@@ -1,0 +1,28 @@
+#:kivy 2.0.0
+#:import utils kivy.utils
+<MDRectangleFlatButton>
+    size: (150, 35)
+
+<MDLabel>
+    height: 10
+
+
+<Welcome_screen>:
+    name: "welcome_screen"
+    MDFloatLayout:
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        MDLabel:
+            size_hint: 1, .2
+            pos_hint: {"center_x": .5, "y": 0.6}
+            halign: "center"
+            text: "Welcome to .csv graph drawer!"
+
+
+        MDRectangleFlatButton:
+            text: "Select a file"
+            pos_hint: {"center_x": .5, "center_y": .5}
+            on_release:
+                root.manager.filepath = root.open_filechooser()
+                print(f"Filepath chosen: {root.manager.filepath[0]}")
+                root.manager.current = 'columns_choice'
+                root.manager.transition.direction = 'left'

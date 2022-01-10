@@ -1,0 +1,36 @@
+#:kivy 2.0.0
+#:import utils kivy.utils
+<MDRectangleFlatButton>
+    size: (150, 35)
+
+
+<Histogram_screen>:
+    name: 'histogram_screen'
+    on_pre_enter: root.sep = root.manager.separator
+    MDFloatLayout:
+        pos_hint: {'center_x': .5, 'center_y': .5}
+
+#        MDTextField:
+#            hint_text: "Number of bins"
+#            size_hint: .3, .1
+#            pos_hint: {"x": .1, "y": .8}
+#            on_text_validate:
+#                root.manager.hist_opt.append = {"bins": self.text}
+
+
+
+        MDRectangleFlatButton:
+            text: "Go back"
+            pos_hint: {"x": .1, "y": .1}
+            on_release:
+                root.manager.current = "columns_choice"
+
+        MDRectangleFlatButton:
+            pos_hint: {"center_x": .5, "center_y": .5}
+            text: "Draw histogram"
+            on_press: root.draw_hist(root.manager.filepath, root.manager.usrColumn_idx)
+
+        MDRectangleFlatButton:
+            pos_hint: {"x": .8, "y": .1}
+            text: "Exit"
+            on_release: exit()

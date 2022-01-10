@@ -1,0 +1,114 @@
+#:kivy 2.0.0
+#:import utils kivy.utils
+
+<MDRectangleFlatButton>
+    size: (150, 35)
+
+<dialListItem>
+    on_release:
+        print("Chosen column: ", self.text)
+        root.parent.parent.text = self.text
+        root.parent.refresh_list()
+        root.highlight_choice()
+
+<dialogContent>
+    orientation: "vertical"
+    spacing: "12dp"
+    size_hint_y: None
+    height: "240dp"
+    ScrollView:
+        background_color: utils.get_color_from_hex('f7f7f7')
+        scroll_type: ["bars"]
+        smooth_scroll_end: 5
+        id:scrolledDialog
+
+<ItemConfirm>
+    on_press: root.set_icon(check)
+
+    CheckboxRightWidget:
+        id: check
+        group: "check"
+
+
+<Columns_choice>:
+    name: "columns_choice"
+    error_indicator: False      # takes True if separator error occurs
+    FloatLayout:
+        MDLabel:
+            size_hint: 1, .1
+            valign: "middle"
+            halign: "center"
+            pos_hint: {"y": .9}
+            text: "Select separator for a .csv file"
+
+        MDRectangleFlatButton:
+            id: separator_dlg
+            pos_hint: {"center_x": .5, "y": .8}
+            text: "Select separator"
+            on_release:
+                root.show_Separator_dialog()
+
+        MDBoxLayout:
+            orientation:"vertical"
+            id: custom_separator_box
+            size_hint: .4, .1
+            opacity: 1
+            pos_hint: {"x": .3, "y": .75}
+            spacing: 20
+
+            MDTextField:
+                id: custom_separator_field
+                visible: False
+                opacity: 1 if self.visible else 0
+                disabled: not self.visible
+                hint_text: "Input separator"
+                max_text_length: 1
+                on_text_validate:
+                    root.manager.separator = self.text
+                    print("separator grabbed")
+                    root.ids.column_selection.visible = True
+
+            MDLabel:
+                id: separator_display
+                valign: "middle"
+                halign: "center"
+
+        MDBoxLayout:
+            id: column_selection
+            orientation: "vertical"
+            visible: False
+            size_hint: 1, .15 if self.visible else 0
+            opacity: 1 if self.visible else 0
+            disabled: not self.visible
+            pos_hint: {"y": .3}
+            spacing: 20
+
+            MDRectangleFlatButton:
+                pos_hint: {"center_x": .5}
+                text: "Select a column"
+                on_release:
+                    root.display_columns(root.manager.filepath, root.manager.separator)
+            MDBoxLayout:
+                orientation: "horizontal"
+                size_hint: .8, .1
+                pos_hint: {"x": .1, "y": .2}
+                MDLabel:
+                    id: chosen_column
+                    halign: "center"
+
+
+        MDRectangleFlatButton:
+            text: "Go back"
+            pos_hint: {"x": .1, "y": .1}
+            on_release:
+                root.manager.current = "welcome_screen"
+
+        MDRectangleFlatButton:
+            id: proceed_button
+            pos_hint: {"x": .8, "y": .1}
+            text: "Proceed"
+            visible: False
+            opacity: 1 if self.visible else 0
+            disabled: not self.visible
+            on_release:
+                root.manager.usrColumn_idx = root.acquire_columnData(root.manager.cols_headers, root.manager.usrColumn)

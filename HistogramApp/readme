@@ -1,0 +1,3 @@
+Python GUI programm for creation of histograms. Used in PhD related to material science.
+Aims to automatize histogram creation for standard options of histograms in matplotlib library.
+Code based on kivy=2.0.0 and kivymd=0.104.1.

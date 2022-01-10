@@ -1,0 +1,24 @@
+Program wykorzystuje bilbiotekę kivy do stworzenia interfejsu użytkownika, prowadzącego przez proces tworzenia histogramu.
+Wykorzystanie kivy jest zwiazane z tworzeniem pliku odpowiadającego za wygląd aplikacji który znajduję sie w tym przypadku
+pod nazwą Porosity.kv (nazwa odnosi się do rzeczy, do której program mi się przyda).
+
+
+Interfejs pozwala na:
+    wybranie pliku .csv (ścieżki do niego), który ma zostac później obrobiony
+    wybranie algorytmu sortującego dane (jednego z 4-rech zaimplementowanych)
+    wyświetlenie czasu sortowania danych z wybranego pliku i kolumny
+    wygenerowanie histogramu dla załadowanych danych
+    zapisanie histogramu w formacie .png lub podobnym
+
+
+Do działania programu wykorzystano biblioteki:
+    kivy - główna bibliotego do tworzenia aplikacji
+    matplotlib - biblioteka pozwalająca na operacje matematyczne na plikach oraz generowanie wykresów
+    pandas - biblioteka pozwalająca na szybszą obróbkę danych (w tym otwieranie plików csv)
+    time - potrzebna do obliczenia czasu sortowania
+    plyer  - zawierająca filechooser systemowy tj. okno pozwalające na wyszukanie na dysku i wybranie pliku
+    sorting_algorithms_database - stworzony plik zawierający moduły sortowania danych
+
+
+
+
