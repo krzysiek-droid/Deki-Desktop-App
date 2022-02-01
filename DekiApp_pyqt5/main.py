@@ -2,7 +2,6 @@ import sys
 
 from Screens.mainWindow import *
 
-
 def main():
     app = QApplication(sys.argv)
 

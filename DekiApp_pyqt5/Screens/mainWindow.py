@@ -10,7 +10,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         # Load Ui from .ui file
         loadUi(r'Screens/mainWindow.ui', self)
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        
         # Hide notification widget
         self.popupNotificationContainer.deleteLater()
 
