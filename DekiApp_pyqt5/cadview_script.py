@@ -1,57 +1,52 @@
-'''
-You can translate a STEP file into an OCCT shape in the following steps:
- 1.load the file,
- 2.check file consistency,
- 3.set the translation parameters,
- 4.perform the translation,
- 5.fetch the results.
-'''
 import logging
 import sys
-import os
-from OCC.Display.SimpleGui import init_display
+
+from PyQt5.QtWidgets import *
+from PyQt5.Qt import QTimer
+from PyQt5.QtCore import Qt
+from PyQt5.uic import loadUi
+
 from OCC.Core.IFSelect import IFSelect_RetDone, IFSelect_ItemsByEntity
 # Reads STEP files, checks them and translates their contents into Open CASCADE models
 from OCC.Core.STEPControl import STEPControl_Reader
-from OCC.Core.Quantity import Quantity_Color, Quantity_TOC_RGB
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QWindow
-
-
 from OCC.Display.backend import load_backend, get_qt_modules
 
 log = logging.getLogger(__name__)
 used_backend = load_backend()
 log.info("GUI backend set to: {0}".format(used_backend))
 print("GUI backend set to: {0}".format(used_backend))
-from OCC.Display.qtDisplay import qtViewer3d
 
-QtCore, QtGui, QtWidgets, QtOpenGl = get_qt_modules()
+# TODO: add buttons for rotation of CAD Model etc.
 
 
 class CadViewer(QWidget):
     def __init__(self, step_filepath: str):
         super(CadViewer, self).__init__()
-
+        loadUi(r'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\Screens\cadViewWidget.ui', self)
         # Class parameters
-        self.step_filepath = step_filepath
+        self.filepath = step_filepath
         self.shape = None
-
-        # Why this 2 lines instead of 1 ?
-        # Layout init for 3D viewer
-        grid = QGridLayout(self)
-
-        # Viewer init
+        self.screenshot = None
+        # --------------------------------------------------CadViewer setup---------------------------------------------
+        # Create layout for 3D viewer
+        self.qtViewer3DContainer = QVBoxLayout(self)
+        # Viewer init, define the widget's appearance
         import OCC.Display.qtDisplay as qtDisplay
         self.viewer = qtDisplay.qtViewer3d()
-        self.viewer.setMinimumSize(400, 400)
-        grid.addWidget(self.viewer)
-        self.viewer.display.FitAll()
-        self.setLayout(grid)
+        self.viewer.setMinimumSize(550, 350)
+        self.qtViewer3DContainer.addWidget(self.viewer, alignment=Qt.AlignHCenter)
+        self.viewerWidget.setLayout(self.qtViewer3DContainer)
+        # ---------------------------------------------------Buttons----------------------------------------------------
+        self.screenshootBtns.hide()
+        self.retryBtn.clicked.connect(lambda: self.screenshot_retry())
+        self.izoViewBtn.clicked.connect(lambda: self.viewer.display.View_Iso())
+        self.snapshootBtn.clicked.connect(lambda: self.takeScreenshot())
+        self.fullscreenBtn.clicked.connect(lambda: print('TODO fullscreen ?'))
 
-        self.read_stepFile(self.step_filepath)
+        # ------------------------------------------------Call class functions------------------------------------------
+        self.read_stepFile(self.filepath)
 
-# -------------------------------------------------------------------------------------------------------Class Functions
+    # ----------------------------------------------Class Functions---------------------------------------------------
     def read_stepFile(self, step_filepath):
         step_reader = STEPControl_Reader()
         status = step_reader.ReadFile(step_filepath)
@@ -64,13 +59,50 @@ class CadViewer(QWidget):
             sys.exit(0)
 
     def start_display(self):
+        self.viewer.InitDriver()
+        self.viewer.createCursors()
+        from OCC.Core.Quantity import Quantity_Color as qc
+        self.viewer.display.set_bg_gradient_color(qc(1, 1, 1, 0), qc(1, 1, 1, 0))
         from OCC.Core.Quantity import Quantity_Color
-        self.viewer.display.View_Iso()
         self.viewer.display.EnableAntiAliasing()
         self.viewer.display.DisplayColoredShape(self.shape,
-                                                color=Quantity_Color(0.3, 0.3, 0.3, 0),     # fourth number means RGB
+                                                color=Quantity_Color(0.3, 0.3, 0.3, 0),  # fourth number means RGB
                                                 update=True)
-        
+
+    def takeScreenshot(self):
+        QTimer.singleShot(1000, self.saveScreenshot)
+
+    def saveScreenshot(self):
+        self.screenshot = self.viewer.screen().grabWindow(self.viewer.winId())
+        self.viewer.close()
+        self.buttons.hide()
+        pic = QLabel()
+        pic.setPixmap(self.screenshot.scaled(300, 200))
+        self.qtViewer3DContainer.addWidget(pic, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
+        self.screenshootBtns.show()
+        # Save a QPixmap as .png
+        # shotArea.save('screenshot.png', 'png')
+
+    def screenshot_retry(self):
+        pass
+        # TODO: change the screenshot preview to notification dialog with approval of user in order to maintain
+        #                                               STP file open during the decision of screenshot approval
+
+    def clearLayout(self, layout):
+        print("-- -- input layout: " + str(layout))
+        for i in reversed(range(layout.count())):
+            layoutItem = layout.itemAt(i)
+            if layoutItem.widget() is not None:
+                widgetToRemove = layoutItem.widget()
+                print("found widget: " + str(widgetToRemove))
+                widgetToRemove.setParent(None)
+                layout.removeWidget(widgetToRemove)
+            elif layoutItem.spacerItem() is not None:
+                print("found spacer: " + str(layoutItem.spacerItem()))
+            else:
+                layoutToRemove = layout.itemAt(i)
+                print("-- found Layout: " + str(layoutToRemove))
+                self.clearLayout(layoutToRemove)
 
 
 if __name__ == "__main__":
@@ -78,6 +110,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     mw = QMainWindow()
     nw = CadViewer("DekiResources/Zbiornik LNG assembly.stp")
+    mw.setCentralWidget(nw)
+    nw.start_display()
     mw.show()
     try:
         sys.exit(app.exec_())
