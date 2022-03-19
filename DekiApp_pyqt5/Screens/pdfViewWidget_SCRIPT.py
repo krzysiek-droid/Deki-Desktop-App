@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     mw = QMainWindow()
-    w = pdfViewerWidget(r'D:\DKI_LNG3200_MS_000_docs')
+    w = pdfViewerWidget(r'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\DekiResources\DKI_LNG3200_MS_000.pdf')
     w.show()
     try:
         sys.exit(app.exec_())

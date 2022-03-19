@@ -3,13 +3,13 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
-from PyQt5 import QtGui
-from Screens import resources_rc
+from Screens import cadViewWidget_SCRIPT as cadviewer
+from Screens import pdfViewWidget_SCRIPT as pdfviewer
 import db_objects as dbo
 
-import cadview_script
-import pdfView_script
+import resources_rc
 
+import pathlib
 
 class ConstructPreviewDialog(QDialog):
     def __init__(self, constructNumber):
@@ -45,7 +45,7 @@ class ConstructPreviewDialog(QDialog):
 
     def showStepModel(self):
         if not self.cadModelViewWidget:
-            self.cadModelViewWidget = cadview_script.CadViewer(self.construct.stpModelPath)
+            self.cadModelViewWidget = cadviewer.CadViewer(self.construct.stpModelPath)
             # Create Layout for cadModelViewWidget
             grid = QVBoxLayout()
             grid.addWidget(self.cadModelViewWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
@@ -61,12 +61,12 @@ class ConstructPreviewDialog(QDialog):
 
     def showPdfViewer(self):
         if not self.pdfViewerWidget:
-            self.pdfViewerWidget = pdfView_script.pdfViewerWidget(self.construct.pdfDocsPath)
-            print(type(self.construct.pdfDocsPath))
+            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\DekiResources\DKI_LNG3200_MS_000.pdf')
             # Create layout for pdfViewerWidget
             grid = QVBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
             # Insert a pdfViewerWidget into docViewer Widget (widget for pdf viewing)
+            # self.docsViewerContainer.removeWidget(QLabel)
             self.docsViewerContainer.setLayout(grid)
             # if self.validate_info():
             #     self.addConstructionBtn.setEnabled(True)
@@ -75,6 +75,7 @@ class ConstructPreviewDialog(QDialog):
 
     def add_subassembly(self):
         pass
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

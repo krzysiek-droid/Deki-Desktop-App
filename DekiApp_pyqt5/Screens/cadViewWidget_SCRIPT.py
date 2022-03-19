@@ -40,7 +40,7 @@ class CadViewer(QWidget):
         self.screenshootBtns.hide()
         self.retryBtn.clicked.connect(lambda: self.screenshot_retry())
         self.izoViewBtn.clicked.connect(lambda: self.viewer.display.View_Iso())
-        self.snapshootBtn.clicked.connect(lambda: self.takeScreenshot())
+        self.snapshootBtn.clicked.connect(lambda: self.viewer.display.ExportToImage('test.png'))
         self.fullscreenBtn.clicked.connect(lambda: print('TODO fullscreen ?'))
 
         # ------------------------------------------------Call class functions------------------------------------------
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     mw = QMainWindow()
-    nw = CadViewer("DekiResources/Zbiornik LNG assembly.stp")
+    nw = CadViewer("../DekiResources/Zbiornik LNG assembly.stp")
     mw.setCentralWidget(nw)
     nw.start_display()
     mw.show()

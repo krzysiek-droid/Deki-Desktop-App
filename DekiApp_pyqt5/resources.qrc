@@ -1,5 +1,55 @@
 <RCC>
   <qresource prefix="Icons">
+    <file>Icons/testingMethodsIcon_lt.png</file>
+    <file>Icons/testingMethodsIcon_rt.png</file>
+    <file>Icons/testingMethodsIcon_ut.png</file>
+    <file>Icons/testingMethodsIcon_mt.png</file>
+    <file>Icons/testingMethodsIcon_pt.png</file>
+    <file>Icons/testingMethodsIcon_vt.png</file>
+    <file>Icons/weldIcon_weldstraightLine.png</file>
+    <file>Icons/weldIcon_weldSide.png</file>
+    <file>Icons/weldIcon_weldBanner.png</file>
+    <file>Icons/weldIcon_weldRoundedLine.png</file>
+    <file>Icons/weldIcon_weldLine.png</file>
+    <file>Icons/weldIcon_weldLine.png</file>
+    <file>Icons/weldIcon_024.png</file>
+    <file>Icons/weldIcon_214.png</file>
+    <file>Icons/weldIcon_204.png</file>
+    <file>Icons/weldIcon_194.png</file>
+    <file>Icons/weldIcon_184.png</file>
+    <file>Icons/weldIcon_174.png</file>
+    <file>Icons/weldIcon_164.png</file>
+    <file>Icons/weldIcon_144.png</file>
+    <file>Icons/weldIcon_134.png</file>
+    <file>Icons/weldIcon_124.png</file>
+    <file>Icons/weldIcon_114.png</file>
+    <file>Icons/weldIcon_104.png</file>
+    <file>Icons/weldIcon_094.png</file>
+    <file>Icons/weldIcon_084.png</file>
+    <file>Icons/weldIcon_074.png</file>
+    <file>Icons/weldIcon_064.png</file>
+    <file>Icons/weldIcon_054.png</file>
+    <file>Icons/weldIcon_044.png</file>
+    <file>Icons/weldIcon_024.png</file>
+    <file>Icons/weldIcon_014.png</file>
+    <file>Icons/rectangle_weld_face.png</file>
+    <file>Icons/chord_weld_face.png</file>
+    <file>Icons/circ_weld_face.png</file>
+    <file>Icons/banner_weld_face.png</file>
+    <file>Icons/anchor_weld_face.png</file>
+    <file>Icons/circline_weld_face.png</file>
+    <file>Icons/convex_weld_face.png</file>
+    <file>Icons/concave_weld_face.png</file>
+    <file>Icons/flat_weld_face.png</file>
+    <file>Icons/rectangle_weld_face.png</file>
+    <file>Icons/chord_weld_face.png</file>
+    <file>Icons/circ_weld_face.png</file>
+    <file>Icons/banner_weld_face.png</file>
+    <file>Icons/anchor_weld_face.png</file>
+    <file>Icons/circline_weld_face.png</file>
+    <file>Icons/convex_weld_face.png</file>
+    <file>Icons/concave_weld_face.png</file>
+    <file>Icons/flat_weld_face.png</file>
     <file>Icons/Logo_twojpartner1.png</file>
     <file>Icons/001__arrow_left.svg</file>
     <file>Icons/002__arrow_right.svg</file>

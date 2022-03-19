@@ -5,10 +5,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
 from PyQt5 import QtGui
 from PyQt5 import QtCore
-from Screens import resources_rc
+from Screens import cadViewWidget_SCRIPT as cadviewer
+from Screens import pdfViewWidget_SCRIPT as pdfviewer
 
-import cadview_script
-import pdfView_script
 import db_objects
 
 quality_norms = {'pressure equipment': ['PED_97_23_WE', 'N/A'], 'pipelines': ['EN 13480', 'N/A'], 'railways':
@@ -60,7 +59,7 @@ class NewConstructDialog(QDialog):
                                                   "stp (*.stp);;All Files (*);;step (*.step)", options=options)
         if fileName:
             if not self.cadModelViewWidget:
-                self.cadModelViewWidget = cadview_script.CadViewer(fileName)
+                self.cadModelViewWidget = cadviewer.CadViewer(fileName)
                 # Create Layout for cadModelViewWidget
                 grid = QVBoxLayout()
                 grid.addWidget(self.cadModelViewWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
@@ -81,7 +80,7 @@ class NewConstructDialog(QDialog):
                                                   "All Files (*);;dxf (*.dxf)", options=options)
         if fileName:
             print(f'Opening dxf: {fileName}')
-            self.dxfModelWidget = pdfView_script.dxfViewerWidget(fileName)
+            self.dxfModelWidget = pdfviewer.dxfViewerWidget(fileName)
             # Create Layout for cadModelViewWidget
             grid = QHBoxLayout()
             grid.addWidget(self.dxfModelWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
@@ -93,7 +92,7 @@ class NewConstructDialog(QDialog):
                                                   "pdf (*.pdf);;All Files (*)", options=options)
         if fileName:
             print(f'Opening pdf: {fileName}')
-            self.pdfViewerWidget = pdfView_script.pdfViewerWidget(fileName)
+            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fileName)
             # Create layout for pdfViewerWidget
             grid = QHBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
@@ -179,7 +178,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     mainWindow = NewConstructDialog()
-    mainWindow.show()
+    mainWindow.showMaximized()
 
     try:
         sys.exit(app.exec_())
