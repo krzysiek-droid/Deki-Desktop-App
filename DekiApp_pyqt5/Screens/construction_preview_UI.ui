@@ -223,6 +223,12 @@ QPushButton{
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
           <widget class="QWidget" name="leftSidedContent" native="true">
+           <property name="minimumSize">
+            <size>
+             <width>630</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="styleSheet">
             <string notr="true">QLabel{
 	background-color: rgb(255, 255, 255);
@@ -277,7 +283,7 @@ QPushButton{
                   <property name="bottomMargin">
                    <number>1</number>
                   </property>
-                  <item alignment="Qt::AlignBottom">
+                  <item>
                    <widget class="QFrame" name="mainConstructPictureContainer">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -321,7 +327,7 @@ QPushButton{
                        <property name="minimumSize">
                         <size>
                          <width>150</width>
-                         <height>150</height>
+                         <height>100</height>
                         </size>
                        </property>
                        <property name="text">
@@ -340,46 +346,45 @@ QPushButton{
                        <property name="frameShadow">
                         <enum>QFrame::Raised</enum>
                        </property>
-                       <layout class="QVBoxLayout" name="verticalLayout_17">
-                        <item alignment="Qt::AlignHCenter">
-                         <widget class="QPushButton" name="constructMoreInforBtn">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>80</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="font">
-                           <font>
-                            <pointsize>10</pointsize>
-                           </font>
-                          </property>
-                          <property name="styleSheet">
-                           <string notr="true">background-color: rgb(30, 210, 80);
+                       <layout class="QVBoxLayout" name="verticalLayout_17"/>
+                      </widget>
+                     </item>
+                     <item alignment="Qt::AlignHCenter">
+                      <widget class="QPushButton" name="constructMoreInforBtn">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>100</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <property name="font">
+                        <font>
+                         <pointsize>10</pointsize>
+                        </font>
+                       </property>
+                       <property name="styleSheet">
+                        <string notr="true">background-color: rgb(30, 210, 80);
 border-radius: 5px;</string>
-                          </property>
-                          <property name="text">
-                           <string>More</string>
-                          </property>
-                          <property name="icon">
-                           <iconset resource="../resources.qrc">
-                            <normaloff>:/Icons/Icons/chevron-down.svg</normaloff>:/Icons/Icons/chevron-down.svg</iconset>
-                          </property>
-                          <property name="iconSize">
-                           <size>
-                            <width>24</width>
-                            <height>24</height>
-                           </size>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
+                       </property>
+                       <property name="text">
+                        <string>Quality info</string>
+                       </property>
+                       <property name="icon">
+                        <iconset resource="../resources.qrc">
+                         <normaloff>:/Icons/Icons/chevron-down.svg</normaloff>:/Icons/Icons/chevron-down.svg</iconset>
+                       </property>
+                       <property name="iconSize">
+                        <size>
+                         <width>24</width>
+                         <height>24</height>
+                        </size>
+                       </property>
                       </widget>
                      </item>
                     </layout>
@@ -529,7 +534,7 @@ border-radius: 5px;</string>
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>20</number>
                              </property>
                             </widget>
                            </item>
@@ -626,7 +631,7 @@ border-radius: 5px;</string>
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>20</number>
                              </property>
                             </widget>
                            </item>
@@ -741,7 +746,7 @@ border-radius: 5px;</string>
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>20</number>
                              </property>
                             </widget>
                            </item>
@@ -829,7 +834,7 @@ border-radius: 5px;</string>
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>20</number>
                              </property>
                             </widget>
                            </item>
@@ -950,7 +955,7 @@ border-radius: 5px;</string>
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>20</number>
                              </property>
                             </widget>
                            </item>
@@ -1035,7 +1040,7 @@ border-radius: 5px;</string>
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>20</number>
                              </property>
                             </widget>
                            </item>
@@ -1180,12 +1185,6 @@ border-radius: 5px;</string>
 	border: 0px;
 }</string>
                     </property>
-                    <property name="frameShape">
-                     <enum>QFrame::StyledPanel</enum>
-                    </property>
-                    <property name="frameShadow">
-                     <enum>QFrame::Raised</enum>
-                    </property>
                     <layout class="QVBoxLayout" name="verticalLayout_32">
                      <property name="spacing">
                       <number>2</number>
@@ -1249,7 +1248,7 @@ border-radius: 5px;</string>
                              <property name="minimumSize">
                               <size>
                                <width>170</width>
-                               <height>0</height>
+                               <height>20</height>
                               </size>
                              </property>
                              <property name="font">
@@ -1273,11 +1272,11 @@ border-radius: 5px;</string>
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="label_12">
+                            <widget class="QLabel" name="constructTypeLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
-                               <height>25</height>
+                               <height>20</height>
                               </size>
                              </property>
                              <property name="text">
@@ -1344,7 +1343,7 @@ border-radius: 5px;</string>
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="label_13">
+                            <widget class="QLabel" name="qualityNormLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -1415,7 +1414,7 @@ border-radius: 5px;</string>
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="label_15">
+                            <widget class="QLabel" name="qualityClassLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -1507,7 +1506,7 @@ border-radius: 5px;</string>
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="label_16">
+                            <widget class="QLabel" name="tolerancesNormLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -1578,7 +1577,7 @@ border-radius: 5px;</string>
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="label_17">
+                            <widget class="QLabel" name="tolerancesLevelLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -1596,30 +1595,11 @@ border-radius: 5px;</string>
                           </layout>
                          </widget>
                         </item>
-                        <item alignment="Qt::AlignHCenter">
-                         <widget class="QRadioButton" name="coopProductionBtn_2">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>Cooperative production</string>
-                          </property>
-                         </widget>
-                        </item>
                        </layout>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFrame" name="subcontratorFrame_2">
+                      <widget class="QFrame" name="subcontratorFrame">
                        <property name="frameShape">
                         <enum>QFrame::StyledPanel</enum>
                        </property>
@@ -1710,7 +1690,7 @@ border-radius: 5px;</string>
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="label_18">
+                            <widget class="QLabel" name="subcontractorLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -1790,7 +1770,7 @@ border-radius: 5px;</string>
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="label_19">
+                            <widget class="QLabel" name="subcontractorContactLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -2635,19 +2615,6 @@ border: 1px solid 'gray';}</string>
                 <height>400</height>
                </size>
               </property>
-              <widget class="QLabel" name="label_4">
-               <property name="geometry">
-                <rect>
-                 <x>40</x>
-                 <y>30</y>
-                 <width>111</width>
-                 <height>16</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>CadViewer</string>
-               </property>
-              </widget>
              </widget>
             </item>
             <item>
@@ -2658,19 +2625,6 @@ border: 1px solid 'gray';}</string>
                 <height>400</height>
                </size>
               </property>
-              <widget class="QLabel" name="label_7">
-               <property name="geometry">
-                <rect>
-                 <x>30</x>
-                 <y>40</y>
-                 <width>121</width>
-                 <height>16</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>DocsViewer</string>
-               </property>
-              </widget>
              </widget>
             </item>
            </layout>

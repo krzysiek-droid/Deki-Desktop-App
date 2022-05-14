@@ -12,7 +12,7 @@ Następnie tworzona jest baza danych dla wszystkich konstrukcji głównych o tag
 <Nazwa firmy>_<rok założenia>_constructions
 Wszystkie kolejne tabele muszą mieć nazwę firmy jako pierwszy String w nazwa tj.: <nazwa firmy>_<...>
 '''
-srv_files_filepath = r'C:\Users\Młody\Desktop\dekiApp\Deki_ServerFiles\constructions_database'
+srv_files_filepath = r'D:\dekiApp\Deki_ServerFiles\constructions_database'
 
 
 class Construction:

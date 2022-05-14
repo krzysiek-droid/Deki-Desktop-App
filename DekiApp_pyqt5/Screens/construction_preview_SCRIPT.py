@@ -11,6 +11,7 @@ import resources_rc
 
 import pathlib
 
+
 class ConstructPreviewDialog(QDialog):
     def __init__(self, constructNumber):
         super(ConstructPreviewDialog, self).__init__()
@@ -22,13 +23,15 @@ class ConstructPreviewDialog(QDialog):
         loadUi(r'construction_preview_UI.ui', self)
 
         # ---------------------------------------------------------------Screen loading functions----------------------
-        self.constructMoreBtns.hide()
         self.subAssemblyListItem.hide()  # subassembly ListItem
+        # if self.construct.info['subcontractor'] == 'N/A':
+        #     self.subcontratorFrame.hide()
+        self.mainConstructQualityInfoContainer.hide()
         # self.rightSidedContent.hide()
         # ---------------------------------------------------------------Button scripting------------------------------
-        self.constructMoreInforBtn.clicked.connect(lambda:
-                                                   self.constructMoreBtns.hide() if self.constructMoreBtns.isVisible()
-                                                   else self.constructMoreBtns.show())
+        self.constructMoreInforBtn.clicked.connect(lambda: self.mainConstructQualityInfoContainer.hide()
+        if self.mainConstructQualityInfoContainer.isVisible() else self.mainConstructQualityInfoContainer.show())
+
         self.addSubassemblyBtn.clicked.connect(lambda: self.add_subassembly())
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
         self.constructPicture.setPixmap(self.construct.picture.scaled(200, 200, 1, 1))
@@ -39,13 +42,22 @@ class ConstructPreviewDialog(QDialog):
         self.constructMaterialLabel.setText(self.construct.info['material'])
         self.constructLocalizationLabel.setText(self.construct.info['localization'])
         self.constructAdditionalInfoLabel.setText(self.construct.info['additional_info'])
-
+        self.constructTypeLabel.setText(self.construct.info['construct_type'])
+        self.qualityNormLabel.setText(self.construct.info['quality_norm'])
+        self.qualityClassLabel.setText(self.construct.info['quality_class'])
+        self.tolerancesNormLabel.setText(self.construct.info['tolerances_norm'])
+        self.tolerancesLevelLabel.setText(self.construct.info['tolerances_level'])
+        self.subcontractorLabel.setText(self.construct.info['subcontractor'])
+        self.subcontractorContactLabel.setText(self.construct.info['sub_contact'])
         self.showStepModel()
         self.showPdfViewer()
 
     def showStepModel(self):
         if not self.cadModelViewWidget:
+            print(self.construct.stpModelPath)
             self.cadModelViewWidget = cadviewer.CadViewer(self.construct.stpModelPath)
+            self.cadModelViewWidget.leftMenuContainer.hide()
+            self.cadModelViewWidget.setMinimumSize(650, 350)
             # Create Layout for cadModelViewWidget
             grid = QVBoxLayout()
             grid.addWidget(self.cadModelViewWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
@@ -61,7 +73,8 @@ class ConstructPreviewDialog(QDialog):
 
     def showPdfViewer(self):
         if not self.pdfViewerWidget:
-            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\DekiResources\DKI_LNG3200_MS_000.pdf')
+            print(self.construct.pdfDocsPath)
+            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{self.construct.pdfDocsPath}')
             # Create layout for pdfViewerWidget
             grid = QVBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)

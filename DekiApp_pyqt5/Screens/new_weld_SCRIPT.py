@@ -5,19 +5,27 @@ from PyQt5.uic import loadUi
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtCore
+
+from Screens import pdfViewWidget_SCRIPT as pdfviewer
+
+import db_objects as dbo
 import resources_rc
 
 
 class NewWeldDialog(QDialog):
-    def __init__(self):
+    def __init__(self, parent_constructionId):
         super(NewWeldDialog, self).__init__()
         loadUi(r'new_weld_UI.ui', self)
         self.selected_weldType = None
         self.selected_weldFaces = []
+        self.pdfViewerWidget = None
+        self.parentConstruction = dbo.Construction()
+        self.parentConstruction.load_info(parent_constructionId)
         # ---------------------------------------------------------------Screen loading functions----------------------
         for line in self.lowerWeldFrame.children():
             if not line.objectName() == 'gridLayout_7' and not line.objectName() == 'lowerWeldTypeIcon':
                 line.hide()
+        self.showPdfViewer()
 
         # ---------------------------------------------------------------Button scripting------------------------------
         self.upperWeldTypeIcon.clicked.connect(lambda: self.openUpperWeldTypeDialog(self.upperWeldTypeIcon, 'weldType'))
@@ -69,6 +77,20 @@ class NewWeldDialog(QDialog):
         else:
             selected_btn.setStyleSheet("background-color : rgb(30, 210, 80)")
 
+    def showPdfViewer(self):
+        if not self.pdfViewerWidget:
+            print(self.parentConstruction.pdfDocsPath)
+            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{self.parentConstruction.pdfDocsPath}')
+            # Create layout for pdfViewerWidget
+            grid = QVBoxLayout()
+            grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
+            # Insert a pdfViewerWidget into docViewer Widget (widget for pdf viewing)
+            # self.docsViewerContainer.removeWidget(QLabel)
+            self.constructDocsViewer.setLayout(grid)
+            # if self.validate_info():
+            #     self.addConstructionBtn.setEnabled(True)
+        else:
+            pass
 
 class weldTypeDialog(QDialog):
     def __init__(self, dialogType):
@@ -128,7 +150,7 @@ class weldTypeDialog(QDialog):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    mainWindow = NewWeldDialog()
+    mainWindow = NewWeldDialog(1)
     mainWindow.show()
 
     try:

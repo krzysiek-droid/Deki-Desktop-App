@@ -1,3 +1,4 @@
+import pathlib
 import sys
 from pathlib import Path
 
@@ -154,7 +155,7 @@ class pdfViewerWidget(QWidget):
         self.main_layout = QVBoxLayout(self)
         self.pdfViewer = QAxContainer.QAxWidget(self)
         self.pdfViewer.setControl("{8856F961-340A-11D0-A96B-00C04FD705A2}")
-        self.pdfViewer.setMinimumSize(500, 350)
+        self.pdfViewer.setMinimumSize(650, 350)
         self.main_layout.addWidget(self.pdfViewer)
 
         self.loadPdf()
@@ -169,7 +170,10 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     mw = QMainWindow()
-    w = pdfViewerWidget(r'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\DekiResources\DKI_LNG3200_MS_000.pdf')
+    filepath = str(r'D:\dekiApp\Deki_ServerFiles\wps_database\135_2020_4.pdf')
+    filepath = pathlib.Path(filepath)
+
+    w = pdfViewerWidget(filepath)
     w.show()
     try:
         sys.exit(app.exec_())

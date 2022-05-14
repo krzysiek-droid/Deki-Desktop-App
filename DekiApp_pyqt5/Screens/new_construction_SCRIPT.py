@@ -14,7 +14,7 @@ quality_norms = {'pressure equipment': ['PED_97_23_WE', 'N/A'], 'pipelines': ['E
     ['EN 15085', 'N/A'], 'welded structures': ['EN 1090', ['EXC1', 'EXC2', 'EXC3', 'EXC4']]}
 
 tolerances_norms = {'ISO 13920': ['1', '2', '3'], 'ISO 2768': ['s', 'm', 'l']}
-srv_files_filepath = r'C:\Users\Młody\Desktop\dekiApp\Deki_ServerFiles'
+srv_files_filepath = r'D:\dekiApp\Deki_ServerFiles'
 
 
 class NewConstructDialog(QDialog):
@@ -28,6 +28,7 @@ class NewConstructDialog(QDialog):
 
         #   ------------------------------------Hidden content----------------------------------------------------------
         self.subcontratorFrame.hide()
+
         #   ------------------------------------Buttons scripts---------------------------------------------------------
         self.cadModelBtn_3.clicked.connect(lambda: self.showStepModel())  # Show CAD step model
         self.documentationLinktbn_3.clicked.connect(lambda: self.showPdfViewer())  # Show .pdf document
@@ -35,6 +36,7 @@ class NewConstructDialog(QDialog):
         self.coopProductionBtn.toggled.connect(lambda:
                                                self.subcontratorFrame.show() if self.coopProductionBtn.isChecked() else
                                                self.subcontratorFrame.hide())
+
         #   ------------------------------------ComboBoxes scripts------------------------------------------------------
         self.constructTypeCombo.addItems(quality_norms.keys())
         self.constructTypeCombo.activated.connect(
@@ -113,7 +115,7 @@ class NewConstructDialog(QDialog):
                                      'localization': self.constructLocalizationLine.text(),
                                      'material': self.constructMaterialLine.text(),
                                      'additional_info': "N/A" if len(self.additionalInfoLine.text()) == 0 else
-                                     self.subContractorContact.text(),
+                                     self.additionalInfoLine.text(),
                                      'subcontractor': "N/A" if len(self.constructSubcontractorLine.text()) == 0 else
                                      self.constructSubcontractorLine.text(),
                                      'sub_contact': "N/A" if len(self.subContractorContact.text()) == 0 else
@@ -178,7 +180,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     mainWindow = NewConstructDialog()
-    mainWindow.showMaximized()
+    mainWindow.show()
 
     try:
         sys.exit(app.exec_())
