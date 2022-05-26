@@ -81,6 +81,7 @@ class NewWeldDialog(QDialog):
         if not self.pdfViewerWidget:
             print(self.parentConstruction.pdfDocsPath)
             self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{self.parentConstruction.pdfDocsPath}')
+            self.pdfViewerWidget.setMinimumSize(650, 450)
             # Create layout for pdfViewerWidget
             grid = QVBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
@@ -91,6 +92,7 @@ class NewWeldDialog(QDialog):
             #     self.addConstructionBtn.setEnabled(True)
         else:
             pass
+
 
 class weldTypeDialog(QDialog):
     def __init__(self, dialogType):
