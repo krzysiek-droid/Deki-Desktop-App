@@ -2,6 +2,7 @@ import mariadb
 import sys
 import pandas as pd
 
+
 with open(r"D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\DekiResources\database_con.txt",
           'r', encoding="UTF-8") as f:
     db_credentials = f.read().split("\n")

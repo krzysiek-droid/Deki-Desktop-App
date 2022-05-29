@@ -72,7 +72,7 @@ class Construction:
         self.picture.load(str(self.picturePath))
         self.stpModelPath = srv_files_filepath + fr'\{self.info["tag"]}_cad.stp'
         self.pdfDocsPath = srv_files_filepath + fr'\{self.info["tag"]}_docs.pdf'
-        print(f'picture loaded.')
+
 
 
 class SubConstruction(Construction):
@@ -82,4 +82,5 @@ class SubConstruction(Construction):
 
 if __name__ == "__main__":
     const = Construction()
-    const.load_info(2)
+    const.load_info(1)
+    print(const.info)

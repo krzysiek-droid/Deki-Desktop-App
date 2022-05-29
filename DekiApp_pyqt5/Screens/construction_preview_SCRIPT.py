@@ -18,13 +18,13 @@ class ConstructPreviewDialog(QDialog):
         self.pdfViewerWidget = None
         self.cadModelViewWidget = None
         self.constructNumber = constructNumber
-        self.construct = dbo.Construction()
-        self.construct.load_info(constructNumber)
+        self.construction = dbo.Construction()
+        self.construction.load_info(constructNumber)
         loadUi(r'construction_preview_UI.ui', self)
 
         # ---------------------------------------------------------------Screen loading functions----------------------
         self.subAssemblyListItem.hide()  # subassembly ListItem
-        # if self.construct.info['subcontractor'] == 'N/A':
+        # if self.construction.info['subcontractor'] == 'N/A':
         #     self.subcontratorFrame.hide()
         self.mainConstructQualityInfoContainer.hide()
         # self.rightSidedContent.hide()
@@ -34,28 +34,28 @@ class ConstructPreviewDialog(QDialog):
 
         self.addSubassemblyBtn.clicked.connect(lambda: self.add_subassembly())
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
-        self.constructPicture.setPixmap(self.construct.picture.scaled(200, 200, 1, 1))
-        self.constructNameLabel.setText(self.construct.info['name'])
-        self.constructTagLabel.setText(self.construct.info['tag'])
-        self.constructNumberLabel.setText(self.construct.info['serial_number'])
-        self.constructOwnerLabel.setText(self.construct.info['owner'])
-        self.constructMaterialLabel.setText(self.construct.info['material'])
-        self.constructLocalizationLabel.setText(self.construct.info['localization'])
-        self.constructAdditionalInfoLabel.setText(self.construct.info['additional_info'])
-        self.constructTypeLabel.setText(self.construct.info['construct_type'])
-        self.qualityNormLabel.setText(self.construct.info['quality_norm'])
-        self.qualityClassLabel.setText(self.construct.info['quality_class'])
-        self.tolerancesNormLabel.setText(self.construct.info['tolerances_norm'])
-        self.tolerancesLevelLabel.setText(self.construct.info['tolerances_level'])
-        self.subcontractorLabel.setText(self.construct.info['subcontractor'])
-        self.subcontractorContactLabel.setText(self.construct.info['sub_contact'])
+        self.constructPicture.setPixmap(self.construction.picture.scaled(200, 200, 1, 1))
+        self.constructNameLabel.setText(self.construction.info['name'])
+        self.constructTagLabel.setText(self.construction.info['tag'])
+        self.constructNumberLabel.setText(self.construction.info['serial_number'])
+        self.constructOwnerLabel.setText(self.construction.info['owner'])
+        self.constructMaterialLabel.setText(self.construction.info['material'])
+        self.constructLocalizationLabel.setText(self.construction.info['localization'])
+        self.constructAdditionalInfoLabel.setText(self.construction.info['additional_info'])
+        self.constructTypeLabel.setText(self.construction.info['construct_type'])
+        self.qualityNormLabel.setText(self.construction.info['quality_norm'])
+        self.qualityClassLabel.setText(self.construction.info['quality_class'])
+        self.tolerancesNormLabel.setText(self.construction.info['tolerances_norm'])
+        self.tolerancesLevelLabel.setText(self.construction.info['tolerances_level'])
+        self.subcontractorLabel.setText(self.construction.info['subcontractor'])
+        self.subcontractorContactLabel.setText(self.construction.info['sub_contact'])
         self.showStepModel()
         self.showPdfViewer()
 
     def showStepModel(self):
         if not self.cadModelViewWidget:
-            print(self.construct.stpModelPath)
-            self.cadModelViewWidget = cadviewer.CadViewer(self.construct.stpModelPath)
+            print(self.construction.stpModelPath)
+            self.cadModelViewWidget = cadviewer.CadViewer(self.construction.stpModelPath)
             self.cadModelViewWidget.leftMenuContainer.hide()
             self.cadModelViewWidget.setMinimumSize(650, 350)
             # Create Layout for cadModelViewWidget
@@ -73,8 +73,8 @@ class ConstructPreviewDialog(QDialog):
 
     def showPdfViewer(self):
         if not self.pdfViewerWidget:
-            print(self.construct.pdfDocsPath)
-            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{self.construct.pdfDocsPath}')
+            print(self.construction.pdfDocsPath)
+            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{self.construction.pdfDocsPath}')
             # Create layout for pdfViewerWidget
             grid = QVBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
