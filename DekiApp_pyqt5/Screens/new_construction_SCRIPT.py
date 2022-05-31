@@ -20,22 +20,25 @@ srv_files_filepath = r'D:\dekiApp\Deki_ServerFiles'
 class NewConstructDialog(QDialog):
     def __init__(self):
         super(NewConstructDialog, self).__init__()
+        loadUi(r'new_construction_UI.ui', self)
+
         #   ------------------------------------Class members-----------------------------------------------------------
         self.cadModelViewWidget = None  # QWidget
         self.dxfModelWidget = None  # QWidget
         self.pdfViewerWidget = None  # QWidget
-        loadUi(r'new_construction_UI.ui', self)
-
         #   ------------------------------------Hidden content----------------------------------------------------------
-        self.subcontratorFrame.hide()
+        self.constructSubcontractorLine.hide()
+        self.subContractorContact.hide()
 
         #   ------------------------------------Buttons scripts---------------------------------------------------------
         self.cadModelBtn_3.clicked.connect(lambda: self.showStepModel())  # Show CAD step model
         self.documentationLinktbn_3.clicked.connect(lambda: self.showPdfViewer())  # Show .pdf document
         self.addConstructionBtn.clicked.connect(lambda: self.addConstruction())
         self.coopProductionBtn.toggled.connect(lambda:
-                                               self.subcontratorFrame.show() if self.coopProductionBtn.isChecked() else
-                                               self.subcontratorFrame.hide())
+                                               (self.constructSubcontractorLine.show(),
+                                                self.subContractorContact.show()) if self.coopProductionBtn.isChecked() else
+                                               (self.constructSubcontractorLine.hide(),
+                                                self.subContractorContact.hide()))
 
         #   ------------------------------------ComboBoxes scripts------------------------------------------------------
         self.constructTypeCombo.addItems(quality_norms.keys())
@@ -47,8 +50,9 @@ class NewConstructDialog(QDialog):
         self.constructTolerancesNormCombo.activated.connect(lambda: self.tolerances_combos_activate(
             self.constructTolerancesNormCombo.currentText()))
         self.tolerances_combos_activate(self.constructTolerancesNormCombo.currentText())
+
         # ---------------------------------------Signals----------------------------------------------------------------
-        validator = QtGui.QRegExpValidator(QtCore.QRegExp(r"^[a-zA-Z0-9.,_%+- ]*"), self)
+        # validator = QtGui.QRegExpValidator(QtCore.QRegExp(r"^[a-zA-Z0-9.,_%+- ]*"), self)
         for widget in self.findChildren(QLineEdit):
             # widget.setValidator(validator)
             widget.editingFinished.connect(lambda: self.addConstructionBtn.setEnabled(True) if self.validate_info() else
@@ -66,7 +70,7 @@ class NewConstructDialog(QDialog):
                 grid = QVBoxLayout()
                 grid.addWidget(self.cadModelViewWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
                 self.cadViewerContainer.setLayout(grid)
-                # To start viewing the cadModel it is needed to call the _display member of viewer, and call the
+                # To start viewing the cadModel it is needed to call the _display member of viewer, call the
                 # method for render and display such as DisplayShape() etc.;   Test() to display sample model
                 self.cadModelViewWidget.start_display()
                 if self.validate_info():
@@ -129,6 +133,13 @@ class NewConstructDialog(QDialog):
             new_construction.pdfDocsPath = self.pdfViewerWidget.filepath
             new_construction.stpModelPath = self.cadModelViewWidget.filepath
             new_construction.save_construction()
+            print("Construction added to database successfully.")
+
+            if type(self.parent()) == QStackedWidget:
+                import construction_preview_SCRIPT
+                self.parent().addWidget(construction_preview_SCRIPT.ConstructPreviewDialog(new_construction.info['id']))
+                self.parent().setCurrentIndex(self.parent().indexOf(self) + 1)
+                self.parent().removeWidget(self)
 
     def validate_info(self):
         for lineEdit in self.findChildren(QLineEdit):
@@ -166,13 +177,13 @@ class NewConstructDialog(QDialog):
             quality_norms[chosen][1]) == list else self.constructQualityClassCombo.addItem(quality_norms[chosen][1])
 
     def tolerances_combos_activate(self, chosen):
-        print(chosen)
         self.constructTolerancesLevelCombo.clear()
         self.constructTolerancesLevelCombo.setEnabled(True)
         self.constructTolerancesLevelCombo.addItems(tolerances_norms[chosen])
 
     def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
         print(self.width(), self.height())
+
 
 
 #   ----------------------------------------Main script (for Screen testing purposes)-----------------------------------

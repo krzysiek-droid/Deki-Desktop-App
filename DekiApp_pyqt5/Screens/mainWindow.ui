@@ -926,7 +926,7 @@ background-color: rgba(214, 214, 214, 80);
              <item>
               <widget class="QStackedWidget" name="stackedWidget_3">
                <property name="currentIndex">
-                <number>3</number>
+                <number>2</number>
                </property>
                <widget class="QWidget" name="HomePage">
                 <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -963,7 +963,7 @@ background-color: rgba(214, 214, 214, 80);
                <widget class="QWidget" name="InsPlanPage">
                 <layout class="QVBoxLayout" name="verticalLayout_16">
                  <item alignment="Qt::AlignHCenter">
-                  <widget class="QPushButton" name="pushButton_2">
+                  <widget class="QPushButton" name="plannedConstructionsGoToBtn">
                    <property name="text">
                     <string>PushButton</string>
                    </property>

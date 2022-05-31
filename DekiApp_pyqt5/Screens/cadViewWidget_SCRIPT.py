@@ -39,9 +39,8 @@ class CadViewer(QWidget):
         self.viewer = qtDisplay.qtViewer3d()
         self.containerBaseSize = {'width': self.viewerWidget.size().width(),
                                   'height': self.viewerWidget.size().height()}
-        print(f'Cad model container type: {type(self.viewerWidget)} with size of {self.containerBaseSize["width"]}x'
-              f'{self.containerBaseSize["height"]}')
-        self.viewer.setMinimumSize(self.containerBaseSize['width'], self.containerBaseSize['height'])
+        print(f'containerBaseSize is: {self.containerBaseSize}')
+        self.viewer.setMinimumSize(self.containerBaseSize['width'] - 10, self.containerBaseSize['height'] - 10)
         self.qtViewer3DContainer.addWidget(self.viewer, alignment=Qt.AlignHCenter)
         self.viewerWidget.setLayout(self.qtViewer3DContainer)
         from OCC.Core.Quantity import Quantity_Color as qc
@@ -90,6 +89,7 @@ class CadViewer(QWidget):
         self.cadModelPictureView.setText('')
         self.cadModelPictureView.setPixmap(self.screenshot.scaled(150, 100))
         # self.screenshot.save('screenshot.png', 'png')
+
     def screenshot_retry(self):
         pass
         # TODO: change the screenshot preview to notification dialog with approval of user in order to maintain
@@ -111,6 +111,12 @@ class CadViewer(QWidget):
                 print("-- found Layout: " + str(layoutToRemove))
                 self.clearLayout(layoutToRemove)
 
+    def fitViewer(self):
+        print(f"Current size of cadViewer viewport: {[self.size().width(), self.size().height()]}, size of "
+              f"{self.parent()}-{self.parent().objectName()} is {[self.parent().size().width(), self.parent().height()]}")
+
+        print(f'Size of viewport changed for {self.size().width(), self.size().height()}')
+
 
 if __name__ == "__main__":
 
@@ -118,7 +124,7 @@ if __name__ == "__main__":
     mw = QMainWindow()
     nw = CadViewer("../DekiResources/Zbiornik LNG assembly.stp")
     mw.setCentralWidget(nw)
-    #nw.start_display()
+    nw.start_display()
     mw.show()
     try:
         sys.exit(app.exec_())

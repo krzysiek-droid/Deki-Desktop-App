@@ -16,7 +16,7 @@ srv_files_filepath = r'D:\dekiApp\Deki_ServerFiles\constructions_database'
 
 
 class Construction:
-    def __init__(self):
+    def __init__(self, accessible_database=None):
         self.company_name = 'deki'
         self.table_name = f'{self.company_name}_2022_constructions'
         self.picture = None
@@ -25,7 +25,7 @@ class Construction:
         self.stpModelPath = None
         self.pdfDocsPath = None
         self.subassemblies = None  # List
-        self.db = database.Database()
+        self.db = database.Database() if accessible_database is None else accessible_database
         self.db_records = None
 
         self.update_records()
@@ -58,6 +58,7 @@ class Construction:
             print(f'Docs copied and saved.')
             self.picturePath = srv_files_filepath + fr'\{self.info["tag"]}_picture.png'
             self.picture.save(self.picturePath, 'png')
+            # TODO add file creation confirmation notification with pathlib.Path.exist()
             print(f'CAD model picture saved.')
             self.db.insert(f'{self.company_name}_2022_constructions', list(self.info.values()))
             self.update_records()
@@ -68,11 +69,12 @@ class Construction:
         values = self.db.get_row(self.table_name, 'id', f'{str(construct_id)}')[0]
         self.info = {k: v for k, v in zip(keys, values)}
         self.picturePath = pathlib.Path(srv_files_filepath + fr'\{self.info["tag"]}_picture.png')
+        # checks if picture is available
+        print(pathlib.Path(srv_files_filepath + fr'\{self.info["tag"]}_picture.png').exists())
         self.picture = QtGui.QPixmap()
         self.picture.load(str(self.picturePath))
         self.stpModelPath = srv_files_filepath + fr'\{self.info["tag"]}_cad.stp'
         self.pdfDocsPath = srv_files_filepath + fr'\{self.info["tag"]}_docs.pdf'
-
 
 
 class SubConstruction(Construction):

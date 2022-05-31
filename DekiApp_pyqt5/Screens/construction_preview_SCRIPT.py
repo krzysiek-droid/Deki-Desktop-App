@@ -23,14 +23,11 @@ class ConstructPreviewDialog(QDialog):
         loadUi(r'construction_preview_UI.ui', self)
 
         # ---------------------------------------------------------------Screen loading functions----------------------
-        self.subAssemblyListItem.hide()  # subassembly ListItem
-        # if self.construction.info['subcontractor'] == 'N/A':
-        #     self.subcontratorFrame.hide()
+        self.subAssemblyListItem.hide()  # subassembly ListItem)
         self.mainConstructQualityInfoContainer.hide()
-        # self.rightSidedContent.hide()
         # ---------------------------------------------------------------Button scripting------------------------------
         self.constructMoreInforBtn.clicked.connect(lambda: self.mainConstructQualityInfoContainer.hide()
-        if self.mainConstructQualityInfoContainer.isVisible() else self.mainConstructQualityInfoContainer.show())
+                if self.mainConstructQualityInfoContainer.isVisible() else self.mainConstructQualityInfoContainer.show())
 
         self.addSubassemblyBtn.clicked.connect(lambda: self.add_subassembly())
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
@@ -55,21 +52,19 @@ class ConstructPreviewDialog(QDialog):
     def showStepModel(self):
         if not self.cadModelViewWidget:
             print(self.construction.stpModelPath)
+            # create a widget for viewing CAD (CAD viewer widget/object)
             self.cadModelViewWidget = cadviewer.CadViewer(self.construction.stpModelPath)
             self.cadModelViewWidget.leftMenuContainer.hide()
-            self.cadModelViewWidget.setMinimumSize(650, 350)
+
             # Create Layout for cadModelViewWidget
             grid = QVBoxLayout()
             grid.addWidget(self.cadModelViewWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
+
             self.cadViewerContainer.setLayout(grid)
-            # To start viewing the cadModel it is needed to call the _display member of viewer, and call the
-            # method for render and display such as DisplayShape() etc.;   Test() to display sample model
+            self.cadModelViewWidget.fitViewer()
             self.cadModelViewWidget.start_display()
-            # if self.validate_info():
-            #     self.addConstructionBtn.setEnabled(True)
         else:
             pass
-        # TODO: add the script for STEP preview model change
 
     def showPdfViewer(self):
         if not self.pdfViewerWidget:

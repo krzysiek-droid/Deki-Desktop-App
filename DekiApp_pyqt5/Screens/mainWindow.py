@@ -1,20 +1,29 @@
+import sys
+
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
+import InspectionPlannerScreen_SCRIPT as InsPlanScr
 
-from Screens import resources_rc
+import resources_rc
 from PyQt5.QtCore import *
 
 
 class MainWindow(QMainWindow):
+
     def __init__(self):
         super(MainWindow, self).__init__()
         # Load Ui from .ui file
-        loadUi(r'Screens/mainWindow.ui', self)
-        
+        loadUi(r'mainWindow.ui', self)
+        # member variables
+        self.animation = None
+
         # Hide notification widget
         self.popupNotificationContainer.deleteLater()
 
         # Buttons scripts allocation
+        self.plannedConstructionsGoToBtn.clicked.connect(
+            lambda: self.openNewModule(InsPlanScr.InspectionPlannerScreen()))
+
         # Show/Hide extension of left Menu with width of 300 pxls
         self.MenuBtn.clicked.connect(lambda: self.showMenu(self.CenterMenuContainer, 300))
 
@@ -34,9 +43,34 @@ class MainWindow(QMainWindow):
             newWidth = opened_width
         else:
             newWidth = 0
+        # noinspection PyAttributeOutsideInit
         self.animation = QPropertyAnimation(menu_widget, b"maximumWidth")
         self.animation.setDuration(250)
         self.animation.setStartValue(width)
         self.animation.setEndValue(newWidth)
         self.animation.setEasingCurve(QEasingCurve.InOutQuart)
         self.animation.start()
+
+    def openNewModule(self, newModuleWindow: QWidget):
+        self.close()
+        newModuleWindow.show()
+
+        # in lambda definition an "event" has to be passed for proper functionality!
+        newModuleWindow.closeEvent = lambda event: self.show()
+
+
+
+def main():
+    app = QApplication(sys.argv)
+
+    mainWindow = MainWindow()
+    mainWindow.show()
+
+    try:
+        sys.exit(app.exec_())
+    except:
+        print("Exiting the App")
+
+
+if __name__ == '__main__':
+    main()

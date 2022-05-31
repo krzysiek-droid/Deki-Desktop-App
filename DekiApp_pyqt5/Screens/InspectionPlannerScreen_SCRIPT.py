@@ -1,13 +1,12 @@
 import sys
 
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
-from Screens import cadViewWidget_SCRIPT as cadviewer
-from Screens import pdfViewWidget_SCRIPT as pdfviewer
+
 import db_objects as dbo
 import gnrl_database_con as database
 
+# resources_rc has to be imported here, even if it is not used directly in code, dunno why
 import resources_rc
 
 import pathlib
@@ -18,7 +17,6 @@ class CustomListItem(QWidget):
         super(CustomListItem, self).__init__()
         loadUi(r'ListItem.ui', self)
         self.constructionID = constructionID
-
         # Get access to QMainWindow instance for its member methods, and save its reference as a member variable
         self.mainWindowInstance = None
         for widget in QApplication.topLevelWidgets():
@@ -27,6 +25,7 @@ class CustomListItem(QWidget):
 
         # Trigger a method of different object, in this case the InspectionPlanningMainWindow
         # Updates the rightSidedContent of the InspectionPlanningMainWindow
+        # in lambda definition an "event" has to be passed for proper functionality
         self.mouseReleaseEvent = lambda event: self.mainWindowInstance.updateRightMenu(self.constructionID)
 
 
@@ -34,21 +33,29 @@ class InspectionPlannerScreen(QWidget):
     def __init__(self):
         super().__init__()
         loadUi(r'InspectionPlannerScreen_UI.ui', self)
-
+        # open database connection
+        self.db = database.Database()
+        # defining the list of constructions widget
         self.scrolledContentWidget = QWidget()
         self.scrolledContentWidget.setObjectName('scrolledContentWidget')
         self.scrolledContentLayout = QVBoxLayout()
-
-        self.loadConstructionsList()  # Load list of constructions
+        # Load list of constructions
+        self.loadConstructionsList()
         self.scrolledContentLayout.setSpacing(1)
 
+        # button allocations
+        # change screen for 'new_construction'
+        import new_construction_SCRIPT
+        self.addConstructionBtn.clicked.connect(
+            lambda: (self.parent().addWidget(new_construction_SCRIPT.NewConstructDialog()),
+                     self.parent().setCurrentIndex(self.parent().indexOf(self) + 1),
+                     self.parent().removeWidget(self)))
+
     def loadConstructionsList(self):
-        db = database.Database()
-        for constructionID in range(len(db.table_into_DF('deki_2022_constructions'))):
-            constructionObject = dbo.Construction()
+        for constructionID in range(len(self.db.table_into_DF('deki_2022_constructions'))):
+            constructionObject = dbo.Construction(self.db)
             constructionObject.load_info(constructionID + 1)
             listItem = CustomListItem(constructionID + 1)
-            print(f'List item for construction with ID: {listItem.constructionID} has been created.')
             listItem.constructionTag.setText(constructionObject.info["tag"])
             listItem.constructionName.setText(constructionObject.info['name'])
             listItem.constructionPicture.setPixmap(constructionObject.picture.scaled(120, 120, 1, 1))
@@ -59,7 +66,7 @@ class InspectionPlannerScreen(QWidget):
         self.scrollArea.setWidget(self.scrolledContentWidget)
 
     def updateRightMenu(self, constructionID):
-        constructionObject = dbo.Construction()
+        constructionObject = dbo.Construction(self.db)
         constructionObject.load_info(constructionID)
         self.constructionName.setText(constructionObject.info['name'])
         self.constructionTag.setText(constructionObject.info['tag'])
