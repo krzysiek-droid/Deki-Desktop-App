@@ -151,11 +151,12 @@ class pdfViewerWidget(QWidget):
     def __init__(self, filepath, parent=None):
         super(pdfViewerWidget, self).__init__(parent)
         self.filepath = Path(filepath)
-
+        if parent is not None:
+            print(f'pdfViewer parent: {parent.size()}')
         self.main_layout = QVBoxLayout(self)
         self.pdfViewer = QAxContainer.QAxWidget(self)
         self.pdfViewer.setControl("{8856F961-340A-11D0-A96B-00C04FD705A2}")
-        self.pdfViewer.setMinimumSize(650, 350)
+        self.pdfViewer.setMinimumSize(parent.size().width() -10, parent.size().height()-10)
         self.main_layout.addWidget(self.pdfViewer)
 
         self.loadPdf()

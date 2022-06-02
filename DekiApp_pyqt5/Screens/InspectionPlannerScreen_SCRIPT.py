@@ -33,6 +33,11 @@ class InspectionPlannerScreen(QWidget):
     def __init__(self):
         super().__init__()
         loadUi(r'InspectionPlannerScreen_UI.ui', self)
+        self.currentListItemID = None
+
+        # Screen loading scripts
+        self.goToConstructionBtn.setEnabled(False)
+        print(f'Loading screen {self.objectName()} from parent widget: {self.parent()}')
         # open database connection
         self.db = database.Database()
         # defining the list of constructions widget
@@ -51,6 +56,13 @@ class InspectionPlannerScreen(QWidget):
                      self.parent().setCurrentIndex(self.parent().indexOf(self) + 1),
                      self.parent().removeWidget(self)))
 
+        # change screen for 'construction_preview'
+        import construction_preview_SCRIPT
+        self.goToConstructionBtn.clicked.connect(
+            lambda: (self.parent().addWidget(construction_preview_SCRIPT.ConstructPreviewDialog(self.currentListItemID)),
+            self.parent().setCurrentIndex(self.parent().indexOf(self) + 1),
+            self.parent().removeWidget(self)))
+
     def loadConstructionsList(self):
         for constructionID in range(len(self.db.table_into_DF('deki_2022_constructions'))):
             constructionObject = dbo.Construction(self.db)
@@ -68,9 +80,10 @@ class InspectionPlannerScreen(QWidget):
     def updateRightMenu(self, constructionID):
         constructionObject = dbo.Construction(self.db)
         constructionObject.load_info(constructionID)
+        self.currentListItemID = constructionID
         self.constructionName.setText(constructionObject.info['name'])
         self.constructionTag.setText(constructionObject.info['tag'])
-        self.constructionSerialNo.setText(constructionObject.info['id'])
+        self.constructionSerialNo.setText(constructionObject.info['id'])  # TODO: change 'id' for 'serialNo'
         self.constructionOwner.setText(constructionObject.info['owner'])
         self.constructionType.setText(constructionObject.info['construct_type'])
         self.constructionQualityNorm.setText(constructionObject.info['quality_norm'])
@@ -80,6 +93,7 @@ class InspectionPlannerScreen(QWidget):
         self.constructionCoopBody.setText(constructionObject.info['subcontractor'])
         self.constructionCoopContact.setText(constructionObject.info['sub_contact'])
         self.constructionPicLarge.setPixmap(constructionObject.picture.scaled(300, 300, 1, 1))
+        self.goToConstructionBtn.setEnabled(True)
 
 
 if __name__ == '__main__':

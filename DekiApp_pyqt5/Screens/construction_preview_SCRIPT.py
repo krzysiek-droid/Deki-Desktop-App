@@ -52,16 +52,15 @@ class ConstructPreviewDialog(QDialog):
     def showStepModel(self):
         if not self.cadModelViewWidget:
             print(self.construction.stpModelPath)
-            # create a widget for viewing CAD (CAD viewer widget/object)
-            self.cadModelViewWidget = cadviewer.CadViewer(self.construction.stpModelPath)
-            self.cadModelViewWidget.leftMenuContainer.hide()
-
+            # create a widget for viewing CAD (CAD canvas widget/object)
+            self.cadModelViewWidget = cadviewer.CadViewer(self.construction.stpModelPath,
+                                                          viewport_width=self.cadViewerContainer.size().width(),
+                                                          viewport_height=self.cadViewerContainer.size().height())
             # Create Layout for cadModelViewWidget
             grid = QVBoxLayout()
             grid.addWidget(self.cadModelViewWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
 
             self.cadViewerContainer.setLayout(grid)
-            self.cadModelViewWidget.fitViewer()
             self.cadModelViewWidget.start_display()
         else:
             pass
@@ -69,15 +68,13 @@ class ConstructPreviewDialog(QDialog):
     def showPdfViewer(self):
         if not self.pdfViewerWidget:
             print(self.construction.pdfDocsPath)
-            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{self.construction.pdfDocsPath}')
+            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{self.construction.pdfDocsPath}', parent=self.docsViewerContainer)
             # Create layout for pdfViewerWidget
             grid = QVBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
             # Insert a pdfViewerWidget into docViewer Widget (widget for pdf viewing)
             # self.docsViewerContainer.removeWidget(QLabel)
             self.docsViewerContainer.setLayout(grid)
-            # if self.validate_info():
-            #     self.addConstructionBtn.setEnabled(True)
         else:
             pass
 
@@ -89,7 +86,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     mainWindow = ConstructPreviewDialog(1)
-    mainWindow.show()
+    mainWindow.showMaximized()
 
     try:
         sys.exit(app.exec_())

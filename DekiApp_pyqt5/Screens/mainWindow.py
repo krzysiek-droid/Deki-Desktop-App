@@ -59,7 +59,6 @@ class MainWindow(QMainWindow):
         newModuleWindow.closeEvent = lambda event: self.show()
 
 
-
 def main():
     app = QApplication(sys.argv)
 

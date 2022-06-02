@@ -1,21 +1,66 @@
+import os
+import sys
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeBox
 
-sample = []
-harness = []
-with open(r'C:\Users\Młody\Desktop\[Srv] Doktorat\PUBLIKACJE\Twardosci\1_2-20x2.txt', 'r') as fop:
-    data = fop.readlines()
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QPushButton,
+    QHBoxLayout,
+    QGroupBox,
+    QDialog,
+    QVBoxLayout,
+)
+
+from OCC.Display.backend import load_backend
+
+load_backend("qt-pyqt5")
+import OCC.Display.qtDisplay as qtDisplay
 
 
-    for row in data:
-        nr = row.split('  ')
-        sample.append(nr)
+class App(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.title = "PyQt5 / pythonOCC"
+        self.left = 300
+        self.top = 300
+        self.width = 800
+        self.height = 300
+        self.initUI()
+        self.displayBOX()
+        self.display.FitAll()
+
+    def initUI(self):
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.createHorizontalLayout()
+
+        windowLayout = QVBoxLayout()
+        windowLayout.addWidget(self.horizontalGroupBox)
+        self.setLayout(windowLayout)
+        self.show()
+
+    def createHorizontalLayout(self):
+        self.horizontalGroupBox = QGroupBox("Display PythonOCC")
+        layout = QHBoxLayout()
+        self.canvas = qtDisplay.qtViewer3d(self)
+        layout.addWidget(self.canvas)
+        self.canvas.resize(200, 200)
+        self.canvas.InitDriver()
+        self.display = self.canvas._display
+        self.horizontalGroupBox.setLayout(layout)
+
+    def displayBOX(self):
+        a_box = BRepPrimAPI_MakeBox(10.0, 20.0, 30.0).Shape()
+        self.ais_box = self.display.DisplayShape(a_box)[0]
+        self.display.FitAll()
+
+    def eraseBOX(self):
+        self.display.Context.Erase(self.ais_box, True)
 
 
-
-new_r = sample[2]
-
-for row in sample:
-    harness.append(row[4][:6])
-
-print(harness)
-with open(r'C:\Users\Młody\Desktop\[Srv] Doktorat\PUBLIKACJE\Twardosci\1_2-20x2-measurements.txt', 'w') as fwr:
-    fwr.write('\n'.join(m for m in harness))
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    ex = App()
+    if os.getenv("APPVEYOR") is None:
+        sys.exit(app.exec_())

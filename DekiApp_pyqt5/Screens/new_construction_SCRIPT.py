@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
 from PyQt5 import QtGui
 from PyQt5 import QtCore
+from PyQt5.Qt import QTimer
 from Screens import cadViewWidget_SCRIPT as cadviewer
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 
@@ -16,6 +17,44 @@ quality_norms = {'pressure equipment': ['PED_97_23_WE', 'N/A'], 'pipelines': ['E
 tolerances_norms = {'ISO 13920': ['1', '2', '3'], 'ISO 2768': ['s', 'm', 'l']}
 srv_files_filepath = r'D:\dekiApp\Deki_ServerFiles'
 
+
+class CadViewerExtended(QWidget):
+    def __init__(self, step_filepath: str):
+        super().__init__()
+        import cadViewWidget_SCRIPT
+        loadUi(r'cadViewWidgetExtended.ui', self)
+
+        self.screenshot = QtGui.QPixmap()
+
+        self.cadViewerWidget = cadViewWidget_SCRIPT.CadViewer(step_filepath, viewport_width=self.viewerFrame.baseSize().width(),
+                                                              viewport_height=self.viewerFrame.baseSize().height())
+        self.viewerFrameLayout.addWidget(self.cadViewerWidget)
+        self.cadViewerWidget.start_display()
+
+        self.izoViewBtn.clicked.connect(lambda: self.cadViewerWidget.display.View_Iso())
+        self.snapshootBtn.clicked.connect(lambda: self.takeScreenshot())
+        self.fullscreenBtn.clicked.connect(lambda: print('TODO fullscreen ?'))
+
+    def takeScreenshot(self):
+        QtCore.QTimer.singleShot(100, self.saveScreenshot)
+        # self.canvas.display.ExportToImage('test.png') could do the work, but it saves image without creating a
+        # class for it
+
+    def saveScreenshot(self):
+        self.screenshot = self.cadViewerWidget.screen().grabWindow(self.cadViewerWidget.canvas.winId())
+        pic = QLabel()
+        pic.setPixmap(self.screenshot.scaled(150, 100))
+        self.cadModelPictureView.setText('')
+        self.cadModelPictureView.setPixmap(self.screenshot.scaled(150, 100))
+        # self.screenshot.save('screenshot.png', 'png')
+
+    def screenshot_retry(self):
+        pass
+        # TODO: change the screenshot preview to notification dialog with approval of user in order to maintain
+        # TODO: STP file open during the decision of screenshot approval
+
+    def showEvent(self, a0: QtGui.QShowEvent) -> None:
+        self.resize(300, 300)
 
 class NewConstructDialog(QDialog):
     def __init__(self):
@@ -60,17 +99,21 @@ class NewConstructDialog(QDialog):
 
     #   ------------------------------------Class functions-------------------------------------------------------------
     def showStepModel(self):
+        # define filechooser dialog
         options = QFileDialog.Options()
+        # open filechooser dialog and save selection
         fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                   "stp (*.stp);;All Files (*);;step (*.step)", options=options)
         if fileName:
             if not self.cadModelViewWidget:
-                self.cadModelViewWidget = cadviewer.CadViewer(fileName)
+                self.cadModelViewWidget = CadViewerExtended(fileName)
+
                 # Create Layout for cadModelViewWidget
                 grid = QVBoxLayout()
                 grid.addWidget(self.cadModelViewWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
-                self.cadViewerContainer.setLayout(grid)
-                # To start viewing the cadModel it is needed to call the _display member of viewer, call the
+                self.viewerFrame.setLayout(grid)
+
+                # To start viewing the cadModel it is needed to call the _display member of canvas, call the
                 # method for render and display such as DisplayShape() etc.;   Test() to display sample model
                 self.cadModelViewWidget.start_display()
                 if self.validate_info():
@@ -185,13 +228,13 @@ class NewConstructDialog(QDialog):
         print(self.width(), self.height())
 
 
-
 #   ----------------------------------------Main script (for Screen testing purposes)-----------------------------------
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    mainWindow = NewConstructDialog()
+    mainWindow = CadViewerExtended("../DekiResources/Zbiornik LNG assembly.stp")
     mainWindow.show()
+
 
     try:
         sys.exit(app.exec_())

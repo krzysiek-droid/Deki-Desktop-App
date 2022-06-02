@@ -5,9 +5,10 @@ import resources_rc
 
 import PyQt5.QtCore
 from PyQt5.QtWidgets import *
-from PyQt5.Qt import QTimer
+
 from PyQt5.QtCore import Qt
 from PyQt5.uic import loadUi
+from PyQt5 import QtGui
 
 from OCC.Core.IFSelect import IFSelect_RetDone, IFSelect_ItemsByEntity
 # Reads STEP files, checks them and translates their contents into Open CASCADE models
@@ -24,32 +25,28 @@ print("GUI backend set to: {0}".format(used_backend))
 
 
 class CadViewer(QWidget):
-    def __init__(self, step_filepath: str):
+    def __init__(self, step_filepath: str, viewport_width=300, viewport_height=300):
         super(CadViewer, self).__init__()
-        loadUi(r'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\Screens\cadViewWidget.ui', self)
-        # Class parameters
-        self.filepath = step_filepath
+        self.setMinimumSize(viewport_width, viewport_height)
+        # Class members
+        self.display = None
         self.shape = None
-        self.screenshot = PyQt5.Qt.QPixmap()
-        # --------------------------------------------------CadViewer setup---------------------------------------------
-        # Create layout for 3D viewer
-        self.qtViewer3DContainer = QVBoxLayout(self)
-        # Viewer init, define the widget's appearance
-        import OCC.Display.qtDisplay as qtDisplay
-        self.viewer = qtDisplay.qtViewer3d()
-        self.containerBaseSize = {'width': self.viewerWidget.size().width(),
-                                  'height': self.viewerWidget.size().height()}
-        print(f'containerBaseSize is: {self.containerBaseSize}')
-        self.viewer.setMinimumSize(self.containerBaseSize['width'] - 10, self.containerBaseSize['height'] - 10)
-        self.qtViewer3DContainer.addWidget(self.viewer, alignment=Qt.AlignHCenter)
-        self.viewerWidget.setLayout(self.qtViewer3DContainer)
-        from OCC.Core.Quantity import Quantity_Color as qc
-        self.viewer.display.set_bg_gradient_color(qc(1, 1, 1, 0), qc(1, 1, 1, 0))
+        self.filepath = step_filepath
 
+        # --------------------------------------------------CadViewer setup---------------------------------------------
+        # Create layout for 3D canvas
+        self.qtViewer3DContainer = QVBoxLayout(self)
+
+        # Viewer init, define the widget's appearance, must be resized after definition to center itself
+        # in widget container (layout)
+        import OCC.Display.qtDisplay as qtDisplay
+        self.canvas = qtDisplay.qtViewer3d()
+        self.canvas.resize(viewport_width - 10, viewport_height - 10)
+
+        # Nor canvas nor qtViewer3Container cannot be aligned, otherwise widget do not shows itself
+        self.qtViewer3DContainer.addWidget(self.canvas)
+        self.setLayout(self.qtViewer3DContainer)
         # ---------------------------------------------------Buttons----------------------------------------------------
-        self.izoViewBtn.clicked.connect(lambda: self.viewer.display.View_Iso())
-        self.snapshootBtn.clicked.connect(lambda: self.takeScreenshot())
-        self.fullscreenBtn.clicked.connect(lambda: print('TODO fullscreen ?'))
 
         # ------------------------------------------------Call class functions------------------------------------------
         self.read_stepFile(self.filepath)
@@ -59,7 +56,8 @@ class CadViewer(QWidget):
         step_reader = STEPControl_Reader()
         status = step_reader.ReadFile(step_filepath)
         if status == IFSelect_RetDone:  # RetDone : normal execution with a result
-            step_reader.PrintCheckLoad(True, IFSelect_ItemsByEntity)
+            # to print stepByStep rendering:
+            # step_reader.PrintCheckLoad(True, IFSelect_ItemsByEntity)
             step_reader.TransferRoot()
             self.shape = step_reader.Shape()
         else:
@@ -67,33 +65,18 @@ class CadViewer(QWidget):
             sys.exit(0)
 
     def start_display(self):
-        self.viewer.InitDriver()
-        self.viewer.createCursors()
+        self.canvas.resize(300, 300)
+        self.canvas.InitDriver()
+        self.display = self.canvas._display
+
         from OCC.Core.Quantity import Quantity_Color as qc
-        self.viewer.display.set_bg_gradient_color(qc(1, 1, 1, 0), qc(1, 1, 1, 0))
+        self.display.set_bg_gradient_color(qc(1, 1, 1, 0), qc(1, 1, 1, 0))
+
         from OCC.Core.Quantity import Quantity_Color
-        self.viewer.display.EnableAntiAliasing()
-        self.viewer.display.DisplayColoredShape(self.shape,
-                                                color=Quantity_Color(0.3, 0.3, 0.3, 0),  # fourth number means RGB
-                                                update=True)
-
-    def takeScreenshot(self):
-        QTimer.singleShot(100, self.saveScreenshot)
-        # self.viewer.display.ExportToImage('test.png') could do the work, but it saves image without creating a
-        # class for it
-
-    def saveScreenshot(self):
-        self.screenshot = self.viewer.screen().grabWindow(self.viewer.winId())
-        pic = QLabel()
-        pic.setPixmap(self.screenshot.scaled(150, 100))
-        self.cadModelPictureView.setText('')
-        self.cadModelPictureView.setPixmap(self.screenshot.scaled(150, 100))
-        # self.screenshot.save('screenshot.png', 'png')
-
-    def screenshot_retry(self):
-        pass
-        # TODO: change the screenshot preview to notification dialog with approval of user in order to maintain
-        #                                               STP file open during the decision of screenshot approval
+        self.display.DisplayColoredShape(self.shape,
+                                         color=Quantity_Color(0.3, 0.3, 0.3, 0),  # fourth number means RGB
+                                         update=True)
+        self.display.FitAll()
 
     def clearLayout(self, layout):
         print("-- -- input layout: " + str(layout))
@@ -111,21 +94,15 @@ class CadViewer(QWidget):
                 print("-- found Layout: " + str(layoutToRemove))
                 self.clearLayout(layoutToRemove)
 
-    def fitViewer(self):
-        print(f"Current size of cadViewer viewport: {[self.size().width(), self.size().height()]}, size of "
-              f"{self.parent()}-{self.parent().objectName()} is {[self.parent().size().width(), self.parent().height()]}")
-
-        print(f'Size of viewport changed for {self.size().width(), self.size().height()}')
-
 
 if __name__ == "__main__":
-
     app = QApplication(sys.argv)
     mw = QMainWindow()
     nw = CadViewer("../DekiResources/Zbiornik LNG assembly.stp")
     mw.setCentralWidget(nw)
     nw.start_display()
     mw.show()
+
     try:
         sys.exit(app.exec_())
     except:
