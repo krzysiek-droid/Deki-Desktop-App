@@ -322,7 +322,7 @@ QPushButton{
                      </font>
                     </property>
                     <property name="text">
-                     <string>Parent Construction</string>
+                     <string>Parent MainConstruction</string>
                     </property>
                     <property name="indent">
                      <number>10</number>
@@ -1232,7 +1232,7 @@ QPushButton{
                         </font>
                        </property>
                        <property name="text">
-                        <string>Construction type:</string>
+                        <string>MainConstruction type:</string>
                        </property>
                        <property name="alignment">
                         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -2815,7 +2815,7 @@ QPushButton{
                            </font>
                           </property>
                           <property name="text">
-                           <string>Construction type:</string>
+                           <string>MainConstruction type:</string>
                           </property>
                           <property name="alignment">
                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

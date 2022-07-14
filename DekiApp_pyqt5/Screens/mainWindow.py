@@ -1,15 +1,14 @@
 import sys
 
+import PyQt5.QtWidgets
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
-import InspectionPlannerScreen_SCRIPT as InsPlanScr
 
 import resources_rc
 from PyQt5.QtCore import *
 
 
 class MainWindow(QMainWindow):
-
     def __init__(self):
         super(MainWindow, self).__init__()
         # Load Ui from .ui file
@@ -21,8 +20,9 @@ class MainWindow(QMainWindow):
         self.popupNotificationContainer.deleteLater()
 
         # Buttons scripts allocation
+        import inspectionPlannerWindow_SCRIPT
         self.plannedConstructionsGoToBtn.clicked.connect(
-            lambda: self.openNewModule(InsPlanScr.InspectionPlannerScreen()))
+            lambda: (self.openNewModule(inspectionPlannerWindow_SCRIPT.InspectionPlannerWindow())))
 
         # Show/Hide extension of left Menu with width of 300 pxls
         self.MenuBtn.clicked.connect(lambda: self.showMenu(self.CenterMenuContainer, 300))
@@ -54,7 +54,6 @@ class MainWindow(QMainWindow):
     def openNewModule(self, newModuleWindow: QWidget):
         self.close()
         newModuleWindow.show()
-
         # in lambda definition an "event" has to be passed for proper functionality!
         newModuleWindow.closeEvent = lambda event: self.show()
 

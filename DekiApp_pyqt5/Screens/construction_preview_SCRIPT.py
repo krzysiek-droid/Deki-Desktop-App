@@ -1,35 +1,65 @@
+import logging
 import sys
 
 from PyQt5.QtCore import Qt
+
 from PyQt5.QtWidgets import *
-from PyQt5.uic import loadUi
+from PyQt5 import uic
 from Screens import cadViewWidget_SCRIPT as cadviewer
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 import db_objects as dbo
-
+import gnrl_database_con as database
 import resources_rc
 
 import pathlib
 
 
+class CustomListItem(QWidget):
+    def __init__(self, subConstructionID):
+        super(CustomListItem, self).__init__()
+        uic.loadUi(r'ListItem.ui', self)
+        self.subConstructionID = subConstructionID
+        # Get access to QMainWindow instance for its member methods, and save its reference as a member variable
+        self.mainWindowInstance = None
+        for widget in QApplication.topLevelWidgets():
+            if widget.objectName() == 'inspectionPlannerScreen':
+                self.mainWindowInstance = widget
+
+
 class ConstructPreviewDialog(QDialog):
-    def __init__(self, constructNumber):
+    def __init__(self, constructNumber, connected_database=None):
         super(ConstructPreviewDialog, self).__init__()
+        # set loggers to print only Warnings during screen changes, w/o it prints all debug lines, which is annoying
+        uic.properties.logger.setLevel(logging.WARNING)
+        uic.uiparser.logger.setLevel(logging.WARNING)
+        uic.loadUi(r'construction_preview_UI.ui', self)
         self.pdfViewerWidget = None
         self.cadModelViewWidget = None
         self.constructNumber = constructNumber
-        self.construction = dbo.Construction()
+        self.construction = dbo.MainConstruction()
         self.construction.load_info(constructNumber)
-        loadUi(r'construction_preview_UI.ui', self)
+        # open database connection
+        self.db = database.Database() if connected_database is None else connected_database
+        self.scrolledContentWidget = QWidget()
+        self.scrolledContentWidget.setObjectName('scrolledContentWidget')
+        self.scrolledContentLayout = QVBoxLayout()
+        self.scrolledContentLayout.setSpacing(1)
 
         # ---------------------------------------------------------------Screen loading functions----------------------
-        self.subAssemblyListItem.hide()  # subassembly ListItem)
+
         self.mainConstructQualityInfoContainer.hide()
         # ---------------------------------------------------------------Button scripting------------------------------
         self.constructMoreInforBtn.clicked.connect(lambda: self.mainConstructQualityInfoContainer.hide()
-                if self.mainConstructQualityInfoContainer.isVisible() else self.mainConstructQualityInfoContainer.show())
+            if self.mainConstructQualityInfoContainer.isVisible() else self.mainConstructQualityInfoContainer.show())
 
         self.addSubassemblyBtn.clicked.connect(lambda: self.add_subassembly())
+        import InspectionPlannerScreen_SCRIPT
+        self.goBackBtn.clicked.connect(lambda: self.parent().changeScreen(self,
+            InspectionPlannerScreen_SCRIPT.InspectionPlannerScreen()) if self.parent() is not None else print('no '
+                                                                                                              'parent'))
+        import new_subconstruction_SCRIPT
+        self.addSubassemblyBtn.clicked.connect(
+            lambda: (self.showDialog(new_subconstruction_SCRIPT.NewSubconstructionDialog(self.construction))))
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
         self.constructPicture.setPixmap(self.construction.picture.scaled(200, 200, 1, 1))
         self.constructNameLabel.setText(self.construction.info['name'])
@@ -49,9 +79,10 @@ class ConstructPreviewDialog(QDialog):
         self.showStepModel()
         self.showPdfViewer()
 
+        self.load_SubConstructionsList()
+
     def showStepModel(self):
         if not self.cadModelViewWidget:
-            print(self.construction.stpModelPath)
             # create a widget for viewing CAD (CAD canvas widget/object)
             self.cadModelViewWidget = cadviewer.CadViewer(self.construction.stpModelPath,
                                                           viewport_width=self.cadViewerContainer.size().width(),
@@ -67,8 +98,8 @@ class ConstructPreviewDialog(QDialog):
 
     def showPdfViewer(self):
         if not self.pdfViewerWidget:
-            print(self.construction.pdfDocsPath)
-            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{self.construction.pdfDocsPath}', parent=self.docsViewerContainer)
+            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{self.construction.pdfDocsPath}',
+                                                             parent=self.docsViewerContainer)
             # Create layout for pdfViewerWidget
             grid = QVBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
@@ -81,11 +112,55 @@ class ConstructPreviewDialog(QDialog):
     def add_subassembly(self):
         pass
 
+    def load_SubConstructionsList(self):
+        # Check if scrollArea needs to be refreshed, if its empty load all subs
+        if len(self.scrollArea.findChildren(CustomListItem)) == 0:
+            # get dataframe with subConstructions belonging to parent construction, by ID
+            belonging_subConstructions = self.db.df_from_filteredTable('deki_2022_SubConstructions',
+                                                                       'parent_construction_id', self.constructNumber)
+            # get list of subConstruction IDs belonging to parent construction
+            subConstructions_IDs = belonging_subConstructions['id'].tolist()
+            # iterate throughout subConstruction IDs list and load those subConstructions into the screen
+            if len(subConstructions_IDs) != 0:
+                constructionObject = dbo.SubConstruction(parentConstruction=self.construction, connected_database=self.db)
+                for constructionID in subConstructions_IDs:
+                    constructionObject.load_info(int(constructionID))
+                    listItem = CustomListItem(int(constructionID))
+                    listItem.constructionTag.setText(constructionObject.info["tag"])
+                    listItem.constructionName.setText(constructionObject.info['name'])
+                    listItem.constructionPicture.setPixmap(constructionObject.picture.scaled(120, 120, 1, 1))
+                    listItem.seriesSize.setText(constructionObject.info['serial_number'])
+                    self.scrolledContentLayout.addWidget(listItem, alignment=Qt.AlignTop)
+            else:
+                print(f"No subConstructions to be loaded.")
+            # Add a scrolled layout (object) to the screens' scrollArea
+            self.scrolledContentWidget.setLayout(self.scrolledContentLayout)
+            self.scrolledContentLayout.setAlignment(Qt.AlignTop)
+            self.scrollArea.setWidget(self.scrolledContentWidget)
+        # if scrollArea is not empty, then delete all its ListItems and load again scrollArea
+        else:
+            #  clear scrolled layout from previously loaded items
+            for idx in reversed(range(self.scrolledContentLayout.count())):
+                print(f"Counted children: {self.scrolledContentLayout.count()}")
+                widgetToRemove = self.scrolledContentLayout.takeAt(idx).widget()
+                print(widgetToRemove)
+                # remove Widget from the layout
+                self.scrolledContentLayout.removeWidget(widgetToRemove)
+                # delete Widget (listItem) from application - memory release, can be also widget.destroy()
+                # but it is more risking when regarding signals/events references
+                widgetToRemove.deleteLater()
+            self.loadConstructionsList()
+
+    def showDialog(self, dialog):
+        dialog.show()
+        dialog.closeEvent = lambda event: (
+            self.load_SubConstructionsList())
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    mainWindow = ConstructPreviewDialog(1)
+    mainWindow = ConstructPreviewDialog(2)
     mainWindow.showMaximized()
 
     try:

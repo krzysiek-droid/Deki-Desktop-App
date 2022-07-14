@@ -19,7 +19,7 @@ class NewWeldDialog(QDialog):
         self.selected_weldType = None
         self.selected_weldFaces = []
         self.pdfViewerWidget = None
-        self.parentConstruction = dbo.Construction()
+        self.parentConstruction = dbo.MainConstruction()
         self.parentConstruction.load_info(parent_constructionId)
         # ---------------------------------------------------------------Screen loading functions----------------------
         for line in self.lowerWeldFrame.children():

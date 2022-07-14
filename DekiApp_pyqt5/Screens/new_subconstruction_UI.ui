@@ -6,25 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1920</width>
-    <height>1000</height>
+    <width>1580</width>
+    <height>868</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">
-QLabel{
-	color: rgb(0, 0, 0);
-}
-
-QPushButton{
-	border: rgb(30, 210, 80);
-}
-#headerContainer{
-	background-color: rgb(255, 255, 255);
-}</string>
+   <string notr="true"/>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <property name="spacing">
@@ -104,7 +94,7 @@ QComboBox{
           <widget class="QWidget" name="leftSidedContent" native="true">
            <property name="minimumSize">
             <size>
-             <width>300</width>
+             <width>350</width>
              <height>0</height>
             </size>
            </property>
@@ -156,7 +146,7 @@ font:  italic 12pt &quot;Calibri&quot;;
              <widget class="QWidget" name="leftSidedContent_2" native="true">
               <property name="minimumSize">
                <size>
-                <width>300</width>
+                <width>0</width>
                 <height>0</height>
                </size>
               </property>
@@ -179,11 +169,11 @@ font:  italic 12pt &quot;Calibri&quot;;
                <property name="bottomMargin">
                 <number>0</number>
                </property>
-               <item alignment="Qt::AlignLeft">
+               <item>
                 <widget class="QWidget" name="mainConstructInfoContainer" native="true">
                  <property name="minimumSize">
                   <size>
-                   <width>300</width>
+                   <width>0</width>
                    <height>0</height>
                   </size>
                  </property>
@@ -233,7 +223,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                      <item>
                       <widget class="QLabel" name="label_11">
                        <property name="sizePolicy">
-                        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                          <horstretch>0</horstretch>
                          <verstretch>0</verstretch>
                         </sizepolicy>
@@ -247,8 +237,14 @@ font:  italic 12pt &quot;Calibri&quot;;
                        <property name="font">
                         <font>
                          <family>Calibri</family>
-                         <pointsize>10</pointsize>
+                         <pointsize>14</pointsize>
+                         <weight>75</weight>
+                         <italic>false</italic>
+                         <bold>true</bold>
                         </font>
+                       </property>
+                       <property name="styleSheet">
+                        <string notr="true">font: 75 bold 14pt &quot;Calibri&quot;;</string>
                        </property>
                        <property name="text">
                         <string>Parent Construction</string>
@@ -258,22 +254,17 @@ font:  italic 12pt &quot;Calibri&quot;;
                        </property>
                       </widget>
                      </item>
-                     <item>
-                      <widget class="QPushButton" name="pushButton_3">
-                       <property name="text">
-                        <string>Show info</string>
-                       </property>
-                       <property name="icon">
-                        <iconset resource="../resources.qrc">
-                         <normaloff>:/Icons/Icons/arrow-left.svg</normaloff>:/Icons/Icons/arrow-left.svg</iconset>
-                       </property>
-                      </widget>
-                     </item>
                     </layout>
                    </widget>
                   </item>
                   <item>
                    <widget class="QWidget" name="parentPictureContaineer" native="true">
+                    <property name="minimumSize">
+                     <size>
+                      <width>350</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <layout class="QVBoxLayout" name="verticalLayout_12">
                      <item>
                       <widget class="QFrame" name="frame_5">
@@ -285,7 +276,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                        </property>
                        <layout class="QVBoxLayout" name="verticalLayout_11">
                         <item alignment="Qt::AlignHCenter">
-                         <widget class="QLabel" name="constructPicture">
+                         <widget class="QLabel" name="parentConstructionPicture">
                           <property name="sizePolicy">
                            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                             <horstretch>0</horstretch>
@@ -294,8 +285,8 @@ font:  italic 12pt &quot;Calibri&quot;;
                           </property>
                           <property name="minimumSize">
                            <size>
-                            <width>150</width>
-                            <height>150</height>
+                            <width>250</width>
+                            <height>250</height>
                            </size>
                           </property>
                           <property name="text">
@@ -316,7 +307,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                           </property>
                           <layout class="QGridLayout" name="gridLayout">
                            <item row="0" column="0">
-                            <widget class="QPushButton" name="showCADmodelBtn">
+                            <widget class="QPushButton" name="showParentConstructionCadModel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -333,7 +324,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item row="0" column="1">
-                            <widget class="QPushButton" name="pushButton">
+                            <widget class="QPushButton" name="goToParentConstructionPreview">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -350,7 +341,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item row="1" column="0">
-                            <widget class="QPushButton" name="show2DdocsBtn">
+                            <widget class="QPushButton" name="showParentConstructionDocs">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -363,23 +354,6 @@ font:  italic 12pt &quot;Calibri&quot;;
                              <property name="icon">
                               <iconset resource="../resources.qrc">
                                <normaloff>:/Icons/Icons/arrow-up-right.svg</normaloff>:/Icons/Icons/arrow-up-right.svg</iconset>
-                             </property>
-                            </widget>
-                           </item>
-                           <item row="1" column="1">
-                            <widget class="QPushButton" name="editConstructBtn">
-                             <property name="minimumSize">
-                              <size>
-                               <width>0</width>
-                               <height>25</height>
-                              </size>
-                             </property>
-                             <property name="text">
-                              <string>Edit</string>
-                             </property>
-                             <property name="icon">
-                              <iconset resource="../resources.qrc">
-                               <normaloff>:/Icons/Icons/edit-3.svg</normaloff>:/Icons/Icons/edit-3.svg</iconset>
                              </property>
                             </widget>
                            </item>
@@ -396,7 +370,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                    <widget class="QFrame" name="parentMainInfo">
                     <property name="minimumSize">
                      <size>
-                      <width>300</width>
+                      <width>0</width>
                       <height>0</height>
                      </size>
                     </property>
@@ -460,7 +434,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                           <property name="frameShadow">
                            <enum>QFrame::Raised</enum>
                           </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_5">
+                          <layout class="QHBoxLayout" name="horizontalLayout_13">
                            <property name="spacing">
                             <number>0</number>
                            </property>
@@ -514,9 +488,9 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="constructNameLabel">
+                            <widget class="QLabel" name="parentConstructNameLabel">
                              <property name="sizePolicy">
-                              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                                <horstretch>0</horstretch>
                                <verstretch>0</verstretch>
                               </sizepolicy>
@@ -542,7 +516,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>5</number>
                              </property>
                             </widget>
                            </item>
@@ -566,7 +540,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                           <property name="lineWidth">
                            <number>0</number>
                           </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_7">
+                          <layout class="QHBoxLayout" name="horizontalLayout_15">
                            <property name="spacing">
                             <number>0</number>
                            </property>
@@ -611,9 +585,9 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="constructTagLabel">
+                            <widget class="QLabel" name="parentConstructTagLabel">
                              <property name="sizePolicy">
-                              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                                <horstretch>0</horstretch>
                                <verstretch>0</verstretch>
                               </sizepolicy>
@@ -639,7 +613,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>5</number>
                              </property>
                             </widget>
                            </item>
@@ -649,12 +623,12 @@ font:  italic 12pt &quot;Calibri&quot;;
                         <item>
                          <widget class="QFrame" name="frame_14">
                           <property name="sizePolicy">
-                           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                             <horstretch>0</horstretch>
                             <verstretch>0</verstretch>
                            </sizepolicy>
                           </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_13">
+                          <layout class="QHBoxLayout" name="horizontalLayout_8">
                            <property name="spacing">
                             <number>0</number>
                            </property>
@@ -688,7 +662,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                               </font>
                              </property>
                              <property name="text">
-                              <string>Manucaturing site localization:</string>
+                              <string>Manucaturing site:</string>
                              </property>
                              <property name="textFormat">
                               <enum>Qt::AutoText</enum>
@@ -702,7 +676,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="constructLocalizationLabel">
+                            <widget class="QLabel" name="parentConstructLocalizationLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -724,7 +698,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>5</number>
                              </property>
                             </widget>
                            </item>
@@ -734,12 +708,12 @@ font:  italic 12pt &quot;Calibri&quot;;
                         <item>
                          <widget class="QFrame" name="frame_10">
                           <property name="sizePolicy">
-                           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                             <horstretch>0</horstretch>
                             <verstretch>0</verstretch>
                            </sizepolicy>
                           </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_9">
+                          <layout class="QHBoxLayout" name="horizontalLayout_4">
                            <property name="spacing">
                             <number>0</number>
                            </property>
@@ -784,9 +758,9 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="constructOwnerLabel">
+                            <widget class="QLabel" name="parentConstructOwnerLabel">
                              <property name="sizePolicy">
-                              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                                <horstretch>0</horstretch>
                                <verstretch>0</verstretch>
                               </sizepolicy>
@@ -812,7 +786,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>5</number>
                              </property>
                             </widget>
                            </item>
@@ -822,12 +796,12 @@ font:  italic 12pt &quot;Calibri&quot;;
                         <item>
                          <widget class="QFrame" name="frame_13">
                           <property name="sizePolicy">
-                           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                             <horstretch>0</horstretch>
                             <verstretch>0</verstretch>
                            </sizepolicy>
                           </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_10">
+                          <layout class="QHBoxLayout" name="horizontalLayout_5">
                            <property name="spacing">
                             <number>0</number>
                            </property>
@@ -846,7 +820,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                            <item>
                             <widget class="QLabel" name="label_34">
                              <property name="sizePolicy">
-                              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                                <horstretch>0</horstretch>
                                <verstretch>0</verstretch>
                               </sizepolicy>
@@ -878,9 +852,9 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="constructMaterialLabel">
+                            <widget class="QLabel" name="parentConstructMaterialLabel">
                              <property name="sizePolicy">
-                              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                                <horstretch>0</horstretch>
                                <verstretch>0</verstretch>
                               </sizepolicy>
@@ -906,7 +880,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>5</number>
                              </property>
                             </widget>
                            </item>
@@ -916,12 +890,12 @@ font:  italic 12pt &quot;Calibri&quot;;
                         <item>
                          <widget class="QFrame" name="frame_9">
                           <property name="sizePolicy">
-                           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                             <horstretch>0</horstretch>
                             <verstretch>0</verstretch>
                            </sizepolicy>
                           </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_8">
+                          <layout class="QHBoxLayout" name="horizontalLayout_16">
                            <property name="spacing">
                             <number>0</number>
                            </property>
@@ -966,9 +940,9 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="constructNumberLabel">
+                            <widget class="QLabel" name="parentConstructNumberLabel">
                              <property name="sizePolicy">
-                              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                                <horstretch>0</horstretch>
                                <verstretch>0</verstretch>
                               </sizepolicy>
@@ -994,7 +968,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
                              </property>
                              <property name="indent">
-                              <number>40</number>
+                              <number>5</number>
                              </property>
                             </widget>
                            </item>
@@ -1009,7 +983,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                           <property name="frameShadow">
                            <enum>QFrame::Raised</enum>
                           </property>
-                          <layout class="QVBoxLayout" name="verticalLayout_28">
+                          <layout class="QHBoxLayout" name="horizontalLayout_10">
                            <property name="spacing">
                             <number>0</number>
                            </property>
@@ -1057,9 +1031,9 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="constructAdditionalInfoLabel">
+                            <widget class="QLabel" name="parentConstructAdditionalInfoLabel">
                              <property name="sizePolicy">
-                              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                                <horstretch>0</horstretch>
                                <verstretch>0</verstretch>
                               </sizepolicy>
@@ -1091,7 +1065,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                               <bool>true</bool>
                              </property>
                              <property name="indent">
-                              <number>10</number>
+                              <number>5</number>
                              </property>
                             </widget>
                            </item>
@@ -1190,7 +1164,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                          </widget>
                         </item>
                         <item>
-                         <widget class="QLabel" name="label_12">
+                         <widget class="QLabel" name="parentConstructTypeLabel">
                           <property name="minimumSize">
                            <size>
                             <width>0</width>
@@ -1236,7 +1210,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                          <widget class="QLabel" name="label_48">
                           <property name="minimumSize">
                            <size>
-                            <width>170</width>
+                            <width>0</width>
                             <height>0</height>
                            </size>
                           </property>
@@ -1250,7 +1224,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                            </font>
                           </property>
                           <property name="text">
-                           <string>Quality Norm:</string>
+                           <string>Quality:</string>
                           </property>
                           <property name="alignment">
                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1261,7 +1235,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                          </widget>
                         </item>
                         <item>
-                         <widget class="QLabel" name="label_13">
+                         <widget class="QLabel" name="parentConstructQualityNormLabel">
                           <property name="minimumSize">
                            <size>
                             <width>0</width>
@@ -1276,63 +1250,8 @@ font:  italic 12pt &quot;Calibri&quot;;
                           </property>
                          </widget>
                         </item>
-                       </layout>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QFrame" name="frame_45">
-                       <property name="frameShape">
-                        <enum>QFrame::StyledPanel</enum>
-                       </property>
-                       <property name="frameShadow">
-                        <enum>QFrame::Raised</enum>
-                       </property>
-                       <layout class="QHBoxLayout" name="horizontalLayout_13">
-                        <property name="spacing">
-                         <number>0</number>
-                        </property>
-                        <property name="leftMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="topMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="rightMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="bottomMargin">
-                         <number>0</number>
-                        </property>
                         <item>
-                         <widget class="QLabel" name="label_49">
-                          <property name="minimumSize">
-                           <size>
-                            <width>170</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="font">
-                           <font>
-                            <family>Calibri</family>
-                            <pointsize>10</pointsize>
-                            <weight>50</weight>
-                            <italic>false</italic>
-                            <bold>false</bold>
-                           </font>
-                          </property>
-                          <property name="text">
-                           <string>Quality Class:</string>
-                          </property>
-                          <property name="alignment">
-                           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                          </property>
-                          <property name="indent">
-                           <number>10</number>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLabel" name="label_15">
+                         <widget class="QLabel" name="parentConstructQualityClassLabel">
                           <property name="minimumSize">
                            <size>
                             <width>0</width>
@@ -1372,7 +1291,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                          <widget class="QLabel" name="label_50">
                           <property name="minimumSize">
                            <size>
-                            <width>170</width>
+                            <width>0</width>
                             <height>0</height>
                            </size>
                           </property>
@@ -1386,7 +1305,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                            </font>
                           </property>
                           <property name="text">
-                           <string>Tolerances Norm:</string>
+                           <string>Tolerances:</string>
                           </property>
                           <property name="alignment">
                            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1397,7 +1316,23 @@ font:  italic 12pt &quot;Calibri&quot;;
                          </widget>
                         </item>
                         <item>
-                         <widget class="QLabel" name="label_16">
+                         <widget class="QLabel" name="parentConstructTolerancesNormLabel">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>25</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string/>
+                          </property>
+                          <property name="indent">
+                           <number>20</number>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QLabel" name="parentConstructTolerancesLevelLabel">
                           <property name="minimumSize">
                            <size>
                             <width>0</width>
@@ -1439,50 +1374,6 @@ font:  italic 12pt &quot;Calibri&quot;;
                         <property name="bottomMargin">
                          <number>0</number>
                         </property>
-                        <item>
-                         <widget class="QLabel" name="label_51">
-                          <property name="minimumSize">
-                           <size>
-                            <width>170</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="font">
-                           <font>
-                            <family>Calibri</family>
-                            <pointsize>10</pointsize>
-                            <weight>50</weight>
-                            <italic>false</italic>
-                            <bold>false</bold>
-                           </font>
-                          </property>
-                          <property name="text">
-                           <string>Tolerances level:</string>
-                          </property>
-                          <property name="alignment">
-                           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-                          </property>
-                          <property name="indent">
-                           <number>10</number>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLabel" name="label_17">
-                          <property name="minimumSize">
-                           <size>
-                            <width>0</width>
-                            <height>25</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string/>
-                          </property>
-                          <property name="indent">
-                           <number>20</number>
-                          </property>
-                         </widget>
-                        </item>
                        </layout>
                       </widget>
                      </item>
@@ -1578,7 +1469,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="label_18">
+                            <widget class="QLabel" name="parentConstructSubcontractorLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -1658,7 +1549,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                             </widget>
                            </item>
                            <item>
-                            <widget class="QLabel" name="label_19">
+                            <widget class="QLabel" name="parentConstructSubcontractorContactLabel">
                              <property name="minimumSize">
                               <size>
                                <width>0</width>
@@ -1701,7 +1592,7 @@ font:  italic 12pt &quot;Calibri&quot;;
            </property>
            <property name="minimumSize">
             <size>
-             <width>640</width>
+             <width>550</width>
              <height>0</height>
             </size>
            </property>
@@ -1713,7 +1604,6 @@ font:  italic 12pt &quot;Calibri&quot;;
 	font: 75 12pt &quot;Calibri&quot;;
 	background-color: rgb(255, 255, 255);
 }
-
 QLineEdit{
 	background-color: rgb(255, 255, 255);
 	font: italic 10pt &quot;Calibri&quot; rgb(150, 150, 150);
@@ -1721,22 +1611,40 @@ QLineEdit{
 	border-bottom: 1px solid rgb(30, 210, 80);
 	border-radius: 10px; 
 }
-
 QLabel{
 	font-family: Calibri, Helvetica, sans-serif;
-	font-size: 14pt;
+	font-size: 10pt;
+	background-color: rgb(255, 255, 255);
 }
-
 QComboBox{
 background-color:rgb(255, 255, 255);
 color:rgb(86, 86, 86);
 padding-left: 10px;
 padding-right: 30px;
 border: 0px;
-font:  italic 12pt &quot;Calibri&quot;;
+font:  italic 10pt &quot;Calibri&quot;;
 }</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_3">
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>50</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">font: 75 bold 14pt &quot;Calibri&quot;;</string>
+              </property>
+              <property name="text">
+               <string>Subconstruction info:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QWidget" name="constructInfoInputContainer" native="true">
               <property name="sizePolicy">
@@ -1752,12 +1660,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                </size>
               </property>
               <property name="styleSheet">
-               <string notr="true">QLabel{
-	font-family: Calibri, Helvetica, sans-serif;
-	font-size: 15px;
-	font-style: normal;
-	font-weight: normal;
-}</string>
+               <string notr="true"/>
               </property>
               <layout class="QGridLayout" name="gridLayout_2">
                <property name="leftMargin">
@@ -1775,33 +1678,8 @@ font:  italic 12pt &quot;Calibri&quot;;
                <property name="spacing">
                 <number>10</number>
                </property>
-               <item row="2" column="1">
-                <widget class="QLineEdit" name="constructMaterialLine_3">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Series size</string>
-                 </property>
-                 <property name="clearButtonEnabled">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
                <item row="2" column="0">
-                <widget class="QLineEdit" name="constructNumberLine_2">
+                <widget class="QLineEdit" name="newSubconstructionSerialNo">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -1826,7 +1704,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                 </widget>
                </item>
                <item row="4" column="1">
-                <widget class="QLineEdit" name="constructSubcontractorLine_2">
+                <widget class="QLineEdit" name="newSubconstructionSubcontractor">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -1854,7 +1732,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                 </widget>
                </item>
                <item row="8" column="1">
-                <widget class="QComboBox" name="constructTolerancesNormCombo_2">
+                <widget class="QComboBox" name="newSubconstructionTolerancesNormCombo">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -1864,7 +1742,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                 </widget>
                </item>
                <item row="6" column="1">
-                <widget class="QComboBox" name="constructQualityNormCombo_2">
+                <widget class="QComboBox" name="newSubconstructionQualityNormCombo">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
@@ -1883,7 +1761,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                 </widget>
                </item>
                <item row="8" column="2">
-                <widget class="QComboBox" name="constructTolerancesLevelCombo_2">
+                <widget class="QComboBox" name="newSubconstructionTolerancesLevelCombo">
                  <property name="enabled">
                   <bool>false</bool>
                  </property>
@@ -1901,8 +1779,248 @@ font:  italic 12pt &quot;Calibri&quot;;
                  </property>
                 </widget>
                </item>
+               <item row="1" column="2">
+                <widget class="QLineEdit" name="newSubconstructionOwner">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Owner/Client</string>
+                 </property>
+                 <property name="clearButtonEnabled">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="8" column="0">
+                <widget class="QLabel" name="label_20">
+                 <property name="text">
+                  <string>Tollerances requirements</string>
+                 </property>
+                 <property name="indent">
+                  <number>10</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="2">
+                <widget class="QComboBox" name="newSubconstructionQualityClassCombo">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="0">
+                <widget class="QLabel" name="label_2">
+                 <property name="text">
+                  <string>Quality Requirements</string>
+                 </property>
+                 <property name="indent">
+                  <number>10</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLineEdit" name="newSubconstructionName">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="cursorPosition">
+                  <number>0</number>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Construction Name</string>
+                 </property>
+                 <property name="cursorMoveStyle">
+                  <enum>Qt::VisualMoveStyle</enum>
+                 </property>
+                 <property name="clearButtonEnabled">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QPushButton" name="newSubconstructionAddSubcontractorBtn">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Add subcontractor</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources.qrc">
+                   <normaloff>:/Icons/Icons/user-plus.svg</normaloff>:/Icons/Icons/user-plus.svg</iconset>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>20</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="newSubconstructionTag">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Tag/Drawing reference number</string>
+                 </property>
+                 <property name="clearButtonEnabled">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="2">
+                <widget class="QLineEdit" name="newSubconstructionSubcontractorContact">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="placeholderText">
+                  <string>contact (phone, e-mail)</string>
+                 </property>
+                 <property name="clearButtonEnabled">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
                <item row="2" column="2">
-                <widget class="QComboBox" name="constructTypeCombo_2">
+                <widget class="QLineEdit" name="newSubconstructionLocalization">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Manufacturing site localization</string>
+                 </property>
+                 <property name="clearButtonEnabled">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QLineEdit" name="newSubconstructionMainMaterial">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Main material</string>
+                 </property>
+                 <property name="clearButtonEnabled">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0">
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string>Construction Type:</string>
+                 </property>
+                 <property name="indent">
+                  <number>10</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="1">
+                <widget class="QComboBox" name="newSubconstructionTypeCombo">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -2128,235 +2246,11 @@ font:  italic 12pt &quot;Calibri&quot;;
                  </property>
                 </widget>
                </item>
-               <item row="3" column="0">
-                <widget class="QLineEdit" name="constructMaterialLine_2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Main material</string>
-                 </property>
-                 <property name="clearButtonEnabled">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QLineEdit" name="constructLocalizationLine_2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Manufacturing site localization</string>
-                 </property>
-                 <property name="clearButtonEnabled">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
-                <widget class="QLineEdit" name="constructOwnerLine_2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Owner/Client</string>
-                 </property>
-                 <property name="clearButtonEnabled">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="8" column="0">
-                <widget class="QLabel" name="label_20">
-                 <property name="text">
-                  <string>Tollerances requirements</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="2">
-                <widget class="QComboBox" name="constructQualityClassCombo_2">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="0">
-                <widget class="QLabel" name="label_2">
-                 <property name="text">
-                  <string>Quality Requirements</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLineEdit" name="constructNameLine_2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="cursorPosition">
-                  <number>0</number>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Construction Name</string>
-                 </property>
-                 <property name="cursorMoveStyle">
-                  <enum>Qt::VisualMoveStyle</enum>
-                 </property>
-                 <property name="clearButtonEnabled">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="0">
-                <widget class="QPushButton" name="coopProductionBtn_3">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>Add subcontractor</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="../resources.qrc">
-                   <normaloff>:/Icons/Icons/user-plus.svg</normaloff>:/Icons/Icons/user-plus.svg</iconset>
-                 </property>
-                 <property name="iconSize">
-                  <size>
-                   <width>20</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                 <property name="checkable">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QLineEdit" name="constructTagLine_2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Tag/Drawing reference number</string>
-                 </property>
-                 <property name="clearButtonEnabled">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="2">
-                <widget class="QLineEdit" name="subContractorContact_2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                 <property name="placeholderText">
-                  <string>contact (phone, e-mail)</string>
-                 </property>
-                 <property name="clearButtonEnabled">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
               </layout>
              </widget>
             </item>
             <item>
-             <widget class="QLineEdit" name="additionalInfoLine">
+             <widget class="QLineEdit" name="newSubconstructionAdditionalInfoLine">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                 <horstretch>0</horstretch>
@@ -2390,7 +2284,7 @@ font:  italic 12pt &quot;Calibri&quot;;
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_7">
                <item>
-                <widget class="QPushButton" name="cadModelBtn_3">
+                <widget class="QPushButton" name="newSubconstructionAddCadBtn">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -2621,7 +2515,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="documentationLinktbn_3">
+                <widget class="QPushButton" name="newSubconstructionAddDocsBtn">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                    <horstretch>0</horstretch>
@@ -2870,9 +2764,9 @@ font:  italic 12pt &quot;Calibri&quot;;
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_14">
                <item>
-                <widget class="QPushButton" name="addConstructionBtn">
+                <widget class="QPushButton" name="newSubconstructionAddSubconstruction">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -2887,7 +2781,7 @@ font:  italic 12pt &quot;Calibri&quot;;
                   </size>
                  </property>
                  <property name="text">
-                  <string>Add construction</string>
+                  <string>Add Subconstruction</string>
                  </property>
                  <property name="icon">
                   <iconset resource="../resources.qrc">
@@ -2924,55 +2818,44 @@ font:  italic 12pt &quot;Calibri&quot;;
            </property>
            <property name="minimumSize">
             <size>
-             <width>0</width>
-             <height>640</height>
+             <width>650</width>
+             <height>850</height>
             </size>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_15">
+            <property name="spacing">
+             <number>2</number>
+            </property>
+            <property name="leftMargin">
+             <number>5</number>
+            </property>
+            <property name="topMargin">
+             <number>5</number>
+            </property>
+            <property name="rightMargin">
+             <number>5</number>
+            </property>
+            <property name="bottomMargin">
+             <number>5</number>
+            </property>
             <item>
              <widget class="QWidget" name="cadViewerContainer" native="true">
               <property name="minimumSize">
                <size>
-                <width>580</width>
-                <height>400</height>
+                <width>560</width>
+                <height>300</height>
                </size>
               </property>
-              <widget class="QLabel" name="label_4">
-               <property name="geometry">
-                <rect>
-                 <x>40</x>
-                 <y>30</y>
-                 <width>111</width>
-                 <height>16</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>CadViewer</string>
-               </property>
-              </widget>
              </widget>
             </item>
             <item>
              <widget class="QWidget" name="docsViewerContainer" native="true">
               <property name="minimumSize">
                <size>
-                <width>580</width>
-                <height>400</height>
+                <width>560</width>
+                <height>300</height>
                </size>
               </property>
-              <widget class="QLabel" name="label_7">
-               <property name="geometry">
-                <rect>
-                 <x>30</x>
-                 <y>40</y>
-                 <width>121</width>
-                 <height>16</height>
-                </rect>
-               </property>
-               <property name="text">
-                <string>DocsViewer</string>
-               </property>
-              </widget>
              </widget>
             </item>
            </layout>

@@ -2,7 +2,6 @@ import mariadb
 import sys
 import pandas as pd
 
-
 with open(r"D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\DekiResources\database_con.txt",
           'r', encoding="UTF-8") as f:
     db_credentials = f.read().split("\n")
@@ -55,8 +54,9 @@ class Database:
     def insert(self, table_name, values: list):
         table_name = validate_text(table_name)
         try:
-            self.cur.execute(f"INSERT INTO {table_name} ({','.join([_ for _ in self.get_columns_names(f'{table_name}')])})"
-                             f" VALUES ({','.join(['%s' for _ in values])})", values)
+            self.cur.execute(
+                f"INSERT INTO {table_name} ({','.join([_ for _ in self.get_columns_names(f'{table_name}')])})"
+                f" VALUES ({','.join(['%s' for _ in values])})", values)
         except ValueError:
             print(f'Values has to be inserted as a py list (not any other arrays!).')
         self.conn.commit()
@@ -125,16 +125,17 @@ class Database:
         print(f"Table {table_name} fully cleared.")
 
     def table_into_DF(self, table_name):
+        self.reconnect()
         table_name = validate_text(table_name)
         qry = f'SELECT * FROM {table_name}'
         self.cur.execute(qry)
         records = self.cur.fetchall()
         table_cols = self.get_columns_names(table_name)
-
         df = pd.DataFrame(columns=table_cols)
         for record in records:
-            series = pd.Series(record, index=table_cols)
-            df = df.append(series, ignore_index=True)
+            row_dict = {k: v for k, v in zip(table_cols, record)}
+            x = pd.DataFrame.from_dict([row_dict])
+            df = pd.concat([df, x])
         return df
 
     def get_row(self, table_name: str, col_name: str, row_pos: str):
@@ -189,7 +190,7 @@ class Database:
     # searches if given table name exists in SQL server tables with table_schema=public
     # Boolean
     def is_table(self, table_name):
-        table_name = validate_text(table_name).lower()
+        table_name = validate_text(table_name)
         tables_list = self.show_tables(DATABASE_NAME)
         for table in tables_list:
             if table[0] == table_name:
@@ -210,7 +211,6 @@ class Database:
         print(f"Column {column_name} has been added to table {table_name}")
 
     def check_records_number(self, table_name):
-
         self.cur.execute(f'SELECT * from {table_name}')
         records = self.cur.fetchall()
         if records is not None:
@@ -218,29 +218,51 @@ class Database:
         else:
             return 0
 
+    def df_from_filteredTable(self, table_name, column_name, value):
+        qry = f"SELECT * FROM {table_name} WHERE {column_name} = {value}  ORDER BY ID"
+        self.cur.execute(qry)
+        records = self.cur.fetchall()
+        table_cols = self.get_columns_names(table_name)
+        df = pd.DataFrame(columns=table_cols)
+        for record in records:
+            row_dict = {k: v for k, v in zip(table_cols, record)}
+            x = pd.DataFrame.from_dict([row_dict])
+            df = pd.concat([df, x])
+        return df
+
+    def reconnect(self):
+        self.cur.close()
+        self.conn.close()
+        print(f"Database connection close - trying to reconnect...")
+        self.__init__()
+
+
 
 if __name__ == "__main__":
     db = Database()
-
-    print(db.show_tables(DATABASE_NAME))
-    dct = {
-        'name': 'Zbiornik LNG',
-        'tag': 'self.constructTagLine.text()',
-        'number': 'DKI_LNG3200_MS_000',
-        'owner': 'self.constructOwnerLine.text()',
-        'localization': 'self.constructLocalizationLine.text()',
-        'material': 'self.constructMaterialLine.text()',
-        'additional_info': 'NaN',
-        'subcontractor': "NaN",
-        'sub_contact': "NaN",
-        'construct_type': 'str(self.constructTypeCombo.currentText())',
-        'quality_norm': 'str(self.constructQualityNormCombo.currentText())',
-        'quality_class': 'str(self.constructQualityClassCombo.currentText())',
-        'tolerances_norm': 'str(self.constructTolerancesNormCombo.currentText())',
-        'tolerances_level': 'str(self.constructTolerancesLevelCombo.currentText())'}
-
-    db.create_table('test_2022_constructions',
-                    ['tag', 'number', 'name', 'owner', 'localization',
-                     'material', 'additional_info', 'subcontractor', 'sub_contact', 'construct_type',
-                     'quality_norm', 'quality_class', 'tolerances_norm', 'tolerances_level'])
-    db.insert('test_2022_constructions', dct.values())
+    db_rows = db.df_from_filteredTable('deki_2022_SubConstructions', 'parent_construction_id', 1)
+    print(db_rows['id'].tolist())
+    for i in db_rows['id'].tolist():
+        print(i)
+    # print(db.show_tables(DATABASE_NAME))
+    # dct = {
+    #     'name': 'Zbiornik LNG',
+    #     'tag': 'self.constructTagLine.text()',
+    #     'number': 'DKI_LNG3200_MS_000',
+    #     'owner': 'self.constructOwnerLine.text()',
+    #     'localization': 'self.constructLocalizationLine.text()',
+    #     'material': 'self.constructMaterialLine.text()',
+    #     'additional_info': 'NaN',
+    #     'subcontractor': "NaN",
+    #     'sub_contact': "NaN",
+    #     'construct_type': 'str(self.constructTypeCombo.currentText())',
+    #     'quality_norm': 'str(self.constructQualityNormCombo.currentText())',
+    #     'quality_class': 'str(self.constructQualityClassCombo.currentText())',
+    #     'tolerances_norm': 'str(self.constructTolerancesNormCombo.currentText())',
+    #     'tolerances_level': 'str(self.constructTolerancesLevelCombo.currentText())'}
+    #
+    # db.create_table('test_2022_constructions',
+    #                 ['tag', 'number', 'name', 'owner', 'localization',
+    #                  'material', 'additional_info', 'subcontractor', 'sub_contact', 'construct_type',
+    #                  'quality_norm', 'quality_class', 'tolerances_norm', 'tolerances_level'])
+    # db.insert('test_2022_constructions', dct.values())

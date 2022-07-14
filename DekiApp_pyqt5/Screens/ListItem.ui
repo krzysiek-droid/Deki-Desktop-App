@@ -258,7 +258,7 @@ QPushButton{
           <number>1</number>
          </property>
          <item alignment="Qt::AlignHCenter|Qt::AlignBottom">
-          <widget class="QPushButton" name="editBtn">
+          <widget class="QPushButton" name="componentsBtn">
            <property name="minimumSize">
             <size>
              <width>150</width>

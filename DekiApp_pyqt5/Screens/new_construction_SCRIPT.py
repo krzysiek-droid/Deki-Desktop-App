@@ -21,12 +21,15 @@ srv_files_filepath = r'D:\dekiApp\Deki_ServerFiles'
 class CadViewerExtended(QWidget):
     def __init__(self, step_filepath: str):
         super().__init__()
-        import cadViewWidget_SCRIPT
+        # set attribute that deletes the instance of this class on closeEvent
+        self.setAttribute(Qt.WA_DeleteOnClose)
         loadUi(r'cadViewWidgetExtended.ui', self)
-
+        self.filepath = step_filepath
         self.screenshot = QtGui.QPixmap()
 
-        self.cadViewerWidget = cadViewWidget_SCRIPT.CadViewer(step_filepath, viewport_width=self.viewerFrame.baseSize().width(),
+        import cadViewWidget_SCRIPT
+        self.cadViewerWidget = cadViewWidget_SCRIPT.CadViewer(self.filepath,
+                                                              viewport_width=self.viewerFrame.baseSize().width(),
                                                               viewport_height=self.viewerFrame.baseSize().height())
         self.viewerFrameLayout.addWidget(self.cadViewerWidget)
         self.cadViewerWidget.start_display()
@@ -56,10 +59,14 @@ class CadViewerExtended(QWidget):
     def showEvent(self, a0: QtGui.QShowEvent) -> None:
         self.resize(300, 300)
 
+
 class NewConstructDialog(QDialog):
     def __init__(self):
         super(NewConstructDialog, self).__init__()
+        # set attribute that deletes the instance of this class on closeEvent
+        self.setAttribute(Qt.WA_DeleteOnClose)
         loadUi(r'new_construction_UI.ui', self)
+        print(QApplication.topLevelWidgets())
 
         #   ------------------------------------Class members-----------------------------------------------------------
         self.cadModelViewWidget = None  # QWidget
@@ -78,6 +85,11 @@ class NewConstructDialog(QDialog):
                                                 self.subContractorContact.show()) if self.coopProductionBtn.isChecked() else
                                                (self.constructSubcontractorLine.hide(),
                                                 self.subContractorContact.hide()))
+
+        # import InspectionPlannerScreen_SCRIPT
+        # self.goBackBtn.clicked.connect(lambda:
+        #     self.parent().changeScreen(self, InspectionPlannerScreen_SCRIPT.InspectionPlannerScreen()) if self.parent() is not None
+        #     else print('no parent'))
 
         #   ------------------------------------ComboBoxes scripts------------------------------------------------------
         self.constructTypeCombo.addItems(quality_norms.keys())
@@ -107,15 +119,11 @@ class NewConstructDialog(QDialog):
         if fileName:
             if not self.cadModelViewWidget:
                 self.cadModelViewWidget = CadViewerExtended(fileName)
-
                 # Create Layout for cadModelViewWidget
                 grid = QVBoxLayout()
-                grid.addWidget(self.cadModelViewWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
-                self.viewerFrame.setLayout(grid)
+                grid.addWidget(self.cadModelViewWidget)
+                self.cadViewerContainer.setLayout(grid)
 
-                # To start viewing the cadModel it is needed to call the _display member of canvas, call the
-                # method for render and display such as DisplayShape() etc.;   Test() to display sample model
-                self.cadModelViewWidget.start_display()
                 if self.validate_info():
                     self.addConstructionBtn.setEnabled(True)
             else:
@@ -132,7 +140,7 @@ class NewConstructDialog(QDialog):
             self.dxfModelWidget = pdfviewer.dxfViewerWidget(fileName)
             # Create Layout for cadModelViewWidget
             grid = QHBoxLayout()
-            grid.addWidget(self.dxfModelWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
+            grid.addWidget(self.dxfModelWidget)
             self.dxfViewer.setLayout(grid)
 
     def showPdfViewer(self):
@@ -141,20 +149,20 @@ class NewConstructDialog(QDialog):
                                                   "pdf (*.pdf);;All Files (*)", options=options)
         if fileName:
             print(f'Opening pdf: {fileName}')
-            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fileName)
+            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fileName, parent=self.docsViewerContainer)
             # Create layout for pdfViewerWidget
             grid = QHBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
             # Insert a pdfViewerWidget into docViewer Widget (widget for pdf viewing)
-            self.docViewer.setLayout(grid)
+            self.docsViewerContainer.setLayout(grid)
             if self.validate_info():
                 self.addConstructionBtn.setEnabled(True)
 
     def addConstruction(self):
         if self.validate_info():
             print('adding to database...')
-            new_construction = db_objects.Construction()
-            new_construction.info = {'id': f'{new_construction.update_records() + 1}',
+            new_construction = db_objects.MainConstruction()
+            new_construction.info = {'id': f'{new_construction.update_records_amount() + 1}',
                                      'name': self.constructNameLine.text(),
                                      'tag': self.constructTagLine.text(),
                                      'serial_number': self.constructNumberLine.text(),
@@ -172,11 +180,14 @@ class NewConstructDialog(QDialog):
                                      'quality_class': str(self.constructQualityClassCombo.currentText()),
                                      'tolerances_norm': str(self.constructTolerancesNormCombo.currentText()),
                                      'tolerances_level': str(self.constructTolerancesLevelCombo.currentText())}
+
             new_construction.picture = self.cadModelViewWidget.screenshot
             new_construction.pdfDocsPath = self.pdfViewerWidget.filepath
+
             new_construction.stpModelPath = self.cadModelViewWidget.filepath
-            new_construction.save_construction()
-            print("Construction added to database successfully.")
+
+            new_construction.save_main_construction()
+            print("MainConstruction added to database successfully.")
 
             if type(self.parent()) == QStackedWidget:
                 import construction_preview_SCRIPT
@@ -224,17 +235,14 @@ class NewConstructDialog(QDialog):
         self.constructTolerancesLevelCombo.setEnabled(True)
         self.constructTolerancesLevelCombo.addItems(tolerances_norms[chosen])
 
-    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
-        print(self.width(), self.height())
-
 
 #   ----------------------------------------Main script (for Screen testing purposes)-----------------------------------
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    mainWindow = CadViewerExtended("../DekiResources/Zbiornik LNG assembly.stp")
+    # mainWindow = CadViewerExtended("../DekiResources/Zbiornik LNG assembly.stp")
+    mainWindow = NewConstructDialog()
     mainWindow.show()
-
 
     try:
         sys.exit(app.exec_())

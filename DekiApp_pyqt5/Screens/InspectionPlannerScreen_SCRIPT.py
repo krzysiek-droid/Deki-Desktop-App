@@ -2,7 +2,8 @@ import sys
 
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
-
+from PyQt5.QtCore import Qt
+from PyQt5 import sip
 import db_objects as dbo
 import gnrl_database_con as database
 
@@ -15,75 +16,91 @@ import pathlib
 class CustomListItem(QWidget):
     def __init__(self, constructionID):
         super(CustomListItem, self).__init__()
+        # set attribute that deletes the instance of this class on closeEvent
+        self.setAttribute(Qt.WA_DeleteOnClose)
         loadUi(r'ListItem.ui', self)
         self.constructionID = constructionID
         # Get access to QMainWindow instance for its member methods, and save its reference as a member variable
         self.mainWindowInstance = None
-        for widget in QApplication.topLevelWidgets():
-            if widget.objectName() == 'inspectionPlannerScreen':
-                self.mainWindowInstance = widget
-
         # Trigger a method of different object, in this case the InspectionPlanningMainWindow
         # Updates the rightSidedContent of the InspectionPlanningMainWindow
         # in lambda definition an "event" has to be passed for proper functionality
-        self.mouseReleaseEvent = lambda event: self.mainWindowInstance.updateRightMenu(self.constructionID)
+        self.mouseReleaseEvent = lambda event: self.update_selfInfo()
+        self.componentsBtn.clicked.connect(lambda: print(QApplication.topLevelWidgets()))
+
+    def update_selfInfo(self):
+        for widget in QApplication.topLevelWidgets():
+            searched_child = widget.findChild(QWidget, name='inspectionPlannerScreen')
+            if searched_child is not None:
+                print(f"found inspectionPlannerScreen in toplevelWidgets, {searched_child}")
+                self.mainWindowInstance = searched_child
+                self.mainWindowInstance.updateRightMenu(self.constructionID)
+                break
+            elif widget.objectName() == 'inspectionPlannerScreen':
+                print(f"widget object name is: {widget.objectName()}")
+                self.mainWindowInstance = widget
+                self.mainWindowInstance.updateRightMenu(self.constructionID)
+                break
 
 
 class InspectionPlannerScreen(QWidget):
-    def __init__(self):
+    def __init__(self, connected_database=None):
         super().__init__()
         loadUi(r'InspectionPlannerScreen_UI.ui', self)
         self.currentListItemID = None
-
         # Screen loading scripts
         self.goToConstructionBtn.setEnabled(False)
-        print(f'Loading screen {self.objectName()} from parent widget: {self.parent()}')
         # open database connection
-        self.db = database.Database()
+        self.db = database.Database() if connected_database is None else connected_database
         # defining the list of constructions widget
-        self.scrolledContentWidget = QWidget()
-        self.scrolledContentWidget.setObjectName('scrolledContentWidget')
-        self.scrolledContentLayout = QVBoxLayout()
+        self.scrolledContentWidget = None
         # Load list of constructions
         self.loadConstructionsList()
-        self.scrolledContentLayout.setSpacing(1)
-
-        # button allocations
-        # change screen for 'new_construction'
+        # --------------------------------------------------------------------------button allocations
+        # show dialog 'new_construction'
         import new_construction_SCRIPT
         self.addConstructionBtn.clicked.connect(
-            lambda: (self.parent().addWidget(new_construction_SCRIPT.NewConstructDialog()),
-                     self.parent().setCurrentIndex(self.parent().indexOf(self) + 1),
-                     self.parent().removeWidget(self)))
+            lambda: (self.showDialog(new_construction_SCRIPT.NewConstructDialog())))
 
         # change screen for 'construction_preview'
         import construction_preview_SCRIPT
         self.goToConstructionBtn.clicked.connect(
-            lambda: (self.parent().addWidget(construction_preview_SCRIPT.ConstructPreviewDialog(self.currentListItemID)),
-            self.parent().setCurrentIndex(self.parent().indexOf(self) + 1),
-            self.parent().removeWidget(self)))
+            lambda: (print(f"Loading construction Preview Screen for construction ID {self.currentListItemID}"),
+                     self.parent().changeScreen(self, construction_preview_SCRIPT.ConstructPreviewDialog(
+                         self.currentListItemID, connected_database=self.db)) if self.parent() is not None else
+                     print('no parent')))
 
     def loadConstructionsList(self):
-        for constructionID in range(len(self.db.table_into_DF('deki_2022_constructions'))):
-            constructionObject = dbo.Construction(self.db)
+        self.scrolledContentWidget = QWidget()
+        self.scrolledContentWidget.setObjectName('scrolledContentWidget')
+        scrolledContentLayout = QVBoxLayout()
+        scrolledContentLayout.setSpacing(1)
+        scrolledContentLayout.setAlignment(Qt.AlignTop)
+        constructionObject = dbo.MainConstruction(connected_database=self.db)
+        db_tableLength = len(self.db.table_into_DF('deki_2022_mainConstructions'))
+        print(db_tableLength)
+        for constructionID in range(db_tableLength):
             constructionObject.load_info(constructionID + 1)
             listItem = CustomListItem(constructionID + 1)
             listItem.constructionTag.setText(constructionObject.info["tag"])
             listItem.constructionName.setText(constructionObject.info['name'])
             listItem.constructionPicture.setPixmap(constructionObject.picture.scaled(120, 120, 1, 1))
             listItem.seriesSize.setText(constructionObject.info['serial_number'])
-            self.scrolledContentLayout.addWidget(listItem)
-
-        self.scrolledContentWidget.setLayout(self.scrolledContentLayout)
+            scrolledContentLayout.addWidget(listItem, alignment=Qt.AlignTop)
+        self.scrolledContentWidget.setLayout(scrolledContentLayout)
         self.scrollArea.setWidget(self.scrolledContentWidget)
 
+    def refresh_scrollArea(self):
+        self.scrolledContentWidget.deleteLater()
+        self.loadConstructionsList()
+
     def updateRightMenu(self, constructionID):
-        constructionObject = dbo.Construction(self.db)
+        constructionObject = dbo.MainConstruction(connected_database=self.db)
         constructionObject.load_info(constructionID)
         self.currentListItemID = constructionID
         self.constructionName.setText(constructionObject.info['name'])
         self.constructionTag.setText(constructionObject.info['tag'])
-        self.constructionSerialNo.setText(constructionObject.info['id'])  # TODO: change 'id' for 'serialNo'
+        self.constructionSerialNo.setText(str(constructionObject.info['id']))  # TODO: change 'id' for 'serialNo'
         self.constructionOwner.setText(constructionObject.info['owner'])
         self.constructionType.setText(constructionObject.info['construct_type'])
         self.constructionQualityNorm.setText(constructionObject.info['quality_norm'])
@@ -94,6 +111,11 @@ class InspectionPlannerScreen(QWidget):
         self.constructionCoopContact.setText(constructionObject.info['sub_contact'])
         self.constructionPicLarge.setPixmap(constructionObject.picture.scaled(300, 300, 1, 1))
         self.goToConstructionBtn.setEnabled(True)
+
+    def showDialog(self, dialog):
+        dialog.show()
+        dialog.closeEvent = lambda event: (
+            self.refresh_scrollArea())
 
 
 if __name__ == '__main__':

@@ -8,81 +8,137 @@ import pathlib
 
 '''
 Podcza instalacji aplikacji, należy ją połączyc z konkretną bazą danych i serwerem tzn. znać nazwę bazy i kody dostępu.
-Następnie tworzona jest baza danych dla wszystkich konstrukcji głównych o tagach: 
-<Nazwa firmy>_<rok założenia>_constructions
-Wszystkie kolejne tabele muszą mieć nazwę firmy jako pierwszy String w nazwa tj.: <nazwa firmy>_<...>
 '''
 srv_files_filepath = r'D:\dekiApp\Deki_ServerFiles\constructions_database'
 
 
 class Construction:
-    def __init__(self, accessible_database=None):
-        self.company_name = 'deki'
-        self.table_name = f'{self.company_name}_2022_constructions'
+    def __init__(self, companyName='deki', connected_database=None):
+        print(f"\n-----------------------------------------------------------------{type(self)} INITIALIZED")
+        self.table_name = None
         self.picture = None
         self.picturePath = None  # Path
         self.info = {}  # Dict
         self.stpModelPath = None
         self.pdfDocsPath = None
-        self.subassemblies = None  # List
-        self.db = database.Database() if accessible_database is None else accessible_database
+        self.db = database.Database() if connected_database is None else connected_database
         self.db_records = None
+        self.company_name = companyName
+        self.folderPath = None
 
-        self.update_records()
-
-    def update_records(self):
-        table_name = f'{self.company_name}_2022_constructions'
-        if self.db.is_table(table_name):
-            self.db_records = 0 if self.db.check_records_number(table_name) is None else self.db.check_records_number(
-                table_name)
+    # returns number of rows in database table (self.table_name)
+    def update_records_amount(self):
+        if self.db.is_table(self.table_name):
+            self.db_records = 0 if self.db.check_records_number(
+                self.table_name) is None else self.db.check_records_number(
+                self.table_name)
             return self.db_records
         else:
-            print(f'Could not find table {table_name} in database')
+            print(f'Could not find table {self.table_name} in database.')
             self.db_records = 0
             return 0
 
-    def save_construction(self):
-        if not self.db.is_table(f'{self.company_name}_2022_constructions'):
-            self.db.create_table(f'{self.company_name}_2022_constructions', list(self.info.keys()))
+
+class MainConstruction(Construction):
+    def __init__(self, connected_database=None):
+        super(MainConstruction, self).__init__(connected_database=connected_database)
+        self.table_name = f"{self.company_name}_2022_mainConstructions"
+        self.update_records_amount()
+
+    def save_main_construction(self):
+        if not self.db.is_table(self.table_name):
+            self.db.create_table(self.table_name, list(self.info.keys()))
             print('database created.')
-            self.save_construction()
-            self.update_records()
+            self.save_main_construction()
         else:
             print('database found, adding...')
-            dst_stpModelPath = srv_files_filepath + fr'\{self.info["tag"]}_cad.stp'
-            print(self.stpModelPath)
+            self.folderPath = srv_files_filepath + fr'\{self.info["tag"]}'
+            try:
+                pathlib.Path.mkdir(pathlib.Path(self.folderPath))
+                print(f'Directory {self.info["tag"]} created. ')
+            except FileExistsError:
+                print(f'Directory {self.info["tag"]} already exists.')
+
+            dst_stpModelPath = self.folderPath + fr'\{self.info["tag"]}_cad.stp'
             self.stpModelPath = shutil.copy2(self.stpModelPath, dst_stpModelPath)
-            print(f'STEP model copied and saved.')
-            dst_pdfDocsPath = srv_files_filepath + fr'\{self.info["tag"]}_docs.pdf'
+            print(f'STEP model copied and saved.-----', end=" ")
+            dst_pdfDocsPath = self.folderPath + fr'\{self.info["tag"]}_docs.pdf'
             self.pdfDocsPath = shutil.copy2(self.pdfDocsPath, dst_pdfDocsPath)
-            print(f'Docs copied and saved.')
-            self.picturePath = srv_files_filepath + fr'\{self.info["tag"]}_picture.png'
+            print(f'Docs copied and saved.-----', end=" ")
+            self.picturePath = self.folderPath + fr'\{self.info["tag"]}_picture.png'
             self.picture.save(self.picturePath, 'png')
             # TODO add file creation confirmation notification with pathlib.Path.exist()
-            print(f'CAD model picture saved.')
-            self.db.insert(f'{self.company_name}_2022_constructions', list(self.info.values()))
-            self.update_records()
+            print(f'CAD model picture saved.-----')
+            self.db.insert(self.table_name, list(self.info.values()))
 
     def load_info(self, construct_id):
-        print(f'loading data from: {self.table_name}, id: {construct_id}')
+        print(f'Loading data for mainConstruction from: {self.table_name} - Construction ID: {construct_id}....',
+              end=" ")
         keys = self.db.get_columns_names(self.table_name)
         values = self.db.get_row(self.table_name, 'id', f'{str(construct_id)}')[0]
         self.info = {k: v for k, v in zip(keys, values)}
-        self.picturePath = pathlib.Path(srv_files_filepath + fr'\{self.info["tag"]}_picture.png')
+        self.folderPath = srv_files_filepath + fr'\{self.info["tag"]}'
+        self.picturePath = pathlib.Path(self.folderPath + fr'\{self.info["tag"]}_picture.png')
         # checks if picture is available
-        print(pathlib.Path(srv_files_filepath + fr'\{self.info["tag"]}_picture.png').exists())
+        if not pathlib.Path(self.folderPath + fr'\{self.info["tag"]}_picture.png').exists():
+            print(f"Picture not found at given location!")
+            raise FileNotFoundError
         self.picture = QtGui.QPixmap()
         self.picture.load(str(self.picturePath))
-        self.stpModelPath = srv_files_filepath + fr'\{self.info["tag"]}_cad.stp'
-        self.pdfDocsPath = srv_files_filepath + fr'\{self.info["tag"]}_docs.pdf'
+        self.stpModelPath = self.folderPath + fr'\{self.info["tag"]}_cad.stp'
+        self.pdfDocsPath = self.folderPath + fr'\{self.info["tag"]}_docs.pdf'
+        print(f'Construction {self.info["name"]}-{self.info["tag"]} loaded.')
 
 
 class SubConstruction(Construction):
-    def __init__(self):
-        super(SubConstruction, self).__init__()
+    def __init__(self, parentConstruction=None, connected_database=None):
+        super(SubConstruction, self).__init__(connected_database=connected_database)
+        self.table_name = f'{self.company_name}_2022_SubConstructions'
+        self.parent_construction = MainConstruction().load_info(1) if parentConstruction is None else parentConstruction
+
+    def save_subConstruction(self):
+        if not self.db.is_table(self.table_name):
+            self.db.create_table(self.table_name, list(self.info.keys()))
+            print('database created.')
+            self.save_subConstruction()
+        else:
+            print('database found, adding...')
+            # TODO add folder for main construction creation, for organizing purposes
+            self.folderPath = self.parent_construction.folderPath + fr'\{self.info["tag"]}'
+            try:
+                pathlib.Path.mkdir(pathlib.Path(self.folderPath))
+                print(f'Directory {self.info["tag"]} created. ')
+            except FileExistsError:
+                print(f'Directory {self.info["tag"]} already exists.')
+            dst_stpModelPath = self.folderPath + fr'\{self.info["tag"]}_cad.stp'
+            self.stpModelPath = shutil.copy2(self.stpModelPath, dst_stpModelPath)
+            print(f'STEP model copied and saved.-----', end=" ")
+            dst_pdfDocsPath = self.folderPath + fr'\{self.info["tag"]}_docs.pdf'
+            self.pdfDocsPath = shutil.copy2(self.pdfDocsPath, dst_pdfDocsPath)
+            print(f'Docs copied and saved.-----', end=" ")
+            self.picturePath = self.folderPath + fr'\{self.info["tag"]}_picture.png'
+            self.picture.save(self.picturePath, 'png')
+            # TODO add file creation confirmation notification with pathlib.Path.exist()
+            print(f'CAD model picture saved.-----')
+            self.db.insert(self.table_name, list(self.info.values()))
+
+    def load_info(self, construct_id):
+        print(f'Loading data for subConstruction from: {self.table_name}, id: {construct_id}.....', end=" ")
+        keys = self.db.get_columns_names(self.table_name)
+        values = self.db.get_row(self.table_name, 'id', f'{str(construct_id)}')[0]
+        self.info = {k: v for k, v in zip(keys, values)}
+        self.folderPath = self.parent_construction.folderPath + fr'\{self.info["tag"]}'
+        self.picturePath = pathlib.Path(self.folderPath + fr'\{self.info["tag"]}_picture.png')
+        # checks if picture is available
+        if not pathlib.Path(self.folderPath + fr'\{self.info["tag"]}_picture.png').exists():
+            print(f"Picture not found at given location!")
+            raise FileNotFoundError
+        self.picture = QtGui.QPixmap()
+        self.picture.load(str(self.picturePath))
+        self.stpModelPath = self.folderPath + fr'\{self.info["tag"]}_cad.stp'
+        self.pdfDocsPath = self.folderPath + fr'\{self.info["tag"]}_docs.pdf'
+        print(f'SubConstruction {self.info["name"]}-{self.info["tag"]} loaded.')
 
 
 if __name__ == "__main__":
-    const = Construction()
-    const.load_info(1)
-    print(const.info)
+    const = SubConstruction()
