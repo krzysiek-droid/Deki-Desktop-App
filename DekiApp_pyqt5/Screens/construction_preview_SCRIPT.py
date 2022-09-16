@@ -40,18 +40,14 @@ class ConstructPreviewDialog(QDialog):
         self.construction.load_info(constructNumber)
         # open database connection
         self.db = database.Database() if connected_database is None else connected_database
-        self.scrolledContentWidget = QWidget()
-        self.scrolledContentWidget.setObjectName('scrolledContentWidget')
-        self.scrolledContentLayout = QVBoxLayout()
-        self.scrolledContentLayout.setSpacing(1)
-
+        # attributes for screen (scrollArea) reloading purposes
+        self.scrolledContentWidget = None
+        self.scrolledContentLayout = None
         # ---------------------------------------------------------------Screen loading functions----------------------
-
         self.mainConstructQualityInfoContainer.hide()
         # ---------------------------------------------------------------Button scripting------------------------------
         self.constructMoreInforBtn.clicked.connect(lambda: self.mainConstructQualityInfoContainer.hide()
-            if self.mainConstructQualityInfoContainer.isVisible() else self.mainConstructQualityInfoContainer.show())
-
+        if self.mainConstructQualityInfoContainer.isVisible() else self.mainConstructQualityInfoContainer.show())
         self.addSubassemblyBtn.clicked.connect(lambda: self.add_subassembly())
         import InspectionPlannerScreen_SCRIPT
         self.goBackBtn.clicked.connect(lambda: self.parent().changeScreen(self,
@@ -60,6 +56,8 @@ class ConstructPreviewDialog(QDialog):
         import new_subconstruction_SCRIPT
         self.addSubassemblyBtn.clicked.connect(
             lambda: (self.showDialog(new_subconstruction_SCRIPT.NewSubconstructionDialog(self.construction))))
+
+        self.editConstructBtn.clicked.connect(lambda: self.refresh_subConstructionList())
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
         self.constructPicture.setPixmap(self.construction.picture.scaled(200, 200, 1, 1))
         self.constructNameLabel.setText(self.construction.info['name'])
@@ -90,7 +88,6 @@ class ConstructPreviewDialog(QDialog):
             # Create Layout for cadModelViewWidget
             grid = QVBoxLayout()
             grid.addWidget(self.cadModelViewWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
-
             self.cadViewerContainer.setLayout(grid)
             self.cadModelViewWidget.start_display()
         else:
@@ -114,47 +111,40 @@ class ConstructPreviewDialog(QDialog):
 
     def load_SubConstructionsList(self):
         # Check if scrollArea needs to be refreshed, if its empty load all subs
-        if len(self.scrollArea.findChildren(CustomListItem)) == 0:
-            # get dataframe with subConstructions belonging to parent construction, by ID
-            belonging_subConstructions = self.db.df_from_filteredTable('deki_2022_SubConstructions',
-                                                                       'parent_construction_id', self.constructNumber)
-            # get list of subConstruction IDs belonging to parent construction
-            subConstructions_IDs = belonging_subConstructions['id'].tolist()
-            # iterate throughout subConstruction IDs list and load those subConstructions into the screen
-            if len(subConstructions_IDs) != 0:
-                constructionObject = dbo.SubConstruction(parentConstruction=self.construction, connected_database=self.db)
-                for constructionID in subConstructions_IDs:
-                    constructionObject.load_info(int(constructionID))
-                    listItem = CustomListItem(int(constructionID))
-                    listItem.constructionTag.setText(constructionObject.info["tag"])
-                    listItem.constructionName.setText(constructionObject.info['name'])
-                    listItem.constructionPicture.setPixmap(constructionObject.picture.scaled(120, 120, 1, 1))
-                    listItem.seriesSize.setText(constructionObject.info['serial_number'])
-                    self.scrolledContentLayout.addWidget(listItem, alignment=Qt.AlignTop)
-            else:
-                print(f"No subConstructions to be loaded.")
-            # Add a scrolled layout (object) to the screens' scrollArea
+        # get dataframe with subConstructions belonging to parent construction, by ID
+        belonging_subConstructions = self.db.df_from_filteredTable('deki_2022_SubConstructions',
+                                                                   'parent_construction_id', self.constructNumber)
+        # get list of subConstruction IDs belonging to parent construction
+        subConstructions_IDs = belonging_subConstructions['id'].tolist()
+        # iterate throughout subConstruction IDs list and load those subConstructions into the screen
+        self.scrolledContentWidget = QWidget()
+        self.scrolledContentWidget.setObjectName('scrolledContentWidget')
+        self.scrolledContentLayout = QVBoxLayout()
+        self.scrolledContentLayout.setSpacing(1)
+        if len(subConstructions_IDs) != 0:
+            constructionObject = dbo.SubConstruction(parentConstruction=self.construction)
+            for constructionID in subConstructions_IDs:
+                constructionObject.load_info(int(constructionID))
+                listItem = CustomListItem(int(constructionID))
+                listItem.constructionTag.setText(constructionObject.info["tag"])
+                listItem.constructionName.setText(constructionObject.info['name'])
+                listItem.constructionPicture.setPixmap(constructionObject.picture.scaled(120, 120, 1, 1))
+                listItem.seriesSize.setText(constructionObject.info['serial_number'])
+                self.scrolledContentLayout.addWidget(listItem, alignment=Qt.AlignTop)
             self.scrolledContentWidget.setLayout(self.scrolledContentLayout)
             self.scrolledContentLayout.setAlignment(Qt.AlignTop)
             self.scrollArea.setWidget(self.scrolledContentWidget)
-        # if scrollArea is not empty, then delete all its ListItems and load again scrollArea
         else:
-            #  clear scrolled layout from previously loaded items
-            for idx in reversed(range(self.scrolledContentLayout.count())):
-                print(f"Counted children: {self.scrolledContentLayout.count()}")
-                widgetToRemove = self.scrolledContentLayout.takeAt(idx).widget()
-                print(widgetToRemove)
-                # remove Widget from the layout
-                self.scrolledContentLayout.removeWidget(widgetToRemove)
-                # delete Widget (listItem) from application - memory release, can be also widget.destroy()
-                # but it is more risking when regarding signals/events references
-                widgetToRemove.deleteLater()
-            self.loadConstructionsList()
+            print(f"No subConstructions to be loaded. ---- subConstructions Ids: {subConstructions_IDs}")
+
+    def refresh_subConstructionList(self):
+        self.scrolledContentWidget.deleteLater()
+        self.load_SubConstructionsList()
 
     def showDialog(self, dialog):
         dialog.show()
         dialog.closeEvent = lambda event: (
-            self.load_SubConstructionsList())
+            self.refresh_subConstructionList())
 
 
 if __name__ == '__main__':

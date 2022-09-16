@@ -104,6 +104,7 @@ class NewSubconstructionDialog(QDialog):
         print(self.parentConstruction.info)
         new_subConstruction.info = {'id': new_subConstruction.update_records_amount() + 1,
                                     'parent_construction_id': self.parentConstruction.info['id'],
+                                    'main_construction_id': self.parentConstruction.main_constructionID,
                                     'name': self.newSubconstructionName.text(),
                                     'tag': self.newSubconstructionTag.text(),
                                     'serial_number': self.newSubconstructionSerialNo.text(),

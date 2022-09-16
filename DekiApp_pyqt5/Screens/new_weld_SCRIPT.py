@@ -6,76 +6,83 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 
+import db_objects
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 
 import db_objects as dbo
 import resources_rc
 
 
+def toggleBtn(selected_btn: QPushButton):
+    # TODO get selected btns to list of selected test methods for added weld
+    if not selected_btn.isChecked():
+        selected_btn.setStyleSheet("background-color : rgb(255, 255, 255)")
+    else:
+        selected_btn.setStyleSheet("background-color : rgb(30, 210, 80)")
+
+
+def toggleOnlyOneBtn(selected_btn: QPushButton, container):
+    print(container.findChildren(QPushButton))
+    for btn in container.findChildren(QPushButton):
+        if btn is not selected_btn:
+            btn.setStyleSheet("background-color : rgb(255, 255, 255)")
+            btn.setChecked(False)
+        else:
+            btn.setStyleSheet("background-color : rgb(30, 210, 80)")
+            btn.setChecked(True)
+
+
 class NewWeldDialog(QDialog):
-    def __init__(self, parent_constructionId):
+    def __init__(self, parentConstruction, connected_database=None):
         super(NewWeldDialog, self).__init__()
         loadUi(r'new_weld_UI.ui', self)
         self.selected_weldType = None
         self.selected_weldFaces = []
         self.pdfViewerWidget = None
-        self.parentConstruction = dbo.MainConstruction()
-        self.parentConstruction.load_info(parent_constructionId)
+        self.parentConstruction = parentConstruction
+        self.mainConstruction = parentConstruction.mainConstruction
+        self.db = self.parentConstruction.db if connected_database is None else connected_database
+        self.new_weld_DbName = f'{self.mainConstruction.info["tag"]}_modelWelds'
+        from db_objects import weldObject
+        self.new_weldObj = weldObject(connected_database=self.db, table_name=self.new_weld_DbName)
         # ---------------------------------------------------------------Screen loading functions----------------------
-        for line in self.lowerWeldFrame.children():
-            if not line.objectName() == 'gridLayout_7' and not line.objectName() == 'lowerWeldTypeIcon':
-                line.hide()
-        self.showPdfViewer()
+        self.rightSidedContent.hide()
+        self.parentConstructionLbl.setText(
+            f"{self.parentConstruction.info['name']}-{self.parentConstruction.info['tag']}")
+        self.mainConstructionLbl.setText(f"{self.mainConstruction.info['name']}-{self.mainConstruction.info['tag']}")
+        import weldGraphWidget_SCRIPT as weldGraphWidget
+        self.weldGraph = weldGraphWidget.WeldGraphWidget()
+        self.weldGraphLayout.addWidget(self.weldGraph)
+        toggleOnlyOneBtn(self.normalWeldBtn, self.normalWeldBtn.parent())
+        self.weldGraph.transformWeldSymbolType("normal")
+        # ----------------------------------------------------------------Buttons scripting----------------------------
+        self.testMthdBtnLT.clicked.connect(lambda: toggleBtn(self.testMthdBtnLT))
+        self.testMthdBtnMT.clicked.connect(lambda: toggleBtn(self.testMthdBtnMT))
+        self.testMthdBtnPT.clicked.connect(lambda: toggleBtn(self.testMthdBtnPT))
+        self.testMthdBtnVT.clicked.connect(lambda: toggleBtn(self.testMthdBtnVT))
+        self.testMthdBtnRT.clicked.connect(lambda: toggleBtn(self.testMthdBtnRT))
+        self.testMthdBtnUT.clicked.connect(lambda: toggleBtn(self.testMthdBtnUT))
+        self.buttJointBtn.toggled.connect(lambda: self.select_jointType(self.buttJointBtn))
+        self.lapJointBtn.toggled.connect(lambda: self.select_jointType(self.lapJointBtn))
+        self.cornerJointBtn.clicked.connect(lambda: self.select_jointType(self.cornerJointBtn))
+        self.teeJointBtn.clicked.connect(lambda: self.select_jointType(self.teeJointBtn))
+        self.edgeJointBtn.clicked.connect(lambda: self.select_jointType(self.edgeJointBtn))
+        self.normalWeldBtn.clicked.connect(
+            lambda: (toggleOnlyOneBtn(self.normalWeldBtn, self.normalWeldBtn.parent()),
+                     self.weldGraph.transformWeldSymbolType("normal")))
+        self.intermittentWeldBtn.clicked.connect(
+            lambda: (toggleOnlyOneBtn(self.intermittentWeldBtn, self.intermittentWeldBtn.parent()),
+                     self.weldGraph.transformWeldSymbolType("intermittent")))
+        self.staggeredWeldBtn.clicked.connect(
+            lambda: (toggleOnlyOneBtn(self.staggeredWeldBtn, self.staggeredWeldBtn.parent()),
+                     self.weldGraph.transformWeldSymbolType("staggered")))
+        self.addWeldBtn.clicked.connect(self.saveWeld)
 
-        # ---------------------------------------------------------------Button scripting------------------------------
-        self.upperWeldTypeIcon.clicked.connect(lambda: self.openUpperWeldTypeDialog(self.upperWeldTypeIcon, 'weldType'))
-        self.upperWeldFaceIcon.clicked.connect(lambda: self.openUpperWeldTypeDialog(self.upperWeldFaceIcon, 'weldFace'))
-
-        self.lowerWeldTypeIcon.clicked.connect(lambda: self.openLowerWeldTypeDialog(self.lowerWeldTypeIcon, 'weldType'))
-        self.lowerWeldFaceIcon.clicked.connect(lambda: self.openLowerWeldTypeDialog(self.lowerWeldFaceIcon, 'weldFace'))
-
-        self.weldAsemblyIcon.clicked.connect(lambda: self.weldAsemblyIcon.setIcon(QtGui.QIcon(QtGui.QPixmap(
-            r':/Icons/Icons/weldIcon_weldBanner.png'))) if self.weldAsemblyIcon.isChecked() else
-        self.weldAsemblyIcon.setIcon(QtGui.QIcon(QtGui.QPixmap(r':/Icons/Icons/banner_weld_face.png'))))
-        self.weldRoundedIcon.clicked.connect(lambda: self.weldRoundedIcon.setIcon(QtGui.QIcon(QtGui.QPixmap(
-            r':/Icons/Icons/weldIcon_weldRoundedLine.png'))) if self.weldRoundedIcon.isChecked() else
-        self.weldRoundedIcon.setIcon(QtGui.QIcon(QtGui.QPixmap(r':/Icons/Icons/weldIcon_weldLine.png'))))
-
-        self.testMthdBtnLT.clicked.connect(lambda: self.select_buttons(self.weldTestingBtns, self.testMthdBtnLT))
-        self.testMthdBtnMT.clicked.connect(lambda: self.select_buttons(self.weldTestingBtns, self.testMthdBtnMT))
-        self.testMthdBtnPT.clicked.connect(lambda: self.select_buttons(self.weldTestingBtns, self.testMthdBtnPT))
-        self.testMthdBtnVT.clicked.connect(lambda: self.select_buttons(self.weldTestingBtns, self.testMthdBtnVT))
-        self.testMthdBtnRT.clicked.connect(lambda: self.select_buttons(self.weldTestingBtns, self.testMthdBtnRT))
-        self.testMthdBtnUT.clicked.connect(lambda: self.select_buttons(self.weldTestingBtns, self.testMthdBtnUT))
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
-
-    def openUpperWeldTypeDialog(self, triggering_btn, dialogType: str):
-        weld_dialog = weldTypeDialog(dialogType)
-        weld_dialog.setWindowFlags(Qt.FramelessWindowHint)
-        weld_dialog.exec_()  # exec_() opens the Dialog and waits for user input
-        # weld_dialog.show() just opens the Dialog and do not wait for user input
-        print(f'Chosen btn: {weld_dialog.selected_btn}')
-        triggering_btn.setIcon(weld_dialog.selected_btn_icon)
-
-    def openLowerWeldTypeDialog(self, triggering_btn, dialogType: str):
-        weld_dialog = weldTypeDialog(dialogType)
-        weld_dialog.setWindowFlags(Qt.FramelessWindowHint)
-        weld_dialog.exec_()  # exec_() opens the Dialog and waits for user input
-        # weld_dialog.show() just opens the Dialog and do not wait for user input
-        print(f'Chosen btn: {weld_dialog.selected_btn}')
-        px = weld_dialog.selected_btn_icon.pixmap(QtCore.QSize(20, 20))
-        px = px.transformed(QtGui.QTransform().scale(1, -1))
-        px = QtGui.QIcon(px)
-        triggering_btn.setIcon(px)
-        for line in self.lowerWeldFrame.children():
-            if not line.objectName() == 'gridLayout_7' and not line.objectName() == 'lowerWeldTypeIcon':
-                line.show()
-
-    def select_buttons(self, btns_container: QFrame, selected_btn: QPushButton):
-        if not selected_btn.isChecked():
-            selected_btn.setStyleSheet("background-color : rgb(255, 255, 255)")
-        else:
-            selected_btn.setStyleSheet("background-color : rgb(30, 210, 80)")
+        self.mainConstructionLbl.setText(f"{self.parentConstruction.mainConstruction.info['name']} \n"
+                                         f"{self.parentConstruction.mainConstruction.info['tag']}")
+        self.parentConstructionLbl.setText(f"{self.parentConstruction.info['name']} \n"
+                                           f"{self.parentConstruction.info['tag']}")
 
     def showPdfViewer(self):
         if not self.pdfViewerWidget:
@@ -86,73 +93,75 @@ class NewWeldDialog(QDialog):
             grid = QVBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
             # Insert a pdfViewerWidget into docViewer Widget (widget for pdf viewing)
-            # self.docsViewerContainer.removeWidget(QLabel)
             self.constructDocsViewer.setLayout(grid)
-            # if self.validate_info():
-            #     self.addConstructionBtn.setEnabled(True)
+
         else:
             pass
 
+    def select_jointType(self, selected_btn: QPushButton):
+        selected_btn.setStyleSheet(
+            "border: 2px solid rgb(30, 210, 80)") if selected_btn.isChecked() else selected_btn.setStyleSheet(
+            'border: 0px')
+        for JTBtn in self.jointTypesBtnsLayout.findChildren(QPushButton):
+            if not JTBtn == selected_btn:
+                JTBtn.setStyleSheet("border: 0px")
+                JTBtn.setChecked(False)
 
-class weldTypeDialog(QDialog):
-    def __init__(self, dialogType):
-        super(weldTypeDialog, self).__init__()
-        if dialogType == "weldType":
-            loadUi(r"weldTypeDialog.ui", self)
-            self.selected_btn = None
-            self.selected_btn_icon = None
+    def saveWeld(self):
+        # TODO: all
+        print(f'Current amount of welds in table {new_weld_DbName}: {self.new_weldObj.db_records}')
+        self.new_weldObj.info = {'id': self.new_weldObj.db_records + 1,
+                            'belonging_construction_tag': 1,
+                            'belonging_construction_ID': 1,
+                            'wps_number': 1,
+                            'weld_id_prefix': 1,
+                            'weld_id_generated': 1,
+                            'weld_id_suffix': 1,
+                            'joint_type': 1,
+                            'weld_continuity_type': 1,
+                            'all_around': 1,
+                            'field_weld': 1,
+                            'upper_sizeType': 1,
+                            'upper_size': 1,
+                            'upper_weld_type': 1,
+                            'upper_weld_face': 1,
+                            'upper_weld_quant': 1,
+                            'upper_length': 1,
+                            'upper_weld_spacing': 1,
+                            'double_sided': 1,
+                            'sided_sizeType': 1,
+                            'sided_size': 1,
+                            'sided_weld_type': 1,
+                            'sided_weld_face': 1,
+                            'sided_weld_quant': 1,
+                            'sided_length': 1,
+                            'sided_weld_spacing': 1,
+                            'tail_info': 1,
+                            'first_material': 1,
+                            'second_material': 1,
+                            'first_welded_part': 1,
+                            'second_welded_part': 1,
+                            'testing_methods': 1,
+                            }
 
-            self.weldType_184.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_184))
-            self.weldType_114.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_114))
-            self.weldType_064.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_064))
-            self.weldType_134.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_134))
-            self.weldType_164.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_164))
-            self.weldType_174.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_174))
-            self.weldType_014.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_014))
-            self.weldType_104.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_104))
-            self.weldType_074.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_074))
-            self.weldType_124.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_124))
-            self.weldType_204.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_204))
-            self.weldType_194.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_194))
-            self.weldType_024.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_024))
-            self.weldType_094.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_094))
-            self.weldType_144.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_144))
-            self.weldType_054.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_054))
-            self.weldType_044.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_044))
-            self.weldType_084.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_084))
-            self.weldType_214.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_214))
+        if self.db.is_table(new_weld_DbName):
+            print('Database for welds found. Adding new weld...')
+            self.db.insert(new_weld_DbName, list(self.new_weldObj.info.values()))
+            print(f'Weld inserted with id: {self.new_weldObj.info["id"]}')
         else:
-            loadUi(r"weldFaceDialog.ui", self)
-            self.selected_btn = None
-            self.selected_btn_icon = None
-            self.weldFace_circline.clicked.connect(
-                lambda: self.select_button(self.weldFaceBtns, self.weldFace_circline))
-            self.weldFace_convex.clicked.connect(lambda: self.select_button(self.weldFaceBtns, self.weldFace_convex))
-            self.weldFace_rect.clicked.connect(lambda: self.select_button(self.weldFaceBtns, self.weldFace_rect))
-            self.weldFace_flat.clicked.connect(lambda: self.select_button(self.weldFaceBtns, self.weldFace_flat))
-            self.weldFace_concave.clicked.connect(lambda: self.select_button(self.weldFaceBtns, self.weldFace_concave))
-            self.weldFace_anchor.clicked.connect(lambda: self.select_button(self.weldFaceBtns, self.weldFace_anchor))
-            self.weldFace_chord.clicked.connect(lambda: self.select_button(self.weldFaceBtns, self.weldFace_chord))
-            self.weldFace_banner.clicked.connect(lambda: self.select_button(self.weldFaceBtns, self.weldFace_banner))
-            self.weldFace_circ.clicked.connect(lambda: self.select_button(self.weldFaceBtns, self.weldFace_circ))
+            print('Database for welds not found. Creating new table in Database...')
+            self.db.create_table(new_weld_DbName, self.new_weldObj.info.keys())
+            print(f'Table {new_weld_DbName} created. Adding weld...')
 
-    def select_button(self, btns_container: QFrame, selected_btn: QPushButton):
-        if not selected_btn.isChecked():
-            selected_btn.setStyleSheet("background-color : rgb(255, 255, 255)")
-        else:
-            for btn in btns_container.findChildren(QPushButton):
-                if not btn == selected_btn:
-                    btn.setStyleSheet("background-color : rgb(255, 255, 255)")
-            selected_btn.setStyleSheet("background-color : rgb(30, 210, 80)")
-            self.selected_btn = selected_btn.objectName()
-            self.selected_btn_icon = selected_btn.icon()
-        self.close()
+            self.db.insert(new_weld_DbName, self.new_weldObj.info.values())
+            print(f'Weld inserted with id: {self.new_weldObj.info["id"]}')
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-
-    mainWindow = NewWeldDialog(1)
+    subConstruction = db_objects.SubConstruction()
+    subConstruction.load_info(1)
+    mainWindow = NewWeldDialog(subConstruction)
     mainWindow.show()
 
     try:
