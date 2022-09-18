@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>734</width>
-    <height>966</height>
+    <width>790</width>
+    <height>970</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -762,185 +762,148 @@ QFrame{
                         <enum>QFrame::Raised</enum>
                        </property>
                        <layout class="QHBoxLayout" name="horizontalLayout_10">
-                        <property name="spacing">
-                         <number>1</number>
-                        </property>
-                        <property name="leftMargin">
-                         <number>1</number>
-                        </property>
-                        <property name="topMargin">
-                         <number>1</number>
-                        </property>
-                        <property name="rightMargin">
-                         <number>1</number>
-                        </property>
-                        <property name="bottomMargin">
-                         <number>1</number>
-                        </property>
                         <item>
-                         <layout class="QGridLayout" name="gridLayout_3">
-                          <property name="bottomMargin">
-                           <number>10</number>
+                         <widget class="QSplitter" name="splitter">
+                          <property name="orientation">
+                           <enum>Qt::Vertical</enum>
                           </property>
-                          <property name="verticalSpacing">
-                           <number>10</number>
+                          <property name="handleWidth">
+                           <number>0</number>
                           </property>
-                          <item row="0" column="2" alignment="Qt::AlignHCenter">
-                           <widget class="QPushButton" name="teeJointBtn">
-                            <property name="minimumSize">
-                             <size>
-                              <width>95</width>
-                              <height>95</height>
-                             </size>
-                            </property>
-                            <property name="text">
-                             <string/>
-                            </property>
-                            <property name="icon">
-                             <iconset resource="../resources.qrc">
-                              <normaloff>:/Pictures/Pictures/jt_004.png</normaloff>:/Pictures/Pictures/jt_004.png</iconset>
-                            </property>
-                            <property name="iconSize">
-                             <size>
-                              <width>90</width>
-                              <height>90</height>
-                             </size>
-                            </property>
-                            <property name="checkable">
-                             <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item row="0" column="3" alignment="Qt::AlignHCenter">
-                           <widget class="QPushButton" name="edgeJointBtn">
-                            <property name="minimumSize">
-                             <size>
-                              <width>95</width>
-                              <height>95</height>
-                             </size>
-                            </property>
-                            <property name="text">
-                             <string/>
-                            </property>
-                            <property name="icon">
-                             <iconset>
-                              <normaloff>:/Icons/Pictures/jt_005.png</normaloff>
-                              <normalon>:/Pictures/Pictures/jt_005.png</normalon>:/Icons/Pictures/jt_005.png</iconset>
-                            </property>
-                            <property name="iconSize">
-                             <size>
-                              <width>90</width>
-                              <height>90</height>
-                             </size>
-                            </property>
-                            <property name="checkable">
-                             <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item row="0" column="1" alignment="Qt::AlignHCenter">
-                           <widget class="QPushButton" name="cornerJointBtn">
-                            <property name="minimumSize">
-                             <size>
-                              <width>95</width>
-                              <height>95</height>
-                             </size>
-                            </property>
-                            <property name="text">
-                             <string/>
-                            </property>
-                            <property name="icon">
-                             <iconset resource="../resources.qrc">
-                              <normaloff>:/Pictures/Pictures/jt_003.png</normaloff>:/Pictures/Pictures/jt_003.png</iconset>
-                            </property>
-                            <property name="iconSize">
-                             <size>
-                              <width>90</width>
-                              <height>90</height>
-                             </size>
-                            </property>
-                            <property name="checkable">
-                             <bool>true</bool>
-                            </property>
-                           </widget>
-                          </item>
-                          <item row="0" column="0">
-                           <widget class="QSplitter" name="splitter">
-                            <property name="orientation">
-                             <enum>Qt::Vertical</enum>
-                            </property>
-                            <property name="opaqueResize">
-                             <bool>false</bool>
-                            </property>
-                            <property name="handleWidth">
-                             <number>0</number>
-                            </property>
-                            <property name="childrenCollapsible">
-                             <bool>false</bool>
-                            </property>
-                            <widget class="QPushButton" name="buttJointBtn">
-                             <property name="sizePolicy">
-                              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                               <horstretch>0</horstretch>
-                               <verstretch>0</verstretch>
-                              </sizepolicy>
-                             </property>
-                             <property name="minimumSize">
-                              <size>
-                               <width>120</width>
-                               <height>45</height>
-                              </size>
-                             </property>
-                             <property name="text">
-                              <string/>
-                             </property>
-                             <property name="icon">
-                              <iconset resource="../resources.qrc">
-                               <normaloff>:/Pictures/Pictures/jt_001.png</normaloff>:/Pictures/Pictures/jt_001.png</iconset>
-                             </property>
-                             <property name="iconSize">
-                              <size>
-                               <width>120</width>
-                               <height>45</height>
-                              </size>
-                             </property>
-                             <property name="checkable">
-                              <bool>true</bool>
-                             </property>
-                            </widget>
-                            <widget class="QPushButton" name="lapJointBtn">
-                             <property name="sizePolicy">
-                              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                               <horstretch>0</horstretch>
-                               <verstretch>0</verstretch>
-                              </sizepolicy>
-                             </property>
-                             <property name="minimumSize">
-                              <size>
-                               <width>120</width>
-                               <height>45</height>
-                              </size>
-                             </property>
-                             <property name="text">
-                              <string/>
-                             </property>
-                             <property name="icon">
-                              <iconset resource="../resources.qrc">
-                               <normaloff>:/Pictures/Pictures/jt_002.png</normaloff>:/Pictures/Pictures/jt_002.png</iconset>
-                             </property>
-                             <property name="iconSize">
-                              <size>
-                               <width>120</width>
-                               <height>45</height>
-                              </size>
-                             </property>
-                             <property name="checkable">
-                              <bool>true</bool>
-                             </property>
-                            </widget>
-                           </widget>
-                          </item>
-                         </layout>
+                          <widget class="QPushButton" name="buttJointBtn">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="minimumSize">
+                            <size>
+                             <width>120</width>
+                             <height>45</height>
+                            </size>
+                           </property>
+                           <property name="text">
+                            <string/>
+                           </property>
+                           <property name="icon">
+                            <iconset resource="../resources.qrc">
+                             <normaloff>:/Pictures/Pictures/jt_001.png</normaloff>:/Pictures/Pictures/jt_001.png</iconset>
+                           </property>
+                           <property name="iconSize">
+                            <size>
+                             <width>120</width>
+                             <height>45</height>
+                            </size>
+                           </property>
+                           <property name="checkable">
+                            <bool>true</bool>
+                           </property>
+                          </widget>
+                          <widget class="QPushButton" name="lapJointBtn">
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                           <property name="text">
+                            <string/>
+                           </property>
+                           <property name="icon">
+                            <iconset resource="../resources.qrc">
+                             <normaloff>:/Pictures/Pictures/jt_002.png</normaloff>:/Pictures/Pictures/jt_002.png</iconset>
+                           </property>
+                           <property name="iconSize">
+                            <size>
+                             <width>120</width>
+                             <height>45</height>
+                            </size>
+                           </property>
+                           <property name="checkable">
+                            <bool>true</bool>
+                           </property>
+                          </widget>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="cornerJointBtn">
+                          <property name="minimumSize">
+                           <size>
+                            <width>95</width>
+                            <height>95</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string/>
+                          </property>
+                          <property name="icon">
+                           <iconset resource="../resources.qrc">
+                            <normaloff>:/Pictures/Pictures/jt_003.png</normaloff>:/Pictures/Pictures/jt_003.png</iconset>
+                          </property>
+                          <property name="iconSize">
+                           <size>
+                            <width>90</width>
+                            <height>90</height>
+                           </size>
+                          </property>
+                          <property name="checkable">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="teeJointBtn">
+                          <property name="minimumSize">
+                           <size>
+                            <width>95</width>
+                            <height>95</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string/>
+                          </property>
+                          <property name="icon">
+                           <iconset resource="../resources.qrc">
+                            <normaloff>:/Pictures/Pictures/jt_004.png</normaloff>:/Pictures/Pictures/jt_004.png</iconset>
+                          </property>
+                          <property name="iconSize">
+                           <size>
+                            <width>90</width>
+                            <height>90</height>
+                           </size>
+                          </property>
+                          <property name="checkable">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QPushButton" name="edgeJointBtn">
+                          <property name="minimumSize">
+                           <size>
+                            <width>95</width>
+                            <height>95</height>
+                           </size>
+                          </property>
+                          <property name="text">
+                           <string/>
+                          </property>
+                          <property name="icon">
+                           <iconset>
+                            <normaloff>:/Icons/Pictures/jt_005.png</normaloff>
+                            <normalon>:/Pictures/Pictures/jt_005.png</normalon>:/Icons/Pictures/jt_005.png</iconset>
+                          </property>
+                          <property name="iconSize">
+                           <size>
+                            <width>90</width>
+                            <height>90</height>
+                           </size>
+                          </property>
+                          <property name="checkable">
+                           <bool>true</bool>
+                          </property>
+                         </widget>
                         </item>
                        </layout>
                       </widget>
@@ -1621,7 +1584,7 @@ QPushButton{
                            </palette>
                           </property>
                           <property name="text">
-                           <string>VT</string>
+                           <string extracomment="vt">VT</string>
                           </property>
                           <property name="icon">
                            <iconset resource="../resources.qrc">
@@ -1828,17 +1791,39 @@ QPushButton{
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>wpsNumberLine</tabstop>
+  <tabstop>weldIDprefixLine</tabstop>
+  <tabstop>weldIDsuffixLine</tabstop>
+  <tabstop>firstMaterialLine</tabstop>
+  <tabstop>secondMaterialLine</tabstop>
+  <tabstop>firstJointPartLine</tabstop>
+  <tabstop>secondJointPartLine</tabstop>
+  <tabstop>pushButton_2</tabstop>
+  <tabstop>addWeldBtn</tabstop>
+  <tabstop>addWPSBtn</tabstop>
+  <tabstop>showWPSBtn</tabstop>
+  <tabstop>TMnotSpecifiedRadioBtn</tabstop>
+  <tabstop>testMthdBtnLT</tabstop>
+  <tabstop>testMthdBtnMT</tabstop>
+  <tabstop>testMthdBtnPT</tabstop>
+  <tabstop>testMthdBtnVT</tabstop>
+  <tabstop>testMthdBtnRT</tabstop>
+  <tabstop>testMthdBtnUT</tabstop>
+  <tabstop>restoreBtn</tabstop>
+  <tabstop>closeBtn</tabstop>
+  <tabstop>teeJointBtn</tabstop>
+  <tabstop>edgeJointBtn</tabstop>
+  <tabstop>cornerJointBtn</tabstop>
+  <tabstop>staggeredWeldBtn</tabstop>
+  <tabstop>normalWeldBtn</tabstop>
+  <tabstop>minimizeBtn</tabstop>
+  <tabstop>intermittentWeldBtn</tabstop>
+  <tabstop>wpsMissingCBox</tabstop>
+ </tabstops>
  <resources>
   <include location="../resources.qrc"/>
-  <include location="../resources.qrc"/>
-  <include location="../resources.qrc"/>
-  <include location="../resources.qrc"/>
-  <include location="../resources.qrc"/>
-  <include location="../resources.qrc"/>
-  <include location="../resources.qrc"/>
-  <include location="../resources.qrc"/>
-  <include location="../resources.qrc"/>
-  <include location="../resources.qrc"/>
+  <include location="C:/Users/Młody/.designer/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -6,37 +6,56 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 
-import db_objects
-from Screens import pdfViewWidget_SCRIPT as pdfviewer
-
-import db_objects as dbo
 import resources_rc
+
 
 class WeldGraphWidget(QWidget):
     def __init__(self):
         super(WeldGraphWidget, self).__init__()
         loadUi(r"weldGraphWidget.ui", self)
-
+        self.upperWeldData = {}
+        self.lowerWeldData = {}
+        self.weldBanners = {'field_weld': None, 'all_around': None, 'double_sided': None}
+        # --------------------------------------------------------------Loading scripts--------------------------------
         self.lowerWeldInfo.hide()
         self.lowerWeldInfo.setEnabled(False)
-        self.addSideWeld.clicked.connect(lambda: self.toggleSideWeld())
         # ---------------------------------------------------------------Button scripting------------------------------
+        self.addSideWeld.clicked.connect(lambda: self.toggleSideWeld())
         self.upperWeldTypeIcon.clicked.connect(
             lambda: self.openWeldTypeDialog(self.upperWeldTypeIcon, 'weldType', False))
         self.upperWeldFaceIcon.clicked.connect(
             lambda: self.openWeldTypeDialog(self.upperWeldFaceIcon, 'weldFace', False))
-
         self.lowerWeldTypeIcon.clicked.connect(
             lambda: self.openWeldTypeDialog(self.lowerWeldTypeIcon, 'weldType', True))
         self.lowerWeldFaceIcon.clicked.connect(
             lambda: self.openWeldTypeDialog(self.lowerWeldFaceIcon, 'weldFace', True))
-
-        self.weldAsemblyIcon.clicked.connect(lambda: self.weldAsemblyIcon.setIcon(QtGui.QIcon(QtGui.QPixmap(
-            r':/Icons/Icons/weldIcon_weldBanner.png'))) if self.weldAsemblyIcon.isChecked() else
-        self.weldAsemblyIcon.setIcon(QtGui.QIcon(QtGui.QPixmap(r':/Icons/Icons/banner_weld_face.png'))))
-        self.weldRoundedIcon.clicked.connect(lambda: self.weldRoundedIcon.setIcon(QtGui.QIcon(QtGui.QPixmap(
-            r':/Icons/Icons/weldIcon_weldRoundedLine.png'))) if self.weldRoundedIcon.isChecked() else
-        self.weldRoundedIcon.setIcon(QtGui.QIcon(QtGui.QPixmap(r':/Icons/Icons/weldIcon_weldLine.png'))))
+        self.weldAsemblyIcon.clicked.connect(
+            lambda: self.updateWeldBanner(self.weldAsemblyIcon, r':/Icons/Icons/weldIcon_weldBanner.png',
+                                          r':/Icons/Icons/banner_weld_face.png', 'field_weld'))
+        # --------------------------------------------------------------Scripting--------------------------------------
+        self.weldRoundedIcon.clicked.connect(
+            lambda: self.updateWeldBanner(self.weldRoundedIcon, r':/Icons/Icons/weldIcon_weldRoundedLine.png',
+                                          r':/Icons/Icons/weldIcon_weldLine.png', 'all_around'))
+        # ---------------upper weld line-----------------------
+        self.upperSizeCombo.currentTextChanged.connect(lambda x: self.updateWeldData(x, 'upper_sizeType', 'upper'))
+        self.upperSizeLine.editingFinished.connect(
+            lambda: self.updateWeldData(self.upperSizeLine.text(), 'upper_size', 'upper'))
+        self.upperWeldQuantityLine.editingFinished.connect(
+            lambda: self.updateWeldData(self.upperWeldQuantityLine.text(), 'upper_weld_quant', 'upper'))
+        self.upperWeldLengthLine.editingFinished.connect(
+            lambda: self.updateWeldData(self.upperWeldLengthLine.text(), 'upper_length', 'upper'))
+        self.upperWeldSpacingLine.editingFinished.connect(
+            lambda: self.updateWeldData(self.upperWeldSpacingLine.text(), 'upper_weld_spacing', 'upper'))
+        # ---------------lower weld line----------------------
+        self.lowerSizeCombo.currentTextChanged.connect(lambda x: self.updateWeldData(x, 'sided_sizeType', 'lower'))
+        self.lowerSizeLine.editingFinished.connect(
+            lambda: self.updateWeldData(self.lowerSizeLine.text(), 'sided_size', 'lower'))
+        self.lowerWeldQuantityLine.editingFinished.connect(
+            lambda: self.updateWeldData(self.lowerWeldQuantityLine.text(), 'sided_weld_quant', 'lower'))
+        self.lowerWeldLengthLine.editingFinished.connect(
+            lambda: self.updateWeldData(self.lowerWeldLengthLine.text(), 'sided_length', 'lower'))
+        self.lowerWeldSpacingLine.editingFinished.connect(
+            lambda: self.updateWeldData(self.lowerWeldSpacingLine.text(), 'sided_weld_spacing', 'lower'))
 
     def toggleSideWeld(self):
         if self.addSideWeld.isChecked():
@@ -44,22 +63,41 @@ class WeldGraphWidget(QWidget):
             self.addSideWeld.setStyleSheet("color: rgb(0, 0, 0);"
                                            "background-color : rgb(30, 210, 80)")
             self.lowerWeldInfo.setEnabled(True)
+            self.weldBanners['double_sided'] = True
         else:
             self.lowerWeldInfo.hide()
             self.lowerWeldInfo.setEnabled(False)
             self.addSideWeld.setStyleSheet("color: rgb(150, 150, 150);"
                                            "background-color : rgb(255, 255, 255)")
+            self.weldBanners['double_sided'] = False
+        print(f'Weld banners changed -- Double sided weld : {self.weldBanners}')
 
-    def openWeldTypeDialog(self, triggering_btn, dialogType: str, rotated: bool):
-        # TODO: Make the dialog pop inside the weldGraphWidget not in the QApp center
+    def openWeldTypeDialog(self, triggering_btn: QPushButton, dialogType: str, rotated: bool):
         weld_dialog = weldTypeDialog(dialogType)
         weld_dialog.setWindowFlags(Qt.FramelessWindowHint)
+        # Let's move the new dialog to open in place of calling btn
+        # Firstly get the position in relation to the global (0,0) of the calling widget
+        global_position = triggering_btn.mapToGlobal(QtCore.QPoint(0, 0))
+        # Then translate this global position in relation to calling widget (triggering_btn), bcs "move" function of
+        # a widget moves it in relation to parent widget, not global
+        move_vect = weld_dialog.mapFromGlobal(global_position)
+        weld_dialog.move(move_vect)
         weld_dialog.exec_()  # exec_() opens the Dialog and waits for user input
-        # weld_dialog.show() just opens the Dialog and do not wait for user input
         print(f'Chosen btn: {weld_dialog.selected_btn}')
+        # save the selected options for upper weld in Dialog specific dict
+        if weld_dialog.selected_btn.count('Type') > 0:
+            self.upperWeldData['upper_weld_type'] = weld_dialog.selected_btn.replace('weldType_', '')
+        else:
+            self.upperWeldData['upper_weld_face'] = weld_dialog.selected_btn.replace('weldFace_', '')
         px = weld_dialog.selected_btn_icon.pixmap(QtCore.QSize(20, 20))
+        # rotate the icon in case the calling button is rotated
         if rotated:
             px = px.transformed(QtGui.QTransform().scale(1, -1))
+            # save the selected options for lower weld in Dialog specific dict
+            if weld_dialog.selected_btn.count('Type') > 0:
+                self.lowerWeldData['lower_weld_type'] = weld_dialog.selected_btn.replace('weldType_', '')
+            else:
+                self.lowerWeldData['lower_weld_face'] = weld_dialog.selected_btn.replace('weldFace_', '')
         px = QtGui.QIcon(px)
         triggering_btn.setIcon(px)
 
@@ -93,6 +131,23 @@ class WeldGraphWidget(QWidget):
             self.lowerWeldLengthLine.show()
             self.lowerWeldSpacingFrame.show()
 
+    def updateWeldData(self, updated_value, key_ref: str, weld_line: str):
+        if weld_line == "upper":
+            self.upperWeldData[key_ref] = updated_value if len(updated_value) > 0 else None
+        else:
+            self.lowerWeldData[key_ref] = updated_value if len(updated_value) > 0 else None
+        print(f"Weld data updated: upper -> {self.upperWeldData}")
+        print(f"Weld data updated: lower -> {self.lowerWeldData}")
+
+    def updateWeldBanner(self, weldBannerBtn: QPushButton, checkedIcon_path, uncheckedIcon_path, banner_type: str):
+        if weldBannerBtn.isChecked():
+            weldBannerBtn.setIcon(QtGui.QIcon(QtGui.QPixmap(checkedIcon_path)))
+            self.weldBanners[banner_type] = True
+        else:
+            weldBannerBtn.setIcon(QtGui.QIcon(QtGui.QPixmap(uncheckedIcon_path)))
+            self.weldBanners[banner_type] = False
+        print(f'Weld banners changed: {self.weldBanners}')
+
 
 class weldTypeDialog(QDialog):
     def __init__(self, dialogType):
@@ -101,7 +156,6 @@ class weldTypeDialog(QDialog):
             loadUi(r"weldTypeDialog.ui", self)
             self.selected_btn = None
             self.selected_btn_icon = None
-
             self.weldType_184.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_184))
             self.weldType_114.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_114))
             self.weldType_064.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_064))

@@ -6,6 +6,7 @@ import datetime
 import shutil
 import pathlib
 import sys
+
 '''
 Podcza instalacji aplikacji, należy ją połączyc z konkretną bazą danych i serwerem tzn. znać nazwę bazy i kody dostępu.
 '''
@@ -156,16 +157,49 @@ class weldObject:
     def __init__(self, companyName='deki', connected_database=None, table_name=None):
         print(f"\n-----------------------------------------------------------------{type(self)} INITIALIZED")
         self.table_name = f"{companyName}_2022_modelWelds" if table_name is None else table_name
-        self.info = {}  # Dict
         self.db = database.Database() if connected_database is None else connected_database
         self.db_records = self.update_records_amount()
+        self.info = {'id': self.db_records + 1,
+                     'belonging_construction_tag': None,
+                     'belonging_construction_ID': None,
+                     'wps_number': None,
+                     'weld_id_prefix': None,
+                     'weld_id_generated': None,
+                     'weld_id_suffix': None,
+                     'joint_type': None,
+                     'weld_continuity_type': None,
+                     'all_around': None,
+                     'field_weld': None,
+                     'upper_sizeType': None,
+                     'upper_size': None,
+                     'upper_weld_type': None,
+                     'upper_weld_face': None,
+                     'upper_weld_quant': None,
+                     'upper_length': None,
+                     'upper_weld_spacing': None,
+                     'double_sided': None,
+                     'sided_sizeType': None,
+                     'sided_size': None,
+                     'sided_weld_type': None,
+                     'sided_weld_face': None,
+                     'sided_weld_quant': None,
+                     'sided_length': None,
+                     'sided_weld_spacing': None,
+                     'tail_info': None,
+                     'first_material': None,
+                     'second_material': None,
+                     'first_welded_part': None,
+                     'second_welded_part': None,
+                     'testing_methods': None
+                     }
+        self.info = dict.fromkeys(self.db.get_columns_names(self.table_name))
 
         print(f'Columns in the database: ')
         print(self.db.get_columns_names(self.table_name))
 
     # returns number of rows in database table (self.table_name)
     def update_records_amount(self):
-        print('updating records amount')
+        print(f'updating records amount in table {self.table_name}')
         if self.db.is_table(self.table_name):
             self.db_records = 0 if self.db.check_records_number(
                 self.table_name) is None else self.db.check_records_number(
