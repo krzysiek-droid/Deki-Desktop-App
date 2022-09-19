@@ -3,8 +3,6 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
-from PyQt5 import QtCore
 
 import db_objects
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
@@ -31,6 +29,8 @@ class NewWeldDialog(QDialog):
         self.parentConstructionLbl.setText(
             f"{self.parentConstruction.info['name']}-{self.parentConstruction.info['tag']}")
         self.mainConstructionLbl.setText(f"{self.mainConstruction.info['name']}-{self.mainConstruction.info['tag']}")
+        self.new_weldObj.info.update({'belonging_construction_tag': self.parentConstruction.info['tag'],
+                                      'belonging_construction_ID': self.parentConstruction.info['id']})
         import weldGraphWidget_SCRIPT as weldGraphWidget
         self.weldGraph = weldGraphWidget.WeldGraphWidget()
         self.weldGraphLayout.addWidget(self.weldGraph)
@@ -58,6 +58,32 @@ class NewWeldDialog(QDialog):
             lambda: (self.select_jointContinuity(self.staggeredWeldBtn),
                      self.weldGraph.transformWeldSymbolType("staggered")))
         self.addWeldBtn.clicked.connect(self.saveWeld)
+        # -----------------------------------------------------------------LineEdits scripts---------------------------
+        self.firstMaterialLine.editingFinished.connect(
+            lambda: self.new_weldObj.info.update({'first_material': self.firstMaterialLine.text()}))
+        self.firstMaterialLine.textChanged.connect(lambda x: self.secondMaterialLine.setText(x))
+        self.firstJointPartLine.editingFinished.connect(
+            lambda: self.new_weldObj.info.update({'first_welded_part': self.firstJointPartLine.text()}))
+        self.secondMaterialLine.editingFinished.connect(
+            lambda: self.new_weldObj.info.update({'second_material': self.secondMaterialLine.text()}))
+        self.secondJointPartLine.editingFinished.connect(
+            lambda: self.new_weldObj.info.update({'second_welded_part': self.secondJointPartLine.text()}))
+        self.wpsNumberLine.editingFinished.connect(
+            lambda: self.new_weldObj.info.update({'wps_number': self.wpsNumberLine.text()}))
+        self.weldIDprefixLine.editingFinished.connect(
+            lambda: self.new_weldObj.info.update({'weld_id_prefix': self.weldIDprefixLine.text()}))
+        self.weldIDsuffixLine.editingFinished.connect(
+            lambda: self.new_weldObj.info.update({'weld_id_suffix': self.weldIDsuffixLine.text()}))
+        self.wpsMissingCBox.toggled.connect(
+            lambda status: (self.wpsNumberLine.setEnabled(False), self.wpsNumberLine.setText("missing"),
+            self.new_weldObj.info.update({'wps_number': 'missing'}))
+            if status is True else
+            self.wpsNumberLine.setEnabled(True))
+        self.TMnotSpecifiedRadioBtn.toggled.connect(
+            lambda status: (self.new_weldObj.info.update({'testing_methods': []}),
+            [(btn.setEnabled(False), btn.setChecked(False))
+             for btn in self.weldTestingBtns.findChildren(QPushButton)])
+            if status is True else [btn.setEnabled(True) for btn in self.weldTestingBtns.findChildren(QPushButton)])
 
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
         self.mainConstructionLbl.setText(f"{self.parentConstruction.mainConstruction.info['name']} \n"
@@ -95,7 +121,6 @@ class NewWeldDialog(QDialog):
 
     def select_testingMethod(self, selected_btn: QPushButton):
         if not selected_btn.isChecked():
-            selected_btn.setStyleSheet("background-color : rgb(255, 255, 255)")
             methods_list = self.new_weldObj.info['testing_methods']
             methods_list.remove(selected_btn.text())
             methods_list.sort()
@@ -105,14 +130,12 @@ class NewWeldDialog(QDialog):
             if self.new_weldObj.info['testing_methods'] is None:
                 self.new_weldObj.info['testing_methods'] = [selected_btn.text()]
                 print(f"Single testing method selected: {self.new_weldObj.info['testing_methods']} has been saved.")
-                selected_btn.setStyleSheet("background-color : rgb(30, 210, 80)")
             else:
                 methods_list = self.new_weldObj.info['testing_methods']
                 methods_list.append(selected_btn.text())
                 methods_list.sort()
                 self.new_weldObj.info['testing_methods'] = methods_list
                 print(f"Selected testing methods: {self.new_weldObj.info['testing_methods']} has been saved")
-                selected_btn.setStyleSheet("background-color : rgb(30, 210, 80)")
 
     def select_jointContinuity(self, selected_btn: QPushButton):
         for btn in self.weldTypeFrame.findChildren(QPushButton):
@@ -122,25 +145,35 @@ class NewWeldDialog(QDialog):
             else:
                 btn.setStyleSheet("background-color : rgb(30, 210, 80)")
                 btn.setChecked(True)
-
         self.new_weldObj.info['weld_continuity_type'] = selected_btn.text().lower()
         print(f"Joint continuity type saved: {self.new_weldObj.info['weld_continuity_type']}")
 
     def saveWeld(self):
         print(f'Current amount of welds in table {self.new_weld_DbName}: {self.new_weldObj.db_records}')
-        if self.db.is_table(self.new_weld_DbName):
-            print('Database for welds found. Adding new weld...')
-            # Do not update db_records to avoid multpile inserting of same object into db
-            self.new_weldObj.info['id'] = self.new_weldObj.db_records + 1
-            self.db.insert(self.new_weld_DbName, list(self.new_weldObj.info.values()))
-            print(f'Weld inserted with id: {self.new_weldObj.info["id"]}')
-        else:
-            print('Database for welds not found. Creating new table in Database...')
-            self.db.create_table(self.new_weld_DbName, self.new_weldObj.info.keys())
-            print(f'Table {self.new_weld_DbName} created. Adding weld...')
-            self.new_weldObj.info['id'] = self.new_weldObj.db_records + 1
-            self.db.insert(self.new_weld_DbName, self.new_weldObj.info.values())
-            print(f'Weld inserted with id: {self.new_weldObj.info["id"]}')
+        for key in self.weldGraph.upperWeldData.keys():
+            self.new_weldObj.info[key] = self.weldGraph.upperWeldData[key]
+        print(f'dolna spoina widoczna: {self.weldGraph.lowerWeldInfo.isVisible()}')
+        if self.weldGraph.lowerWeldInfo.isVisible():
+            for key in self.weldGraph.lowerWeldData.keys():
+                self.new_weldObj.info[key] = self.weldGraph.lowerWeldData[key]
+        for key in self.weldGraph.weldBanners.keys():
+            self.new_weldObj.info[key] = self.weldGraph.weldBanners[key]
+
+        print(self.new_weldObj.info)
+
+        # if self.db.is_table(self.new_weld_DbName):
+        #     print('Database for welds found. Adding new weld...')
+        #     # Do not update db_records to avoid multpile inserting of same weldObject into db
+        #     self.new_weldObj.info['id'] = self.new_weldObj.db_records + 1
+        #     self.db.insert(self.new_weld_DbName, list(self.new_weldObj.info.values()))
+        #     print(f'Weld inserted with id: {self.new_weldObj.info["id"]}')
+        # else:
+        #     print('Database for welds not found. Creating new table in Database...')
+        #     self.db.create_table(self.new_weld_DbName, self.new_weldObj.info.keys())
+        #     print(f'Table {self.new_weld_DbName} created. Adding weld...')
+        #     self.new_weldObj.info['id'] = self.new_weldObj.db_records + 1
+        #     self.db.insert(self.new_weld_DbName, self.new_weldObj.info.values())
+        #     print(f'Weld inserted with id: {self.new_weldObj.info["id"]}')
 
 
 if __name__ == '__main__':

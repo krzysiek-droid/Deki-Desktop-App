@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>790</width>
+    <width>794</width>
     <height>970</height>
    </rect>
   </property>
@@ -257,7 +257,7 @@
            </property>
            <property name="minimumSize">
             <size>
-             <width>720</width>
+             <width>780</width>
              <height>0</height>
             </size>
            </property>
@@ -287,7 +287,7 @@
               </property>
               <property name="minimumSize">
                <size>
-                <width>550</width>
+                <width>780</width>
                 <height>0</height>
                </size>
               </property>
@@ -317,6 +317,12 @@
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>780</width>
+                   <height>0</height>
+                  </size>
                  </property>
                  <property name="styleSheet">
                   <string notr="true"/>
@@ -514,6 +520,9 @@ QLineEdit{
                      </item>
                      <item>
                       <widget class="QLineEdit" name="wpsNumberLine">
+                       <property name="enabled">
+                        <bool>true</bool>
+                       </property>
                        <property name="minimumSize">
                         <size>
                          <width>0</width>
@@ -522,6 +531,9 @@ QLineEdit{
                        </property>
                        <property name="alignment">
                         <set>Qt::AlignCenter</set>
+                       </property>
+                       <property name="clearButtonEnabled">
+                        <bool>true</bool>
                        </property>
                       </widget>
                      </item>
@@ -549,6 +561,9 @@ QLineEdit{
                         </item>
                         <item>
                          <widget class="QPushButton" name="showWPSBtn">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
                           <property name="text">
                            <string>Show WPS</string>
                           </property>
@@ -636,12 +651,18 @@ QLineEdit{
                          <property name="alignment">
                           <set>Qt::AlignCenter</set>
                          </property>
+                         <property name="clearButtonEnabled">
+                          <bool>true</bool>
+                         </property>
                         </widget>
                        </item>
                        <item row="0" column="2">
                         <widget class="QLineEdit" name="weldIDsuffixLine">
                          <property name="alignment">
                           <set>Qt::AlignCenter</set>
+                         </property>
+                         <property name="clearButtonEnabled">
+                          <bool>true</bool>
                          </property>
                         </widget>
                        </item>
@@ -762,6 +783,21 @@ QFrame{
                         <enum>QFrame::Raised</enum>
                        </property>
                        <layout class="QHBoxLayout" name="horizontalLayout_10">
+                        <property name="spacing">
+                         <number>5</number>
+                        </property>
+                        <property name="leftMargin">
+                         <number>5</number>
+                        </property>
+                        <property name="topMargin">
+                         <number>5</number>
+                        </property>
+                        <property name="rightMargin">
+                         <number>5</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>5</number>
+                        </property>
                         <item>
                          <widget class="QSplitter" name="splitter">
                           <property name="orientation">
@@ -1079,6 +1115,28 @@ QLineEdit{
                           </property>
                          </widget>
                         </item>
+                        <item>
+                         <widget class="QPushButton" name="pushButton">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>26</height>
+                           </size>
+                          </property>
+                          <property name="font">
+                           <font>
+                            <family>Arial 12</family>
+                            <pointsize>10</pointsize>
+                            <weight>9</weight>
+                            <italic>false</italic>
+                            <bold>false</bold>
+                           </font>
+                          </property>
+                          <property name="text">
+                           <string>Show Drawing</string>
+                          </property>
+                         </widget>
+                        </item>
                        </layout>
                       </widget>
                      </item>
@@ -1125,6 +1183,9 @@ QLineEdit{
                                <property name="placeholderText">
                                 <string>not specified</string>
                                </property>
+                               <property name="clearButtonEnabled">
+                                <bool>true</bool>
+                               </property>
                               </widget>
                              </item>
                              <item row="0" column="1">
@@ -1137,6 +1198,9 @@ QLineEdit{
                                </property>
                                <property name="alignment">
                                 <set>Qt::AlignCenter</set>
+                               </property>
+                               <property name="clearButtonEnabled">
+                                <bool>true</bool>
                                </property>
                               </widget>
                              </item>
@@ -1162,17 +1226,52 @@ QLineEdit{
                              </item>
                             </layout>
                            </item>
-                           <item alignment="Qt::AlignVCenter">
-                            <widget class="QLabel" name="label_4">
-                             <property name="text">
-                              <string/>
+                           <item>
+                            <widget class="QFrame" name="frame_10">
+                             <property name="frameShape">
+                              <enum>QFrame::StyledPanel</enum>
                              </property>
-                             <property name="pixmap">
-                              <pixmap resource="../resources.qrc">:/Icons/Icons/x-circle.svg</pixmap>
+                             <property name="frameShadow">
+                              <enum>QFrame::Raised</enum>
                              </property>
-                             <property name="scaledContents">
-                              <bool>true</bool>
-                             </property>
+                             <layout class="QVBoxLayout" name="verticalLayout_11">
+                              <property name="spacing">
+                               <number>2</number>
+                              </property>
+                              <property name="leftMargin">
+                               <number>1</number>
+                              </property>
+                              <property name="topMargin">
+                               <number>1</number>
+                              </property>
+                              <property name="rightMargin">
+                               <number>1</number>
+                              </property>
+                              <property name="bottomMargin">
+                               <number>1</number>
+                              </property>
+                              <item>
+                               <widget class="QLabel" name="upperWeldIcon">
+                                <property name="text">
+                                 <string/>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QLabel" name="label_4">
+                                <property name="text">
+                                 <string/>
+                                </property>
+                               </widget>
+                              </item>
+                              <item>
+                               <widget class="QLabel" name="lowerWeldIcon">
+                                <property name="text">
+                                 <string/>
+                                </property>
+                               </widget>
+                              </item>
+                             </layout>
                             </widget>
                            </item>
                            <item>
@@ -1191,6 +1290,9 @@ QLineEdit{
                                <property name="placeholderText">
                                 <string>not specified</string>
                                </property>
+                               <property name="clearButtonEnabled">
+                                <bool>true</bool>
+                               </property>
                               </widget>
                              </item>
                              <item row="0" column="0">
@@ -1203,6 +1305,9 @@ QLineEdit{
                                </property>
                                <property name="alignment">
                                 <set>Qt::AlignCenter</set>
+                               </property>
+                               <property name="clearButtonEnabled">
+                                <bool>true</bool>
                                </property>
                               </widget>
                              </item>
@@ -1248,7 +1353,14 @@ QPushButton{
 	border-radius: 5px;
 	border: 1px solid rgb(30, 210, 80);
 	background-color: rgb(255, 255, 255);
+	color: rgb(0, 0, 0);
 }
+QPushButton:disabled {
+background-color:rgb(194, 194, 194);
+}
+QPushButton:checked{
+	background-color: rgb(30, 210, 80);}
+
 </string>
                     </property>
                     <property name="frameShape">
@@ -1302,9 +1414,7 @@ QPushButton{
                         </size>
                        </property>
                        <property name="styleSheet">
-                        <string notr="true">QPushButton{
-	color: rgb(0, 0, 0);
-}</string>
+                        <string notr="true"/>
                        </property>
                        <property name="frameShape">
                         <enum>QFrame::StyledPanel</enum>
@@ -1355,6 +1465,9 @@ QPushButton{
                         </item>
                         <item row="0" column="2">
                          <widget class="QPushButton" name="testMthdBtnPT">
+                          <property name="enabled">
+                           <bool>true</bool>
+                          </property>
                           <property name="minimumSize">
                            <size>
                             <width>0</width>
@@ -1370,6 +1483,9 @@ QPushButton{
                           </property>
                           <property name="checkable">
                            <bool>true</bool>
+                          </property>
+                          <property name="checked">
+                           <bool>false</bool>
                           </property>
                          </widget>
                         </item>
@@ -1529,9 +1645,9 @@ QPushButton{
                              <colorrole role="Button">
                               <brush brushstyle="SolidPattern">
                                <color alpha="255">
-                                <red>255</red>
-                                <green>255</green>
-                                <blue>255</blue>
+                                <red>194</red>
+                                <green>194</green>
+                                <blue>194</blue>
                                </color>
                               </brush>
                              </colorrole>
@@ -1556,18 +1672,18 @@ QPushButton{
                              <colorrole role="Base">
                               <brush brushstyle="SolidPattern">
                                <color alpha="255">
-                                <red>255</red>
-                                <green>255</green>
-                                <blue>255</blue>
+                                <red>194</red>
+                                <green>194</green>
+                                <blue>194</blue>
                                </color>
                               </brush>
                              </colorrole>
                              <colorrole role="Window">
                               <brush brushstyle="SolidPattern">
                                <color alpha="255">
-                                <red>255</red>
-                                <green>255</green>
-                                <blue>255</blue>
+                                <red>194</red>
+                                <green>194</green>
+                                <blue>194</blue>
                                </color>
                               </brush>
                              </colorrole>

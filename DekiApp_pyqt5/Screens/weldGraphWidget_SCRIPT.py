@@ -15,7 +15,7 @@ class WeldGraphWidget(QWidget):
         loadUi(r"weldGraphWidget.ui", self)
         self.upperWeldData = {}
         self.lowerWeldData = {}
-        self.weldBanners = {'field_weld': None, 'all_around': None, 'double_sided': None}
+        self.weldBanners = {'field_weld': False, 'all_around': False, 'double_sided': False}
         # --------------------------------------------------------------Loading scripts--------------------------------
         self.lowerWeldInfo.hide()
         self.lowerWeldInfo.setEnabled(False)
@@ -95,9 +95,9 @@ class WeldGraphWidget(QWidget):
             px = px.transformed(QtGui.QTransform().scale(1, -1))
             # save the selected options for lower weld in Dialog specific dict
             if weld_dialog.selected_btn.count('Type') > 0:
-                self.lowerWeldData['lower_weld_type'] = weld_dialog.selected_btn.replace('weldType_', '')
+                self.lowerWeldData['sided_weld_type'] = weld_dialog.selected_btn.replace('weldType_', '')
             else:
-                self.lowerWeldData['lower_weld_face'] = weld_dialog.selected_btn.replace('weldFace_', '')
+                self.lowerWeldData['sided_weld_face'] = weld_dialog.selected_btn.replace('weldFace_', '')
         px = QtGui.QIcon(px)
         triggering_btn.setIcon(px)
 
