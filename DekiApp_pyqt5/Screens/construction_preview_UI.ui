@@ -24,7 +24,7 @@ border-radius: 5px;
 
 QLineEdit{
 	background-color: rgb(255, 255, 255);
-	font: italic 10pt &quot;Calibri&quot; rgb(150, 150, 150);
+	font: italic 10pt &quot;Arial&quot; rgb(150, 150, 150);
 	border: 0px;
 	border-bottom: 1px solid rgb(30, 210, 80);
 	border-radius: 10px; 
@@ -2034,255 +2034,230 @@ border-radius: 5px;</string>
                     </property>
                    </widget>
                   </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QFrame" name="frame_4">
+                 <property name="frameShape">
+                  <enum>QFrame::StyledPanel</enum>
+                 </property>
+                 <property name="frameShadow">
+                  <enum>QFrame::Raised</enum>
+                 </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_14">
                   <item>
-                   <widget class="QFrame" name="frame_18">
+                   <widget class="QFrame" name="frame_15">
                     <property name="frameShape">
                      <enum>QFrame::StyledPanel</enum>
                     </property>
                     <property name="frameShadow">
                      <enum>QFrame::Raised</enum>
                     </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_21"/>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QWidget" name="weldListWidget" native="true">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <weight>75</weight>
-                   <bold>true</bold>
-                  </font>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">#weldListWidget{
-border: 1px solid 'gray';}</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_14">
-                  <property name="spacing">
-                   <number>2</number>
-                  </property>
-                  <property name="leftMargin">
-                   <number>5</number>
-                  </property>
-                  <property name="topMargin">
-                   <number>5</number>
-                  </property>
-                  <property name="rightMargin">
-                   <number>5</number>
-                  </property>
-                  <property name="bottomMargin">
-                   <number>5</number>
-                  </property>
-                  <item alignment="Qt::AlignTop">
-                   <widget class="QWidget" name="weldListItem" native="true">
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>36</height>
-                     </size>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(255, 255, 255);</string>
-                    </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_19">
-                     <property name="spacing">
-                      <number>2</number>
-                     </property>
-                     <property name="leftMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>2</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>2</number>
-                     </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout">
                      <item>
-                      <widget class="QFrame" name="frame_4">
+                      <widget class="QLineEdit" name="lineEdit">
                        <property name="minimumSize">
                         <size>
-                         <width>45</width>
-                         <height>45</height>
+                         <width>0</width>
+                         <height>25</height>
                         </size>
                        </property>
-                       <property name="frameShape">
-                        <enum>QFrame::StyledPanel</enum>
+                       <property name="font">
+                        <font>
+                         <family>Arial</family>
+                         <pointsize>10</pointsize>
+                         <weight>50</weight>
+                         <italic>true</italic>
+                         <bold>false</bold>
+                        </font>
                        </property>
-                       <property name="frameShadow">
-                        <enum>QFrame::Raised</enum>
+                       <property name="inputMask">
+                        <string>weld ID, size, length etc.</string>
                        </property>
-                       <layout class="QHBoxLayout" name="horizontalLayout_9">
-                        <property name="spacing">
-                         <number>2</number>
-                        </property>
-                        <property name="leftMargin">
-                         <number>2</number>
-                        </property>
-                        <property name="topMargin">
-                         <number>2</number>
-                        </property>
-                        <property name="rightMargin">
-                         <number>2</number>
-                        </property>
-                        <property name="bottomMargin">
-                         <number>2</number>
-                        </property>
-                        <item>
-                         <widget class="QLabel" name="weldListItemPicture">
-                          <property name="minimumSize">
-                           <size>
-                            <width>45</width>
-                            <height>45</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>TextLabel</string>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
+                       <property name="text">
+                        <string>wel I, size, ledgt etc.</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignCenter</set>
+                       </property>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFrame" name="weldListItemInfo">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
+                      <widget class="QCheckBox" name="checkBox_2">
+                       <property name="text">
+                        <string/>
                        </property>
-                       <property name="frameShape">
-                        <enum>QFrame::StyledPanel</enum>
+                       <property name="icon">
+                        <iconset resource="../resources.qrc">
+                         <normaloff>:/Icons/Icons/weldIcon_weldBanner.png</normaloff>:/Icons/Icons/weldIcon_weldBanner.png</iconset>
                        </property>
-                       <property name="frameShadow">
-                        <enum>QFrame::Raised</enum>
+                       <property name="iconSize">
+                        <size>
+                         <width>20</width>
+                         <height>20</height>
+                        </size>
                        </property>
-                       <layout class="QVBoxLayout" name="verticalLayout_31">
-                        <property name="spacing">
-                         <number>2</number>
-                        </property>
-                        <property name="leftMargin">
-                         <number>2</number>
-                        </property>
-                        <property name="topMargin">
-                         <number>2</number>
-                        </property>
-                        <property name="rightMargin">
-                         <number>2</number>
-                        </property>
-                        <property name="bottomMargin">
-                         <number>2</number>
-                        </property>
-                        <item>
-                         <widget class="QLabel" name="numberLabel_2">
-                          <property name="font">
-                           <font>
-                            <family>Calibri,Helvetica,sans-serif</family>
-                            <pointsize>10</pointsize>
-                            <weight>75</weight>
-                            <bold>true</bold>
-                           </font>
-                          </property>
-                          <property name="text">
-                           <string>TextLabel</string>
-                          </property>
-                          <property name="indent">
-                           <number>7</number>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLabel" name="nameLabel_2">
-                          <property name="font">
-                           <font>
-                            <family>Calibri,Helvetica,sans-serif</family>
-                            <pointsize>10</pointsize>
-                           </font>
-                          </property>
-                          <property name="text">
-                           <string>TextLabel</string>
-                          </property>
-                          <property name="indent">
-                           <number>10</number>
-                          </property>
-                         </widget>
-                        </item>
-                        <item>
-                         <widget class="QLabel" name="tagLabel_2">
-                          <property name="text">
-                           <string>TextLabel</string>
-                          </property>
-                          <property name="indent">
-                           <number>14</number>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
                       </widget>
                      </item>
                      <item>
-                      <widget class="QFrame" name="weldListItemBtns">
-                       <property name="frameShape">
-                        <enum>QFrame::StyledPanel</enum>
+                      <widget class="QCheckBox" name="checkBox">
+                       <property name="text">
+                        <string/>
                        </property>
-                       <property name="frameShadow">
-                        <enum>QFrame::Raised</enum>
+                       <property name="icon">
+                        <iconset resource="../resources.qrc">
+                         <normaloff>:/Icons/Icons/weldIcon_weldRoundedLine.png</normaloff>:/Icons/Icons/weldIcon_weldRoundedLine.png</iconset>
                        </property>
-                       <layout class="QHBoxLayout" name="horizontalLayout_8">
-                        <property name="leftMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="topMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="rightMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="bottomMargin">
-                         <number>0</number>
-                        </property>
-                        <item>
-                         <widget class="QPushButton" name="pushButton_2">
-                          <property name="minimumSize">
-                           <size>
-                            <width>62</width>
-                            <height>20</height>
-                           </size>
-                          </property>
-                          <property name="baseSize">
-                           <size>
-                            <width>0</width>
-                            <height>0</height>
-                           </size>
-                          </property>
-                          <property name="text">
-                           <string>Edit</string>
-                          </property>
-                          <property name="icon">
-                           <iconset resource="../resources.qrc">
-                            <normaloff>:/Icons/Icons/edit-2.svg</normaloff>:/Icons/Icons/edit-2.svg</iconset>
-                          </property>
-                         </widget>
-                        </item>
-                       </layout>
+                       <property name="iconSize">
+                        <size>
+                         <width>20</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QFrame" name="frame_12">
+                    <property name="frameShape">
+                     <enum>QFrame::StyledPanel</enum>
+                    </property>
+                    <property name="frameShadow">
+                     <enum>QFrame::Raised</enum>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_3">
+                     <item>
+                      <widget class="QCheckBox" name="checkBox_3">
+                       <property name="text">
+                        <string>normal</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QCheckBox" name="checkBox_4">
+                       <property name="text">
+                        <string>staggered</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QCheckBox" name="checkBox_5">
+                       <property name="text">
+                        <string>intermittent</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pushButton">
+                       <property name="minimumSize">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string>Filter</string>
+                       </property>
                       </widget>
                      </item>
                     </layout>
                    </widget>
                   </item>
                  </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QScrollArea" name="weldListWidget">
+                 <property name="widgetResizable">
+                  <bool>true</bool>
+                 </property>
+                 <widget class="QWidget" name="weldListWidgetContent">
+                  <property name="geometry">
+                   <rect>
+                    <x>0</x>
+                    <y>0</y>
+                    <width>576</width>
+                    <height>675</height>
+                   </rect>
+                  </property>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="frame_16">
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <item>
+                <spacer name="horizontalSpacer_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_2">
+                 <property name="minimumSize">
+                  <size>
+                   <width>110</width>
+                   <height>30</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Arial 12</family>
+                   <pointsize>12</pointsize>
+                   <weight>50</weight>
+                   <italic>false</italic>
+                   <bold>false</bold>
+                  </font>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">border-radius: 10px;
+font: 12pt &quot;Arial&quot; bold;</string>
+                 </property>
+                 <property name="text">
+                  <string>Add weld</string>
+                 </property>
+                 <property name="icon">
+                  <iconset resource="../resources.qrc">
+                   <normaloff>:/Icons/Icons/plus.svg</normaloff>:/Icons/Icons/plus.svg</iconset>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>25</width>
+                   <height>25</height>
+                  </size>
+                 </property>
                 </widget>
                </item>
               </layout>

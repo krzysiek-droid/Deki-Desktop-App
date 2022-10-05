@@ -5,10 +5,14 @@ from PyQt5.QtCore import Qt
 
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
+
+import db_objects
 from Screens import cadViewWidget_SCRIPT as cadviewer
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 import db_objects as dbo
 import gnrl_database_con as database
+
+import pandas as pd
 import resources_rc
 
 import pathlib
@@ -45,14 +49,16 @@ class ConstructPreviewDialog(QDialog):
         self.scrolledContentLayout = None
         # ---------------------------------------------------------------Screen loading functions----------------------
         self.mainConstructQualityInfoContainer.hide()
+        self.load_weldList()
+        self.load_SubConstructionsList()
         # ---------------------------------------------------------------Button scripting------------------------------
         self.constructMoreInforBtn.clicked.connect(lambda: self.mainConstructQualityInfoContainer.hide()
         if self.mainConstructQualityInfoContainer.isVisible() else self.mainConstructQualityInfoContainer.show())
         self.addSubassemblyBtn.clicked.connect(lambda: self.add_subassembly())
         import InspectionPlannerScreen_SCRIPT
         self.goBackBtn.clicked.connect(lambda: self.parent().changeScreen(self,
-            InspectionPlannerScreen_SCRIPT.InspectionPlannerScreen()) if self.parent() is not None else print('no '
-                                                                                                              'parent'))
+                                                                          InspectionPlannerScreen_SCRIPT.InspectionPlannerScreen()) if self.parent() is not None else print(
+            'no parent'))
         import new_subconstruction_SCRIPT
         self.addSubassemblyBtn.clicked.connect(
             lambda: (self.showDialog(new_subconstruction_SCRIPT.NewSubconstructionDialog(self.construction))))
@@ -76,8 +82,6 @@ class ConstructPreviewDialog(QDialog):
         self.subcontractorContactLabel.setText(self.construction.info['sub_contact'])
         self.showStepModel()
         self.showPdfViewer()
-
-        self.load_SubConstructionsList()
 
     def showStepModel(self):
         if not self.cadModelViewWidget:
@@ -112,10 +116,12 @@ class ConstructPreviewDialog(QDialog):
     def load_SubConstructionsList(self):
         # Check if scrollArea needs to be refreshed, if its empty load all subs
         # get dataframe with subConstructions belonging to parent construction, by ID
-        belonging_subConstructions = self.db.df_from_filteredTable('deki_2022_SubConstructions',
-                                                                   'parent_construction_id', self.constructNumber)
+        belonging_subConstructions = pd.merge(self.db.df_from_filteredTable('deki_2022_SubConstructions',
+                                               'main_construction_id', self.constructNumber),
+                                              self.db.df_from_filteredTable('deki_2022_SubConstructions',
+                                               'parent_construction_id', self.constructNumber), how='outer')
         # get list of subConstruction IDs belonging to parent construction
-        subConstructions_IDs = belonging_subConstructions['id'].tolist()
+        subConstructions_IDs = belonging_subConstructions['id']
         # iterate throughout subConstruction IDs list and load those subConstructions into the screen
         self.scrolledContentWidget = QWidget()
         self.scrolledContentWidget.setObjectName('scrolledContentWidget')
@@ -137,6 +143,19 @@ class ConstructPreviewDialog(QDialog):
         else:
             print(f"No subConstructions to be loaded. ---- subConstructions Ids: {subConstructions_IDs}")
 
+    def load_weldList(self):
+        layout = QVBoxLayout()
+        layout.setSpacing(2)
+        layout.setAlignment(Qt.AlignTop)
+        welds_tableName = f"{self.construction.info['tag']}_modelWelds"
+        if self.db.is_table(welds_tableName):
+            for weld in range(self.db.check_records_number(welds_tableName)):
+                print(f'Loading weld id {weld} into {self.weldListWidgetContent.objectName()}')
+                from weldListItem_SCRIPT import WeldListItem
+                layout.addWidget(WeldListItem(weld + 1, self.construction), alignment=Qt.AlignTop)
+        layout.setAlignment(Qt.AlignTop)
+        self.weldListWidgetContent.setLayout(layout)
+
     def refresh_subConstructionList(self):
         self.scrolledContentWidget.deleteLater()
         self.load_SubConstructionsList()
@@ -150,7 +169,7 @@ class ConstructPreviewDialog(QDialog):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    mainWindow = ConstructPreviewDialog(2)
+    mainWindow = ConstructPreviewDialog(1)
     mainWindow.showMaximized()
 
     try:

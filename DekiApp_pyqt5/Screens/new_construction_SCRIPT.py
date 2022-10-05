@@ -150,11 +150,8 @@ class NewConstructDialog(QDialog):
         if fileName:
             print(f'Opening pdf: {fileName}')
             self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fileName, parent=self.docsViewerContainer)
-            # Create layout for pdfViewerWidget
-            grid = QHBoxLayout()
-            grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
             # Insert a pdfViewerWidget into docViewer Widget (widget for pdf viewing)
-            self.docsViewerContainer.setLayout(grid)
+            self.docsViewerContainer.setLayout(self.pdfViewerWidget.main_layout)
             if self.validate_info():
                 self.addConstructionBtn.setEnabled(True)
 
@@ -183,9 +180,7 @@ class NewConstructDialog(QDialog):
 
             new_construction.picture = self.cadModelViewWidget.screenshot
             new_construction.pdfDocsPath = self.pdfViewerWidget.filepath
-
             new_construction.stpModelPath = self.cadModelViewWidget.filepath
-
             new_construction.save_main_construction()
             print("MainConstruction added to database successfully.")
 

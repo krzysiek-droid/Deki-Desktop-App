@@ -11,7 +11,14 @@ import sys
 Podcza instalacji aplikacji, należy ją połączyc z konkretną bazą danych i serwerem tzn. znać nazwę bazy i kody dostępu.
 '''
 srv_files_filepath = r'D:\dekiApp\Deki_ServerFiles\constructions_database'
-
+srv_wps_files_path = r'D:\dekiApp\Deki_ServerFiles\wps_database'
+weld_specification = ['id', 'belonging_construction_tag', 'belonging_construction_ID', 'wps_number', 'weld_id_prefix',
+                   'weld_id_generated', 'weld_id_suffix', 'joint_type', 'weld_continuity_type', 'all_around',
+                   'field_weld', 'upper_sizeType', 'upper_size', 'upper_weld_type', 'upper_weld_face',
+                   'upper_weld_quant', 'upper_length', 'upper_weld_spacing', 'double_sided', 'sided_sizeType',
+                   'sided_size', 'sided_weld_type', 'sided_weld_face', 'sided_weld_quant', 'sided_length',
+                   'sided_weld_spacing', 'tail_info', 'first_material', 'second_material', 'first_welded_part',
+                   'second_welded_part', 'testing_methods']
 
 class Construction:
     def __init__(self, companyName='deki', connected_database=None):
@@ -96,13 +103,8 @@ class SubConstruction(Construction):
     def __init__(self, parentConstruction=None, connected_database=None):
         super(SubConstruction, self).__init__(connected_database=connected_database)
         self.table_name = f'{self.company_name}_2022_SubConstructions'
-        # self.parent_construction = MainConstruction().load_info(1) if parentConstruction is None else
-        # parentConstruction
         self.parent_construction = parentConstruction
         self.mainConstruction = parentConstruction.mainConstruction if parentConstruction is not None else None
-
-        # if parentConstruction is None:
-        #     self.load_info(1)
 
     def save_subConstruction(self):
         if not self.db.is_table(self.table_name):
@@ -154,48 +156,20 @@ class SubConstruction(Construction):
 
 
 class weldObject:
-    def __init__(self, companyName='deki', connected_database=None, table_name=None):
+    def __init__(self, parentConstructName='deki', connected_database=None, table_name=None):
         print(f"\n-----------------------------------------------------------------{type(self)} INITIALIZED")
-        self.table_name = f"{companyName}_2022_modelWelds" if table_name is None else table_name
+        self.table_name = f"{parentConstructName}_modelWelds" if table_name is None else table_name
         self.db = database.Database() if connected_database is None else connected_database
         self.db_records = self.update_records_amount()
-        self.info = {'id': self.db_records + 1,
-                     'belonging_construction_tag': None,
-                     'belonging_construction_ID': None,
-                     'wps_number': None,
-                     'weld_id_prefix': None,
-                     'weld_id_generated': None,
-                     'weld_id_suffix': None,
-                     'joint_type': None,
-                     'weld_continuity_type': None,
-                     'all_around': None,
-                     'field_weld': None,
-                     'upper_sizeType': None,
-                     'upper_size': None,
-                     'upper_weld_type': None,
-                     'upper_weld_face': None,
-                     'upper_weld_quant': None,
-                     'upper_length': None,
-                     'upper_weld_spacing': None,
-                     'double_sided': None,
-                     'sided_sizeType': None,
-                     'sided_size': None,
-                     'sided_weld_type': None,
-                     'sided_weld_face': None,
-                     'sided_weld_quant': None,
-                     'sided_length': None,
-                     'sided_weld_spacing': None,
-                     'tail_info': None,
-                     'first_material': None,
-                     'second_material': None,
-                     'first_welded_part': None,
-                     'second_welded_part': None,
-                     'testing_methods': None
-                     }
-        self.info = dict.fromkeys(self.db.get_columns_names(self.table_name))
+        self.wps_filepath = None
 
-        print(f'Columns in the database: ')
-        print(self.db.get_columns_names(self.table_name))
+        if self.db.is_table(self.table_name):
+            self.info = dict.fromkeys(self.db.get_columns_names(self.table_name))
+        else:
+            print(f'{self} -- table {self.table_name} not found. Creating a table...')
+            self.info = dict.fromkeys(weld_specification)
+            self.db.create_table(self.table_name, self.info)
+            print(f'{self} -- {self. table_name} created.')
 
     # returns number of rows in database table (self.table_name)
     def update_records_amount(self):
@@ -211,18 +185,42 @@ class weldObject:
             return None
 
     def load_info(self, weld_id):
-        print(f'Loading data for modelWeld from: {self.table_name} - Wled ID: {weld_id}....',
+        print(f'Loading data for weld from: {self.table_name} - Weld ID: {weld_id}....',
               end=" ")
         keys = self.db.get_columns_names(self.table_name)
         values = self.db.get_row(self.table_name, 'id', f'{str(weld_id)}')[0]
         self.info = {k: v for k, v in zip(keys, values)}
-        print(f'Construction {self.info["name"]}-{self.info["tag"]} loaded.')
+        self.wps_filepath = srv_wps_files_path + fr'\{self.info["wps_number"]}.pdf'
+        print(f'Weld info loaded')
+
+    def save_weld(self, new_weld_DbName, pathToWpsFile):
+        dst_wpsDocsPath = srv_wps_files_path + fr'\{self.info["wps_number"]}.pdf'
+        if self.db.is_table(new_weld_DbName):
+            print('Database for welds found. Adding new weld...')
+            # Do not update db_records to avoid multpile inserting of same weldObject into db
+            print(f'Columns/Values length check:  '
+                  f'{len(self.db.get_columns_names(new_weld_DbName))} == {len(self.info.values())}?')
+            self.info['id'] = int(self.db_records) + 1
+            self.db.insert(new_weld_DbName, list(self.info.values()))
+            print(f'Weld inserted with id: {self.info["id"]}')
+            if pathToWpsFile is not None:
+                self.wps_filepath = shutil.copy2(pathToWpsFile, dst_wpsDocsPath)
+        else:
+            print('Database for welds not found. Creating new table in Database...')
+            self.db.create_table(new_weld_DbName, self.info.keys())
+            print(f'Table {new_weld_DbName} created. Adding weld...')
+            self.info['id'] = int(self.db_records) + 1
+            self.db.insert(new_weld_DbName, list(self.info.values()))
+            print(f'Weld inserted with id: {self.info["id"]}')
+            if pathToWpsFile is not None:
+                self.wps_filepath = shutil.copy2(pathToWpsFile, dst_wpsDocsPath)
 
 
 if __name__ == "__main__":
-
     app = QApplication(sys.argv)
-    subCons = weldObject()
+    subCons = weldObject('test1_modelWelds')
+    subCons.info['wps_number'] = '135_2020_5'
+    subCons.save_weld('test1_modelWelds', r'D:/dekiApp/DKI_MVP_01/WPSy/135_2020_5.pdf')
 
     try:
         sys.exit(app.exec_())

@@ -2,6 +2,7 @@ import pathlib
 import sys
 from pathlib import Path
 
+
 from ezdxf.addons.drawing import qtviewer
 from ezdxf.addons.drawing.qtviewer import *
 
@@ -30,7 +31,7 @@ class dxfViewer(qtviewer.CADGraphicsViewWithOverlay):  # # Unused, for legacy st
             print(f'Invalid or corrupted DXF file.')
             sys.exit(2)
         if self.auditor.has_errors:
-            print(f'Found unrecoverable errors in DXF file: {name}.')
+            print(f'Found unrecoverable errors in DXF file:.')
             self.auditor.print_error_report()
 
     def _reset_backend(self, scale: float = 1.0):
@@ -149,17 +150,21 @@ class dxfViewerWidget(QWidget):  # Unused, for legacy stuff
 # TODO: Add conversion from .dxf and .dwg to .pdf
 class pdfViewerWidget(QWidget):
     def __init__(self, filepath, parent=None):
-        super(pdfViewerWidget, self).__init__(parent)
+        super(pdfViewerWidget, self).__init__()
         self.filepath = Path(filepath)
-        if parent is not None:
-            print(f'pdfViewer parent: {parent.size()}')
+        print(f'filepath to Path.uri object: {self.filepath.as_uri()}')
         self.main_layout = QVBoxLayout(self)
         self.pdfViewer = QAxContainer.QAxWidget(self)
         self.pdfViewer.setControl("{8856F961-340A-11D0-A96B-00C04FD705A2}")
-        self.pdfViewer.setMinimumSize(parent.size().width() -10, parent.size().height()-10)
+        if parent is not None:
+            print(f'pdfViewer parent: {parent}')
+            self.pdfViewer.setMinimumSize(parent.size().width() -10, parent.size().height()-10)
+        else:
+            self.pdfViewer.setMinimumSize(885, 500)
         self.main_layout.addWidget(self.pdfViewer)
 
         self.loadPdf()
+        print(f"pdfViewerWidget initialized succesfully")
 
     def loadPdf(self):
         # convert system path to web path with .as_uri() method

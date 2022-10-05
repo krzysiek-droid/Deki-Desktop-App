@@ -681,16 +681,11 @@
     <file>Icons/170__leaves.svg</file>
   </qresource>
   <qresource prefix="Pictures">
-    <file>Pictures/jt_001.png</file>
-    <file>Pictures/jt_002.png</file>
-    <file>Pictures/jt_003.png</file>
-    <file>Pictures/jt_004.png</file>
-    <file>Pictures/jt_005.png</file>
-    <file>Pictures/Logo_twojpartner1.png</file>
     <file>Pictures/stagger.png</file>
     <file>Pictures/weldNote.png</file>
     <file>Pictures/jt_001.png</file>
     <file>Pictures/jt_002.png</file>
+    <file>Pictures/stagger_thick.svg</file>
     <file>Pictures/jt_003.png</file>
     <file>Pictures/jt_004.png</file>
     <file>Pictures/jt_005.png</file>

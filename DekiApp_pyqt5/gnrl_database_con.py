@@ -218,7 +218,7 @@ class Database:
         else:
             return 0
 
-    def df_from_filteredTable(self, table_name, column_name, value):
+    def df_from_filteredTable(self, table_name, column_name, value) -> pd.DataFrame:
         qry = f"SELECT * FROM {table_name} WHERE {column_name} = {value}  ORDER BY ID"
         self.cur.execute(qry)
         records = self.cur.fetchall()

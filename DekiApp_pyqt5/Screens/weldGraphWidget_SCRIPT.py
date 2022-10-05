@@ -15,10 +15,19 @@ class WeldGraphWidget(QWidget):
         loadUi(r"weldGraphWidget.ui", self)
         self.upperWeldData = {}
         self.lowerWeldData = {}
-        self.weldBanners = {'field_weld': False, 'all_around': False, 'double_sided': False}
+        self.weldBanners = {'field_weld': False, 'all_around': False, 'double_sided': False, 'tail_info': None}
         # --------------------------------------------------------------Loading scripts--------------------------------
         self.lowerWeldInfo.hide()
         self.lowerWeldInfo.setEnabled(False)
+        self.lineEdits = {'upper_size': self.upperSizeLine,
+                     'upper_weld_quant': self.upperWeldQuantityLine,
+                     'upper_length': self.upperWeldLengthLine,
+                     'upper_weld_spacing': self.upperWeldSpacingLine,
+                     'sided_size': self.lowerSizeLine,
+                     'sided_weld_quant': self.lowerWeldQuantityLine,
+                     'sided_length': self.lowerWeldLengthLine,
+                     'sided_weld_spacing': self.lowerWeldSpacingLine,
+                     }
         # ---------------------------------------------------------------Button scripting------------------------------
         self.addSideWeld.clicked.connect(lambda: self.toggleSideWeld())
         self.upperWeldTypeIcon.clicked.connect(
@@ -38,6 +47,7 @@ class WeldGraphWidget(QWidget):
                                           r':/Icons/Icons/weldIcon_weldLine.png', 'all_around'))
         # ---------------upper weld line-----------------------
         self.upperSizeCombo.currentTextChanged.connect(lambda x: self.updateWeldData(x, 'upper_sizeType', 'upper'))
+        self.upperSizeCombo.setCurrentIndex(2)
         self.upperSizeLine.editingFinished.connect(
             lambda: self.updateWeldData(self.upperSizeLine.text(), 'upper_size', 'upper'))
         self.upperWeldQuantityLine.editingFinished.connect(
@@ -48,6 +58,7 @@ class WeldGraphWidget(QWidget):
             lambda: self.updateWeldData(self.upperWeldSpacingLine.text(), 'upper_weld_spacing', 'upper'))
         # ---------------lower weld line----------------------
         self.lowerSizeCombo.currentTextChanged.connect(lambda x: self.updateWeldData(x, 'sided_sizeType', 'lower'))
+        self.lowerSizeCombo.setCurrentIndex(2)
         self.lowerSizeLine.editingFinished.connect(
             lambda: self.updateWeldData(self.lowerSizeLine.text(), 'sided_size', 'lower'))
         self.lowerWeldQuantityLine.editingFinished.connect(
@@ -56,6 +67,9 @@ class WeldGraphWidget(QWidget):
             lambda: self.updateWeldData(self.lowerWeldLengthLine.text(), 'sided_length', 'lower'))
         self.lowerWeldSpacingLine.editingFinished.connect(
             lambda: self.updateWeldData(self.lowerWeldSpacingLine.text(), 'sided_weld_spacing', 'lower'))
+        self.tailMultiline.textChanged.connect(
+            lambda: self.weldBanners.update({"tail_info": self.tailMultiline.toPlainText()})
+        )
 
     def toggleSideWeld(self):
         if self.addSideWeld.isChecked():
@@ -104,11 +118,11 @@ class WeldGraphWidget(QWidget):
     def transformWeldSymbolType(self, new_type):
         if new_type == "normal":
             self.staggeredGraph.hide()
-            self.upperWeldAmountLabel.hide()
-            self.upperWeldLengthLine.hide()
+            self.upperWeldAmountLabel.show()
+            self.upperWeldLengthLine.show()
             self.upperWeldSpacingFrame.hide()
-            self.lowerWeldLengthLine.hide()
-            self.lowerWeldAmountLabel.hide()
+            self.lowerWeldLengthLine.show()
+            self.lowerWeldAmountLabel.show()
             self.lowerWeldSpacingFrame.hide()
         elif new_type == 'staggered':
             self.staggeredGraph.hide()
