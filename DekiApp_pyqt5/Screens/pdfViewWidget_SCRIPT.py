@@ -2,7 +2,6 @@ import pathlib
 import sys
 from pathlib import Path
 
-
 from ezdxf.addons.drawing import qtviewer
 from ezdxf.addons.drawing.qtviewer import *
 
@@ -148,28 +147,45 @@ class dxfViewerWidget(QWidget):  # Unused, for legacy stuff
 
 
 # TODO: Add conversion from .dxf and .dwg to .pdf
+class pdfViewerLayout(QVBoxLayout):
+    def __init__(self, filepath, parent=None):
+        super(pdfViewerLayout, self).__init__()
+        self.filepath = Path(filepath)
+        print(f'filepath to Path.uri object: {self.filepath.as_uri()}')
+        self.pdfWidget = QAxContainer.QAxWidget()
+        self.pdfWidget.setControl("{8856F961-340A-11D0-A96B-00C04FD705A2}")
+        self.loadPdf()
+        print(f"pdfViewerLayout initialized succesfully")
+
+    def loadPdf(self):
+        # convert system path to web path with .as_uri() method
+        # load object
+        self.pdfWidget.dynamicCall('Navigate(const QString&)', self.filepath.as_uri())
+        self.addWidget(self.pdfWidget)
+
+
 class pdfViewerWidget(QWidget):
     def __init__(self, filepath, parent=None):
         super(pdfViewerWidget, self).__init__()
         self.filepath = Path(filepath)
         print(f'filepath to Path.uri object: {self.filepath.as_uri()}')
-        self.main_layout = QVBoxLayout(self)
-        self.pdfViewer = QAxContainer.QAxWidget(self)
-        self.pdfViewer.setControl("{8856F961-340A-11D0-A96B-00C04FD705A2}")
-        if parent is not None:
-            print(f'pdfViewer parent: {parent}')
-            self.pdfViewer.setMinimumSize(parent.size().width() -10, parent.size().height()-10)
-        else:
-            self.pdfViewer.setMinimumSize(885, 500)
-        self.main_layout.addWidget(self.pdfViewer)
-
+        self.pdfWidget = QAxContainer.QAxWidget()
+        self.pdfWidget.setControl("{8856F961-340A-11D0-A96B-00C04FD705A2}")
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.pdfWidget)
+        self.setLayout(self.layout)
         self.loadPdf()
-        print(f"pdfViewerWidget initialized succesfully")
+        print(f"pdfViewerLayout initialized successfully.")
 
     def loadPdf(self):
         # convert system path to web path with .as_uri() method
         # load object
-        self.pdfViewer.dynamicCall('Navigate(const QString&)', self.filepath.as_uri())
+        self.pdfWidget.dynamicCall('Navigate(const QString&)', self.filepath.as_uri())
+
+    def fitToParent(self):
+        if self.parent() is not None:
+            print(f"resizing pdfViewer...")
+            self.resize(self.parent().size())
 
 
 if __name__ == "__main__":
@@ -179,7 +195,7 @@ if __name__ == "__main__":
     filepath = str(r'D:\dekiApp\Deki_ServerFiles\wps_database\135_2020_4.pdf')
     filepath = pathlib.Path(filepath)
 
-    w = pdfViewerWidget(filepath)
+    w = pdfViewerLayout(filepath)
     w.show()
     try:
         sys.exit(app.exec_())

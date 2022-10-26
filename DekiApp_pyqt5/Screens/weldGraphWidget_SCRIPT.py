@@ -20,14 +20,22 @@ class WeldGraphWidget(QWidget):
         self.lowerWeldInfo.hide()
         self.lowerWeldInfo.setEnabled(False)
         self.lineEdits = {'upper_size': self.upperSizeLine,
-                     'upper_weld_quant': self.upperWeldQuantityLine,
-                     'upper_length': self.upperWeldLengthLine,
-                     'upper_weld_spacing': self.upperWeldSpacingLine,
-                     'sided_size': self.lowerSizeLine,
-                     'sided_weld_quant': self.lowerWeldQuantityLine,
-                     'sided_length': self.lowerWeldLengthLine,
-                     'sided_weld_spacing': self.lowerWeldSpacingLine,
-                     }
+                          'upper_weld_quant': self.upperWeldQuantityLine,
+                          'upper_length': self.upperWeldLengthLine,
+                          'upper_weld_spacing': self.upperWeldSpacingLine,
+                          'sided_size': self.lowerSizeLine,
+                          'sided_weld_quant': self.lowerWeldQuantityLine,
+                          'sided_length': self.lowerWeldLengthLine,
+                          'sided_weld_spacing': self.lowerWeldSpacingLine,
+                          }
+        self.pushButtons = {
+            'field_weld': self.weldAsemblyIcon,
+            'all_around': self.weldRoundedIcon,
+            'upper_weld_type': self.upperWeldTypeIcon,
+            'upper_weld_face': self.upperWeldFaceIcon,
+            'sided_weld_type': self.lowerWeldTypeIcon,
+            'sided_weld_face': self.lowerWeldFaceIcon
+        }
         # ---------------------------------------------------------------Button scripting------------------------------
         self.addSideWeld.clicked.connect(lambda: self.toggleSideWeld())
         self.upperWeldTypeIcon.clicked.connect(
@@ -41,48 +49,49 @@ class WeldGraphWidget(QWidget):
         self.weldAsemblyIcon.clicked.connect(
             lambda: self.updateWeldBanner(self.weldAsemblyIcon, r':/Icons/Icons/weldIcon_weldBanner.png',
                                           r':/Icons/Icons/banner_weld_face.png', 'field_weld'))
-        # --------------------------------------------------------------Scripting--------------------------------------
         self.weldRoundedIcon.clicked.connect(
             lambda: self.updateWeldBanner(self.weldRoundedIcon, r':/Icons/Icons/weldIcon_weldRoundedLine.png',
                                           r':/Icons/Icons/weldIcon_weldLine.png', 'all_around'))
         # ---------------upper weld line-----------------------
         self.upperSizeCombo.currentTextChanged.connect(lambda x: self.updateWeldData(x, 'upper_sizeType', 'upper'))
         self.upperSizeCombo.setCurrentIndex(2)
-        self.upperSizeLine.editingFinished.connect(
+        self.upperSizeLine.textChanged.connect(
             lambda: self.updateWeldData(self.upperSizeLine.text(), 'upper_size', 'upper'))
-        self.upperWeldQuantityLine.editingFinished.connect(
+        self.upperWeldQuantityLine.textChanged.connect(
             lambda: self.updateWeldData(self.upperWeldQuantityLine.text(), 'upper_weld_quant', 'upper'))
-        self.upperWeldLengthLine.editingFinished.connect(
+        self.upperWeldLengthLine.textChanged.connect(
             lambda: self.updateWeldData(self.upperWeldLengthLine.text(), 'upper_length', 'upper'))
-        self.upperWeldSpacingLine.editingFinished.connect(
+        self.upperWeldSpacingLine.textChanged.connect(
             lambda: self.updateWeldData(self.upperWeldSpacingLine.text(), 'upper_weld_spacing', 'upper'))
         # ---------------lower weld line----------------------
         self.lowerSizeCombo.currentTextChanged.connect(lambda x: self.updateWeldData(x, 'sided_sizeType', 'lower'))
         self.lowerSizeCombo.setCurrentIndex(2)
-        self.lowerSizeLine.editingFinished.connect(
+        self.lowerSizeLine.textChanged.connect(
             lambda: self.updateWeldData(self.lowerSizeLine.text(), 'sided_size', 'lower'))
-        self.lowerWeldQuantityLine.editingFinished.connect(
+        self.lowerWeldQuantityLine.textChanged.connect(
             lambda: self.updateWeldData(self.lowerWeldQuantityLine.text(), 'sided_weld_quant', 'lower'))
-        self.lowerWeldLengthLine.editingFinished.connect(
+        self.lowerWeldLengthLine.textChanged.connect(
             lambda: self.updateWeldData(self.lowerWeldLengthLine.text(), 'sided_length', 'lower'))
-        self.lowerWeldSpacingLine.editingFinished.connect(
+        self.lowerWeldSpacingLine.textChanged.connect(
             lambda: self.updateWeldData(self.lowerWeldSpacingLine.text(), 'sided_weld_spacing', 'lower'))
         self.tailMultiline.textChanged.connect(
-            lambda: self.weldBanners.update({"tail_info": self.tailMultiline.toPlainText()})
-        )
+            lambda: (self.weldBanners.update({"tail_info": self.tailMultiline.toPlainText()}),
+                     print(f"Weld banners updated: {self.weldBanners}")))
+
+        self.editGraphBtn.hide()
 
     def toggleSideWeld(self):
         if self.addSideWeld.isChecked():
             self.lowerWeldInfo.show()
-            self.addSideWeld.setStyleSheet("color: rgb(0, 0, 0);"
-                                           "background-color : rgb(30, 210, 80)")
+            # self.addSideWeld.setStyleSheet("color: rgb(0, 0, 0);"
+            #                                "background-color : rgb(30, 210, 80)")
             self.lowerWeldInfo.setEnabled(True)
             self.weldBanners['double_sided'] = True
         else:
             self.lowerWeldInfo.hide()
             self.lowerWeldInfo.setEnabled(False)
-            self.addSideWeld.setStyleSheet("color: rgb(150, 150, 150);"
-                                           "background-color : rgb(255, 255, 255)")
+            # self.addSideWeld.setStyleSheet("color: rgb(150, 150, 150);"
+            #                                "background-color : rgb(255, 255, 255)")
             self.weldBanners['double_sided'] = False
         print(f'Weld banners changed -- Double sided weld : {self.weldBanners}')
 
@@ -97,21 +106,21 @@ class WeldGraphWidget(QWidget):
         move_vect = weld_dialog.mapFromGlobal(global_position)
         weld_dialog.move(move_vect)
         weld_dialog.exec_()  # exec_() opens the Dialog and waits for user input
-        print(f'Chosen btn: {weld_dialog.selected_btn}')
+        print(f'Chosen btn: {weld_dialog.selectedBtn_Name}')
         # save the selected options for upper weld in Dialog specific dict
-        if weld_dialog.selected_btn.count('Type') > 0:
-            self.upperWeldData['upper_weld_type'] = weld_dialog.selected_btn.replace('weldType_', '')
+        if weld_dialog.selectedBtn_Name.count('Type') > 0:
+            self.upperWeldData['upper_weld_type'] = weld_dialog.selectedBtn_Name.replace('weldType_', '')
         else:
-            self.upperWeldData['upper_weld_face'] = weld_dialog.selected_btn.replace('weldFace_', '')
+            self.upperWeldData['upper_weld_face'] = weld_dialog.selectedBtn_Name.replace('weldFace_', '')
         px = weld_dialog.selected_btn_icon.pixmap(QtCore.QSize(20, 20))
         # rotate the icon in case the calling button is rotated
         if rotated:
             px = px.transformed(QtGui.QTransform().scale(1, -1))
             # save the selected options for lower weld in Dialog specific dict
-            if weld_dialog.selected_btn.count('Type') > 0:
-                self.lowerWeldData['sided_weld_type'] = weld_dialog.selected_btn.replace('weldType_', '')
+            if weld_dialog.selectedBtn_Name.count('Type') > 0:
+                self.lowerWeldData['sided_weld_type'] = weld_dialog.selectedBtn_Name.replace('weldType_', '')
             else:
-                self.lowerWeldData['sided_weld_face'] = weld_dialog.selected_btn.replace('weldFace_', '')
+                self.lowerWeldData['sided_weld_face'] = weld_dialog.selectedBtn_Name.replace('weldFace_', '')
         px = QtGui.QIcon(px)
         triggering_btn.setIcon(px)
 
@@ -168,7 +177,7 @@ class weldTypeDialog(QDialog):
         super(weldTypeDialog, self).__init__()
         if dialogType == "weldType":
             loadUi(r"weldTypeDialog.ui", self)
-            self.selected_btn = None
+            self.selectedBtn_Name = str
             self.selected_btn_icon = None
             self.weldType_184.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_184))
             self.weldType_114.clicked.connect(lambda: self.select_button(self.weldTypesBtns, self.weldType_114))
@@ -192,7 +201,7 @@ class weldTypeDialog(QDialog):
         else:
             loadUi(r"weldFaceDialog.ui", self)
 
-            self.selected_btn = None
+            self.selectedBtn_Name = None
             self.selected_btn_icon = None
             self.weldFace_circline.clicked.connect(
                 lambda: self.select_button(self.weldFaceBtns, self.weldFace_circline))
@@ -217,7 +226,7 @@ class weldTypeDialog(QDialog):
                 if not btn == selected_btn:
                     btn.setStyleSheet("background-color : rgb(255, 255, 255)")
             selected_btn.setStyleSheet("background-color : rgb(30, 210, 80)")
-            self.selected_btn = selected_btn.objectName()
+            self.selectedBtn_Name = selected_btn.objectName()
             self.selected_btn_icon = selected_btn.icon()
         self.close()
 

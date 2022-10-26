@@ -149,8 +149,8 @@ class NewConstructDialog(QDialog):
                                                   "pdf (*.pdf);;All Files (*)", options=options)
         if fileName:
             print(f'Opening pdf: {fileName}')
-            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fileName, parent=self.docsViewerContainer)
-            # Insert a pdfViewerWidget into docViewer Widget (widget for pdf viewing)
+            self.pdfViewerWidget = pdfviewer.pdfViewerLayout(fileName, parent=self.docsViewerContainer)
+            # Insert a pdfViewerLayout into docViewer Widget (widget for pdf viewing)
             self.docsViewerContainer.setLayout(self.pdfViewerWidget.main_layout)
             if self.validate_info():
                 self.addConstructionBtn.setEnabled(True)

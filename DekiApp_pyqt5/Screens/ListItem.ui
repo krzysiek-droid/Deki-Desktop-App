@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1110</width>
+    <width>661</width>
     <height>134</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -148,6 +154,9 @@ QPushButton{
             <enum>QFrame::Raised</enum>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="spacing">
+             <number>1</number>
+            </property>
             <item>
              <widget class="QLabel" name="constructionName">
               <property name="sizePolicy">
@@ -217,6 +226,19 @@ QPushButton{
               </property>
              </widget>
             </item>
+            <item>
+             <spacer name="verticalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
            </layout>
           </widget>
          </item>
@@ -233,7 +255,7 @@ QPushButton{
         </layout>
        </widget>
       </item>
-      <item alignment="Qt::AlignHCenter|Qt::AlignBottom">
+      <item>
        <widget class="QFrame" name="frame_3">
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
@@ -249,19 +271,25 @@ QPushButton{
           <number>1</number>
          </property>
          <property name="topMargin">
-          <number>1</number>
+          <number>10</number>
          </property>
          <property name="rightMargin">
           <number>1</number>
          </property>
          <property name="bottomMargin">
-          <number>1</number>
+          <number>10</number>
          </property>
-         <item alignment="Qt::AlignHCenter|Qt::AlignBottom">
-          <widget class="QPushButton" name="componentsBtn">
+         <item>
+          <widget class="QPushButton" name="openSubConstructionBtn">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="minimumSize">
             <size>
-             <width>150</width>
+             <width>70</width>
              <height>30</height>
             </size>
            </property>
@@ -273,19 +301,32 @@ QPushButton{
             </font>
            </property>
            <property name="text">
-            <string>Components</string>
+            <string>Open</string>
            </property>
            <property name="icon">
             <iconset resource="../resources.qrc">
-             <normaloff>:/Icons/Icons/chevron-down.svg</normaloff>:/Icons/Icons/chevron-down.svg</iconset>
+             <normaloff>:/Icons/Icons/external-link.svg</normaloff>:/Icons/Icons/external-link.svg</iconset>
            </property>
            <property name="iconSize">
             <size>
-             <width>24</width>
-             <height>24</height>
+             <width>16</width>
+             <height>16</height>
             </size>
            </property>
           </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>

@@ -26,18 +26,15 @@ class CustomListItem(QWidget):
         # Updates the rightSidedContent of the InspectionPlanningMainWindow
         # in lambda definition an "event" has to be passed for proper functionality
         self.mouseReleaseEvent = lambda event: self.update_selfInfo()
-        self.componentsBtn.clicked.connect(lambda: print(QApplication.topLevelWidgets()))
 
     def update_selfInfo(self):
         for widget in QApplication.topLevelWidgets():
             searched_child = widget.findChild(QWidget, name='inspectionPlannerScreen')
             if searched_child is not None:
-                print(f"found inspectionPlannerScreen in toplevelWidgets, {searched_child}")
                 self.mainWindowInstance = searched_child
                 self.mainWindowInstance.updateRightMenu(self.constructionID)
                 break
             elif widget.objectName() == 'inspectionPlannerScreen':
-                print(f"widget object name is: {widget.objectName()}")
                 self.mainWindowInstance = widget
                 self.mainWindowInstance.updateRightMenu(self.constructionID)
                 break
@@ -48,6 +45,11 @@ class InspectionPlannerScreen(QWidget):
         super().__init__()
         loadUi(r'InspectionPlannerScreen_UI.ui', self)
         self.currentListItemID = None
+        self.mainWindowObject = None
+        for widget in QApplication.topLevelWidgets():
+            if widget.objectName() == 'inspectionPlannerWindow':
+                self.mainWindowObject = widget
+                print(f"found {self.mainWindowObject}")
         # Screen loading scripts
         self.goToConstructionBtn.setEnabled(False)
         # open database connection
@@ -63,12 +65,12 @@ class InspectionPlannerScreen(QWidget):
             lambda: (self.showDialog(new_construction_SCRIPT.NewConstructDialog())))
 
         # change screen for 'construction_preview'
-        import construction_preview_SCRIPT
+        from construction_preview_SCRIPT import ConstructPreviewDialog
         self.goToConstructionBtn.clicked.connect(
-            lambda: (print(f"Loading construction Preview Screen for construction ID {self.currentListItemID}"),
-                     self.parent().changeScreen(self, construction_preview_SCRIPT.ConstructPreviewDialog(
-                         self.currentListItemID, connected_database=self.db)) if self.parent() is not None else
-                     print('no parent')))
+            lambda: (print(f"Loading mainConstructionObject Preview Screen for mainConstructionObject ID {self.currentListItemID}"),
+                     self.mainWindowObject.stackedWidget.changeScreen(self, ConstructPreviewDialog(
+                         self.currentListItemID, connected_database=self.db), 'Main Construction Preview') \
+                         if self.parent() is not None else print('no parent')))
 
     def loadConstructionsList(self):
         self.scrolledContentWidget = QWidget()
@@ -84,7 +86,7 @@ class InspectionPlannerScreen(QWidget):
             listItem = CustomListItem(constructionID + 1)
             listItem.constructionTag.setText(constructionObject.info["tag"])
             listItem.constructionName.setText(constructionObject.info['name'])
-            listItem.constructionPicture.setPixmap(constructionObject.picture.scaled(120, 120, 1, 1))
+            listItem.constructionPicture.setPixmap(constructionObject.picture.scaledToHeight(120, mode=Qt.SmoothTransformation))
             listItem.seriesSize.setText(constructionObject.info['serial_number'])
             scrolledContentLayout.addWidget(listItem, alignment=Qt.AlignTop)
         self.scrolledContentWidget.setLayout(scrolledContentLayout)
@@ -109,7 +111,8 @@ class InspectionPlannerScreen(QWidget):
         self.constructionTolerancesLevel.setText(constructionObject.info['tolerances_level'])
         self.constructionCoopBody.setText(constructionObject.info['subcontractor'])
         self.constructionCoopContact.setText(constructionObject.info['sub_contact'])
-        self.constructionPicLarge.setPixmap(constructionObject.picture.scaled(300, 300, 1, 1))
+        self.constructionPicLarge.setPixmap(constructionObject.picture.scaledToHeight(250, mode=Qt.SmoothTransformation))
+        print(self.constructionPicLarge.size())
         self.goToConstructionBtn.setEnabled(True)
 
     def showDialog(self, dialog):

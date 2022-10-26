@@ -14,10 +14,9 @@ class WeldListItem(QWidget):
     def __init__(self, weldID, parent_construction):
         super(WeldListItem, self).__init__()
         uic.loadUi(r'weldListItem.ui', self)
-        self.weldObj = db_objects.weldObject(connected_database=parent_construction.db,
-                                             parentConstructName=parent_construction.info['tag'])
+        self.weldObj = db_objects.WeldObject(connected_database=parent_construction.db,
+                                             table_name=f"{parent_construction.mainConstruction.info['tag']}_modelWelds")
         self.weldObj.load_info(weldID)
-        print(self.weldObj.info['weld_continuity_type'])
         if self.weldObj.info['weld_continuity_type'] == 'normal':
             self.upperSpacing.hide()
             self.sidedSpacing.hide()
@@ -34,15 +33,12 @@ class WeldListItem(QWidget):
         self.allRoundWeldLbl.setPixmap(
             QtGui.QPixmap(QtGui.QIcon(':/Icons/Icons/weldIcon_weldRoundedLine.png').pixmap(22, 22)))
         self.allRoundWeldLbl.show() if bool(int(self.weldObj.info['all_around'])) else self.allRoundWeldLbl.hide()
-        #self.staggerSignLbl.setPixmap(QtGui.QPixmap(QtGui.QIcon(':/Pictures/Pictures/stagger_thick.svg').pixmap(25, 25)))
-
         # ----------------------------------------------------------- upper weld info loading --------------------------
         self.upperWeldTypeLbl.setPixmap(QtGui.QPixmap(
             QtGui.QIcon(f':/Icons/Icons/weldIcon_{self.weldObj.info["upper_weld_type"]}.png').pixmap(20, 20)))
         self.upperSize.setText(f"{self.weldObj.info['upper_sizeType']}{self.weldObj.info['upper_size']}")
         self.upperLength.setText(f"Length: {self.weldObj.info['upper_length']} mm")
         self.weldNumberLbl.setText(f"{self.weldObj.info['weld_id_prefix']}")
-
         for testingMethodButton in self.testingMthdsFrame.findChildren(QtWidgets.QPushButton):
             try:
                 if testingMethodButton.objectName().replace('Btn', '') in self.weldObj.info['testing_methods'].split(';'):
@@ -54,7 +50,6 @@ class WeldListItem(QWidget):
 
     def check_sidedInfo(self):
         if not bool(int(self.weldObj.info['double_sided'])):
-            print(f'double sided weld not specified.')
             self.sidedInfoFrame.hide()
             self.resize(self.width(), self.height() - self.sidedWeldTypeLbl.height())
         else:
@@ -65,7 +60,6 @@ class WeldListItem(QWidget):
             self.sidedWeldTypeLbl.setPixmap(QtGui.QPixmap(
                 QtGui.QIcon(f':/Icons/Icons/weldIcon_{self.weldObj.info["sided_weld_type"]}.png').pixmap(
                     20, 20).transformed(QtGui.QTransform().scale(1, -1))))
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

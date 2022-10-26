@@ -8,17 +8,15 @@ import new_construction_SCRIPT as newConstructionScreen
 
 
 class NewSubconstructionDialog(QDialog):
-    # db_ParentConstruction has to be a database object class -> db_object.MainConstruction
-    def __init__(self, db_ParentConstruction=None):
+    # parentConstructionObject has to be a database object class -> db_object.MainConstruction
+    def __init__(self, parentConstruction=None, connected_db=None):
+        # TODO: Add database connection parse
         super(NewSubconstructionDialog, self).__init__()
+        self.db = connected_db if connected_db is not None else parentConstruction.db
         self.pdfViewerWidget = None
         self.cadModelViewWidget = None
-        self.parentConstruction = db_ParentConstruction
+        self.parentConstruction = parentConstruction
         loadUi(r'new_subconstruction_UI.ui', self)
-        if not db_ParentConstruction:
-            print(f'Subconstruction screen loaded without parent construction')
-        else:
-            print(f'Parent construction loaded: {self.parentConstruction.info}')
 
         #   ------------------------------------Hidden content----------------------------------------------------------
         self.newSubconstructionSubcontractor.hide()
@@ -91,49 +89,56 @@ class NewSubconstructionDialog(QDialog):
                                                   "pdf (*.pdf);;All Files (*)", options=options)
         if fileName:
             print(f'Opening pdf: {fileName}')
-            self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fileName, parent=self.docsViewerContainer)
-            # Create layout for pdfViewerWidget
+            self.pdfViewerWidget = pdfviewer.pdfViewerLayout(fileName, parent=self.docsViewerContainer)
+            # Create layout for pdfViewerLayout
             grid = QHBoxLayout()
             grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
-            # Insert a pdfViewerWidget into docViewer Widget (widget for pdf viewing)
+            # Insert a pdfViewerLayout into docViewer Widget (widget for pdf viewing)
             self.docsViewerContainer.setLayout(grid)
 
     def addSubConstruction(self):
         print('adding to database...')
-        new_subConstruction = db_objects.SubConstruction(parentConstruction=self.parentConstruction)
         print(self.parentConstruction.info)
-        new_subConstruction.info = {'id': new_subConstruction.update_records_amount() + 1,
-                                    'parent_construction_id': self.parentConstruction.info['id'],
-                                    'main_construction_id': self.parentConstruction.main_constructionID,
-                                    'name': self.newSubconstructionName.text(),
-                                    'tag': self.newSubconstructionTag.text(),
-                                    'serial_number': self.newSubconstructionSerialNo.text(),
-                                    'owner': self.newSubconstructionOwner.text(),
-                                    'localization': self.newSubconstructionLocalization.text(),
-                                    'material': self.newSubconstructionMainMaterial.text(),
-                                    'additional_info': "N/A" if len(self.newSubconstructionAdditionalInfoLine.text()) == 0 else
-                                    self.newSubconstructionAdditionalInfoLine.text(),
-                                    'subcontractor': "N/A" if len(self.newSubconstructionSubcontractor.text()) == 0 else
-                                    self.newSubconstructionSubcontractor.text(),
-                                    'sub_contact': "N/A" if len(self.newSubconstructionSubcontractorContact.text()) == 0 else
-                                    self.newSubconstructionSubcontractorContact.text(),
-                                    'construct_type': str(self.newSubconstructionTypeCombo.currentText()),
-                                    'quality_norm': str(self.newSubconstructionQualityNormCombo.currentText()),
-                                    'quality_class': str(self.newSubconstructionQualityClassCombo.currentText()),
-                                    'tolerances_norm': str(self.newSubconstructionTolerancesNormCombo.currentText()),
-                                    'tolerances_level': str(self.newSubconstructionTolerancesLevelCombo.currentText())}
+        new_subConstruction = db_objects.SubConstruction(parentConstruction=self.parentConstruction,
+                                                         connected_database=self.db)
+        new_subConstruction.info = \
+            {'id': new_subConstruction.update_records_amount() + 1,
+             'parent_construction_id': int(self.parentConstruction.info['id']) if type(self.parentConstruction) is not
+                                db_objects.MainConstruction else None,
+             'main_construction_id': self.parentConstruction.info['id'] if type(self.parentConstruction) is
+                                db_objects.MainConstruction else self.parentConstruction.info['main_construction_id'],
+             'name': self.newSubconstructionName.text(),
+             'tag': self.newSubconstructionTag.text(),
+             'serial_number': self.newSubconstructionSerialNo.text(),
+             'owner': self.newSubconstructionOwner.text(),
+             'localization': self.newSubconstructionLocalization.text(),
+             'material': self.newSubconstructionMainMaterial.text(),
+             'additional_info': "N/A" if len(self.newSubconstructionAdditionalInfoLine.text()) == 0 else
+             self.newSubconstructionAdditionalInfoLine.text(),
+             'subcontractor': "N/A" if len(self.newSubconstructionSubcontractor.text()) == 0 else
+             self.newSubconstructionSubcontractor.text(),
+             'sub_contact': "N/A" if len(self.newSubconstructionSubcontractorContact.text()) == 0 else
+             self.newSubconstructionSubcontractorContact.text(),
+             'construct_type': str(self.newSubconstructionTypeCombo.currentText()),
+             'quality_norm': str(self.newSubconstructionQualityNormCombo.currentText()),
+             'quality_class': str(self.newSubconstructionQualityClassCombo.currentText()),
+             'tolerances_norm': str(self.newSubconstructionTolerancesNormCombo.currentText()),
+             'tolerances_level': str(self.newSubconstructionTolerancesLevelCombo.currentText())}
+
         new_subConstruction.picture = self.cadModelViewWidget.screenshot
         new_subConstruction.pdfDocsPath = self.pdfViewerWidget.filepath
         new_subConstruction.stpModelPath = self.cadModelViewWidget.filepath
-        print('subconstruct created.')
+        print(f'SubConstruction {self} creation succeeded. ------------ ', end='')
         new_subConstruction.save_subConstruction()
-        print("MainConstruction added to database successfully.")
+        print("SubConstruction added to database successfully.")
         if type(self.parent()) == QStackedWidget:
             import construction_preview_SCRIPT
             self.parent().addWidget(
                 construction_preview_SCRIPT.ConstructPreviewDialog(new_subConstruction.info['id']))
             self.parent().setCurrentIndex(self.parent().indexOf(self) + 1)
             self.parent().removeWidget(self)
+
+        self.close()
 
     def quality_combos_activate(self, chosen):
         self.newSubconstructionQualityNormCombo.setCurrentText(newConstructionScreen.quality_norms[chosen][0])
@@ -158,7 +163,8 @@ if __name__ == '__main__':
     # mainWindow = CadViewerExtended("../DekiResources/Zbiornik LNG assembly.stp")
     dummy_constructionObject = db_objects.MainConstruction()
     dummy_constructionObject.load_info(1)
-    mainWindow = NewSubconstructionDialog(db_ParentConstruction=dummy_constructionObject)
+    mainWindow = NewSubconstructionDialog(parentConstruction=dummy_constructionObject,
+                                          connected_db=dummy_constructionObject.db)
     mainWindow.show()
 
     try:

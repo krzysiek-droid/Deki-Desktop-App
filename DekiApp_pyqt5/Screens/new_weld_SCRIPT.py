@@ -4,8 +4,10 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import Qt
+from PyQt5 import QtGui
 
 import db_objects
+import gnrl_database_con
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 
 import db_objects as dbo
@@ -16,13 +18,15 @@ class NewWeldDialog(QDialog):
     def __init__(self, parentConstruction, connected_database=None):
         super(NewWeldDialog, self).__init__()
         loadUi(r'new_weld_UI.ui', self)
-        self.parentConstruction = parentConstruction
-        self.mainConstruction = parentConstruction.mainConstruction
+        self.setWindowFlag(Qt.FramelessWindowHint)
+        self.parentConstruction = parentConstruction if parentConstruction is not None else None
+        self.mainConstruction = parentConstruction.mainConstruction if parentConstruction is not None else None
         self.db = self.parentConstruction.db if connected_database is None else connected_database
         self.new_weld_DbName = f'{self.mainConstruction.info["tag"]}_modelWelds'
         self.wps_filepath = None
-        from db_objects import weldObject
-        self.new_weldObj = weldObject(connected_database=self.db, table_name=self.new_weld_DbName)
+        from db_objects import WeldObject
+        self.new_weldObj = WeldObject(self.mainConstruction.info['tag'], self.db,
+                                      table_name=self.new_weld_DbName)
         # ---------------------------------------------------------------Screen loading functions----------------------
 
         self.parentConstructionLbl.setText(
@@ -35,8 +39,9 @@ class NewWeldDialog(QDialog):
         self.weldGraphLayout.addWidget(self.weldGraph)
         self.select_jointContinuity(self.normalWeldBtn)
         self.weldGraph.transformWeldSymbolType("normal")
-        
+
         # ----------------------------------------------------------------Buttons scripting----------------------------
+        self.closeBtn.clicked.connect(lambda: self.close())
         self.testMthdBtnLT.clicked.connect(lambda: self.select_testingMethod(self.testMthdBtnLT))
         self.testMthdBtnMT.clicked.connect(lambda: self.select_testingMethod(self.testMthdBtnMT))
         self.testMthdBtnPT.clicked.connect(lambda: self.select_testingMethod(self.testMthdBtnPT))
@@ -77,12 +82,13 @@ class NewWeldDialog(QDialog):
             lambda: self.new_weldObj.info.update({'weld_id_suffix': self.weldIDsuffixLine.text()}))
         self.wpsMissingCBox.toggled.connect(
             lambda status: (self.wpsNumberLine.setEnabled(False), self.wpsNumberLine.setText("WPS missing checked"),
-            self.new_weldObj.info.update({'wps_number': 'missing'}))
+                            self.new_weldObj.info.update({'wps_number': 'missing'}))
             if status is True else
             self.wpsNumberLine.setEnabled(True))
         self.TMnotSpecifiedRadioBtn.toggled.connect(
             lambda status: (self.new_weldObj.info.update({'testing_methods': []}),
-            [(btn.setEnabled(False), btn.setChecked(False)) for btn in self.weldTestingBtns.findChildren(QPushButton)])
+                            [(btn.setEnabled(False), btn.setChecked(False)) for btn in
+                             self.weldTestingBtns.findChildren(QPushButton)])
             if status is True else [btn.setEnabled(True) for btn in self.weldTestingBtns.findChildren(QPushButton)])
 
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
@@ -100,9 +106,8 @@ class NewWeldDialog(QDialog):
             self.wpsNumberLine.setText(pathlib.Path(filepath).stem)
             self.wps_filepath = filepath
         if len(container.findChildren(QLayout)) < 1:
-            pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{filepath}')
-            container.setLayout(pdfViewerWidget.main_layout)
-            pdfViewerWidget.show()
+            pdfViewerWidget = pdfviewer.pdfViewerLayout(fr'{filepath}')
+            container.setLayout(pdfViewerWidget)
         else:
             print(f'Layout {container.objectName()} already exist.')
 
@@ -165,14 +170,19 @@ class NewWeldDialog(QDialog):
             self.new_weldObj.info['testing_methods'] = None
         if self.db.is_table(self.new_weld_DbName):
             self.new_weldObj.save_weld(self.new_weld_DbName, self.wps_filepath)
-
-        self.db.create_table(self.new_weld_DbName, self.new_weldObj.info.keys())
+        else:
+            self.db.create_table(self.new_weld_DbName, self.new_weldObj.info.keys())
         self.close()
 
+
 if __name__ == '__main__':
+    db = gnrl_database_con.Database()
     app = QApplication(sys.argv)
-    subConstruction = db_objects.SubConstruction()
+    mainConstruction = db_objects.MainConstruction(connected_database=db)
+    mainConstruction.load_info(1)
+    subConstruction = db_objects.SubConstruction(parentConstruction=mainConstruction, connected_database=db)
     subConstruction.load_info(1)
+    # mainWindow = NewWeldDialog(parentConstruction=subConstruction)
     mainWindow = NewWeldDialog(subConstruction)
     mainWindow.show()
 

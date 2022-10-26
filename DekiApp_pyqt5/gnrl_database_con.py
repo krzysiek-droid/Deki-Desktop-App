@@ -61,6 +61,16 @@ class Database:
             print(f'Values has to be inserted as a py list (not any other arrays!).')
         self.conn.commit()
 
+    def replace_row(self, table_name, values: list):
+        table_name = validate_text(table_name)
+        try:
+            self.cur.execute(
+                f"REPLACE INTO {table_name} ({','.join([_ for _ in self.get_columns_names(f'{table_name}')])})"
+                f"VALUES ({','.join(['%s' for _ in values])})", values)
+        except ValueError:
+            print(f'Values has to be inserted as a py list (not any other arrays!).')
+        self.conn.commit()
+
     # returns a pandas DataFrame from given table and columns (as a list of strings)
     # returns all columns if given '*'
     def get_by_column(self, table_name, *columns):
