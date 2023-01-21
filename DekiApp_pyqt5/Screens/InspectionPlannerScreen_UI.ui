@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1300</width>
-    <height>904</height>
+    <width>1600</width>
+    <height>900</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -18,6 +18,9 @@
   </property>
   <property name="windowTitle">
    <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
@@ -109,8 +112,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>856</width>
-           <height>769</height>
+           <width>1156</width>
+           <height>765</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_9">

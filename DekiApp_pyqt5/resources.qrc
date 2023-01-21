@@ -1,5 +1,8 @@
 <RCC>
   <qresource prefix="Icons">
+    <file>Icons/31.gif</file>
+    <file>Icons/green_circle.png</file>
+    <file>Icons/orange_circle.png</file>
     <file>Icons/testingMethodsIcon_lt.png</file>
     <file>Icons/testingMethodsIcon_rt.png</file>
     <file>Icons/testingMethodsIcon_ut.png</file>

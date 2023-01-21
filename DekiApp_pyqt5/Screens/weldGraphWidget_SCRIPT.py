@@ -133,6 +133,10 @@ class WeldGraphWidget(QWidget):
             self.lowerWeldLengthLine.show()
             self.lowerWeldAmountLabel.show()
             self.lowerWeldSpacingFrame.hide()
+            self.upperWeldQuantityLine.hide()
+            self.upperWeldAmountLabel.hide()
+            self.lowerWeldQuantityLine.hide()
+            self.lowerWeldAmountLabel.hide()
         elif new_type == 'staggered':
             self.staggeredGraph.hide()
             self.upperStaggerSpacer.hide()
@@ -143,6 +147,10 @@ class WeldGraphWidget(QWidget):
             self.lowerWeldAmountLabel.show()
             self.lowerWeldLengthLine.show()
             self.lowerWeldSpacingFrame.show()
+            self.upperWeldQuantityLine.show()
+            self.upperWeldAmountLabel.show()
+            self.lowerWeldQuantityLine.show()
+            self.lowerWeldAmountLabel.show()
         else:
             self.staggeredGraph.show()
             self.upperStaggerSpacer.show()
@@ -153,6 +161,10 @@ class WeldGraphWidget(QWidget):
             self.lowerWeldAmountLabel.show()
             self.lowerWeldLengthLine.show()
             self.lowerWeldSpacingFrame.show()
+            self.upperWeldQuantityLine.show()
+            self.upperWeldAmountLabel.show()
+            self.lowerWeldQuantityLine.show()
+            self.lowerWeldAmountLabel.show()
 
     def updateWeldData(self, updated_value, key_ref: str, weld_line: str):
         if weld_line == "upper":

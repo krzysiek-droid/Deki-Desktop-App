@@ -159,7 +159,7 @@ class pdfViewerLayout(QVBoxLayout):
 
     def loadPdf(self):
         # convert system path to web path with .as_uri() method
-        # load object
+        # load new_screen_ref
         self.pdfWidget.dynamicCall('Navigate(const QString&)', self.filepath.as_uri())
         self.addWidget(self.pdfWidget)
 
@@ -179,7 +179,7 @@ class pdfViewerWidget(QWidget):
 
     def loadPdf(self):
         # convert system path to web path with .as_uri() method
-        # load object
+        # load new_screen_ref
         self.pdfWidget.dynamicCall('Navigate(const QString&)', self.filepath.as_uri())
 
     def fitToParent(self):

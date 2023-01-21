@@ -78,34 +78,12 @@ class WeldGraphPreviewWidget(WeldGraphWidget):
             self.tailMultiline.setText(self.weldData['tail_info'])
         else:
             self.tailMultiline.setPlaceholderText('n/a')
-        self.upperSizeCombo.setCurrentText(f"{self.weldData['upper_sizeType']}")
+        self.upperSizeCombo.setCurrentText(f"{self.weldData['sided_sizeType']}")
         self.lowerSizeCombo.setCurrentText(f"{self.weldData['sided_sizeType']}")
 
 
-class CustomLineEdit(QLineEdit):
-    def __init__(self, *args):
-        super(CustomLineEdit, self).__init__(*args)
-        self.clearAction = None
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.setReadOnly(True)
-        self.textChanged.connect(lambda: self.customLineEdit_textChanged())
-        self.customLineEdit_textChanged()
-        self.setClearButtonEnabled(False)
-
-    def customLineEdit_textChanged(self):
-        if self.text() is not None and self.isReadOnly() and self.clearAction is None:
-            clear_icon = QtGui.QIcon(':/Icons/Icons/edit-3.svg')
-            self.clearAction = self.addAction(clear_icon, QLineEdit.ActionPosition.TrailingPosition)
-            self.clearAction.triggered.connect(lambda: (self.setReadOnly(False), self.customLineEdit_textChanged()))
-        else:
-            self.removeAction(self.clearAction)
-            self.clearAction = None
-            self.setClearButtonEnabled(True)
-            # TODO: add color change after text edited.
-
-
 class WeldPreviewDialog(QDialog):
-    def __init__(self, parentConstruction, weldID, connected_database=None):
+    def __init__(self, weldObject=None, parentConstruction=None, weldID=None, connected_database=None):
         super(WeldPreviewDialog, self).__init__()
         self.wps_filepath = None
         loadUi('weld_preview_UI.ui', self)
@@ -119,14 +97,17 @@ class WeldPreviewDialog(QDialog):
             'second_welded_part': self.secondJointPartLine
         }
         self.db = gnrl_database_con.Database() if connected_database is None else connected_database
-        self.weldObj = dbo.WeldObject(mainConstructionTag=parentConstruction.mainConstruction.info['tag'],
-                                      connected_database=self.db)
-        self.weldObj.load_info(weldID)
+        if weldObject is None:
+            self.weldObj = dbo.WeldObject(mainConstructionTag=parentConstruction.mainConstructionObject.info['tag'],
+                                          connected_database=self.db)
+            self.weldObj.load_info(weldID)
+        else:
+            self.weldObj = weldObject
 
         self.weldGraph = WeldGraphPreviewWidget(self.weldObj.info)
         self.weldGraphLayout.addWidget(self.weldGraph)
         self.parentConstructionLbl.setText(parentConstruction.info['tag'])
-        self.mainConstructionLbl.setText(parentConstruction.mainConstruction.info['tag'])
+        self.mainConstructionLbl.setText(parentConstruction.mainConstructionObject.info['tag'])
         #   ------------------------------ Scripts to be performed Before loading the info from db
         self.highlight_jointType()
         self.highlight_jointContinuity()
@@ -134,9 +115,9 @@ class WeldPreviewDialog(QDialog):
         self.editJointContinuity.clicked.connect(self.edit_jointContinuity)
         self.editTestingMethodsBtn.clicked.connect(self.edit_testingMethods)
         self.saveChangesBtn.clicked.connect(lambda: self.replaceWeld())
-
         self.load_lineInfo()
         self.load_testingMethods()
+
         self.showPdfViewer(self.drawingDocsViewer, filepath=parentConstruction.pdfDocsPath)
         #   ---------------------------------------------- Post info load scripts
         self.firstMaterialLine.textChanged.connect(
@@ -162,14 +143,17 @@ class WeldPreviewDialog(QDialog):
 
     def highlight_jointType(self):
         # button status changes before execution of this function!
-        jointType_btnName = self.weldObj.info['joint_type'].replace(' ', '').replace('joint', 'Joint') + 'Btn'
-        for JTBtn in self.jointTypesBtnsLayout.findChildren(QPushButton):
-            if JTBtn.objectName() == jointType_btnName:
-                JTBtn.setStyleSheet("border: 2px solid rgb(30, 210, 80)")
-                JTBtn.setChecked(True)
-            else:
-                JTBtn.setChecked(False)
-                JTBtn.setEnabled(False)
+        try:
+            jointType_btnName = self.weldObj.info['joint_type'].replace(' ', '').replace('joint', 'Joint') + 'Btn'
+            for JTBtn in self.jointTypesBtnsLayout.findChildren(QPushButton):
+                if JTBtn.objectName() == jointType_btnName:
+                    JTBtn.setStyleSheet("border: 2px solid rgb(30, 210, 80)")
+                    JTBtn.setChecked(True)
+                else:
+                    JTBtn.setChecked(False)
+                    JTBtn.setEnabled(False)
+        except AttributeError:
+            print('joint Type issue - check db')
 
     def select_jointType(self, selected_btn: QPushButton):
         # button status changes before execution of this function!
@@ -240,8 +224,10 @@ class WeldPreviewDialog(QDialog):
     def load_lineInfo(self):
         for key in self.lineEdits.keys():
             self.lineEdits[key].setText(self.weldObj.info[key])
-            if self.weldObj.info[key] is None:
-                self.lineEdits[key].setPlaceholderText('not specified')
+            if self.weldObj.info[key] is None or len(self.weldObj.info[key]) == 0:
+                self.lineEdits[key].setText('not specified')
+                self.lineEdits[key].setReadOnly(True)
+                self.lineEdits[key].customLineEdit_textChanged()
                 if key == 'wps_number':
                     self.wpsMissingCBox.setChecked(True)
             else:
@@ -254,6 +240,10 @@ class WeldPreviewDialog(QDialog):
             options = QFileDialog.Options()
             filepath, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                       "pdf (*.pdf);;All Files (*)", options=options)
+            self.wpsMissingCBox.setChecked(False)
+            self.wpsNumberLine.setReadOnly(False)
+            self.wpsNumberLine.customLineEdit_textChanged()
+            self.wpsNumberLine.setText(pathlib.Path(filepath).stem)
             self.wps_filepath = filepath
         if len(container.findChildren(QLayout)) == 0:
             pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{filepath}')
@@ -270,9 +260,7 @@ class WeldPreviewDialog(QDialog):
             old_pdf.hide()
             newPdfViewer = pdfviewer.pdfViewerWidget(fr'{filepath}')
             container.layout().addWidget(newPdfViewer)
-            self.wps_filepath = filepath
-            self.wpsNumberLine.setText(pathlib.Path(filepath).stem)
-            #   TODO: reprogram the pdfViewer to be QWidget so it could be easily replaced.
+        #   TODO: reprogram the pdfViewer to be QWidget so it could be easily replaced.
 
     def load_testingMethods(self):
         methods_selected = self.weldObj.info['testing_methods']
@@ -299,19 +287,18 @@ class WeldPreviewDialog(QDialog):
         if not selected_btn.isChecked():
             self.weldObj.info['testing_methods'].remove(selected_btn.text())
             self.weldObj.info['testing_methods'].sort()
-            print(
-                f"{selected_btn.text()} removed from testing methods. New list {self.weldObj.info['testing_methods']} saved.")
+            # print( f"{selected_btn.text()} removed from testing methods. New list {self.weldObj.info[
+            # 'testing_methods']} saved.")
         else:
             if self.weldObj.info['testing_methods'] is None:
                 self.weldObj.info['testing_methods'] = [selected_btn.text()]
-                print(f"Single testing method selected: {self.weldObj.info['testing_methods']} has been saved.")
+            # print(f"Single testing method selected: {self.weldObj.info['testing_methods']} has been saved.")
             else:
                 self.weldObj.info['testing_methods'].append(selected_btn.text())
                 self.weldObj.info['testing_methods'].sort()
-                print(f"Selected testing methods: {self.weldObj.info['testing_methods']} has been saved")
+            # print(f"Selected testing methods: {self.weldObj.info['testing_methods']} has been saved")
 
-    def replaceWeld(self):  # TODO
-        print(self.weldObj.info)
+    def replaceWeld(self):
         for key in self.weldGraph.upperWeldData.keys():
             self.weldObj.info[key] = self.weldGraph.upperWeldData[key]
         if self.weldGraph.lowerWeldInfo.isVisible():
@@ -336,8 +323,8 @@ if __name__ == '__main__':
     mainConstruction.load_info(1)
     subConstruction = db_objects.SubConstruction(parentConstruction=mainConstruction, connected_database=db)
     subConstruction.load_info(1)
-    # mainWindow = NewWeldDialog(parentConstruction=subConstruction)
-    mainWindow = WeldPreviewDialog(subConstruction, 5)
+
+    mainWindow = WeldPreviewDialog(parentConstruction=subConstruction, weldID=10)
     mainWindow.show()
 
     try:

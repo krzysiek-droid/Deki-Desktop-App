@@ -8,7 +8,7 @@ import new_construction_SCRIPT as newConstructionScreen
 
 
 class NewSubconstructionDialog(QDialog):
-    # parentConstructionObject has to be a database object class -> db_object.MainConstruction
+    # parentConstructionObject has to be a database new_screen_ref class -> db_object.MainConstruction
     def __init__(self, parentConstruction=None, connected_db=None):
         # TODO: Add database connection parse
         super(NewSubconstructionDialog, self).__init__()
@@ -73,14 +73,23 @@ class NewSubconstructionDialog(QDialog):
         fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                   "stp (*.stp);;All Files (*);;step (*.step)", options=options)
         if fileName:
+            from new_construction_SCRIPT import CadViewerExtended
             if not self.cadModelViewWidget:
-                self.cadModelViewWidget = newConstructionScreen.CadViewerExtended(fileName)
+                self.cadModelViewWidget = CadViewerExtended(fileName)
                 # Create Layout for cadModelViewWidget
                 grid = QVBoxLayout()
                 grid.addWidget(self.cadModelViewWidget)
                 self.cadViewerContainer.setLayout(grid)
+
             else:
-                pass
+                old_viewer = self.cadViewerContainer.findChild(CadViewerExtended)
+                old_viewer.deleteLater()
+                old_viewer.hide()
+                # Replace old Viewer with new Viewer with new CAD model
+                self.cadModelViewWidget = CadViewerExtended(fileName)
+                self.cadViewerContainer.layout().addWidget(self.cadModelViewWidget)
+        else:
+            pass
 
     def showPdfViewer(self):
         from Screens import pdfViewWidget_SCRIPT as pdfviewer
@@ -88,13 +97,19 @@ class NewSubconstructionDialog(QDialog):
         fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                   "pdf (*.pdf);;All Files (*)", options=options)
         if fileName:
-            print(f'Opening pdf: {fileName}')
-            self.pdfViewerWidget = pdfviewer.pdfViewerLayout(fileName, parent=self.docsViewerContainer)
-            # Create layout for pdfViewerLayout
-            grid = QHBoxLayout()
-            grid.addWidget(self.pdfViewerWidget, alignment=Qt.AlignHCenter | Qt.AlignVCenter)
-            # Insert a pdfViewerLayout into docViewer Widget (widget for pdf viewing)
-            self.docsViewerContainer.setLayout(grid)
+            if not self.pdfViewerWidget:
+                self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fileName)
+                layout = QVBoxLayout()
+                layout.addWidget(self.pdfViewerWidget)
+                self.docsViewerContainer.setLayout(layout)
+
+            else:
+                old_viewer = self.docsViewerContainer.findChild(pdfviewer.pdfViewerWidget)
+                old_viewer.deleteLater()
+                old_viewer.hide()
+                # Replace old Viewer with new Viewer with new CAD model
+                self.cadModelViewWidget = pdfviewer.pdfViewerWidget(fileName)
+                self.docsViewerContainer.layout().addWidget(self.cadModelViewWidget)
 
     def addSubConstruction(self):
         print('adding to database...')
@@ -104,9 +119,10 @@ class NewSubconstructionDialog(QDialog):
         new_subConstruction.info = \
             {'id': new_subConstruction.update_records_amount() + 1,
              'parent_construction_id': int(self.parentConstruction.info['id']) if type(self.parentConstruction) is not
-                                db_objects.MainConstruction else None,
+                                                                                  db_objects.MainConstruction else None,
              'main_construction_id': self.parentConstruction.info['id'] if type(self.parentConstruction) is
-                                db_objects.MainConstruction else self.parentConstruction.info['main_construction_id'],
+                                                                           db_objects.MainConstruction else
+             self.parentConstruction.info['main_construction_id'],
              'name': self.newSubconstructionName.text(),
              'tag': self.newSubconstructionTag.text(),
              'serial_number': self.newSubconstructionSerialNo.text(),
@@ -124,20 +140,12 @@ class NewSubconstructionDialog(QDialog):
              'quality_class': str(self.newSubconstructionQualityClassCombo.currentText()),
              'tolerances_norm': str(self.newSubconstructionTolerancesNormCombo.currentText()),
              'tolerances_level': str(self.newSubconstructionTolerancesLevelCombo.currentText())}
-
         new_subConstruction.picture = self.cadModelViewWidget.screenshot
         new_subConstruction.pdfDocsPath = self.pdfViewerWidget.filepath
         new_subConstruction.stpModelPath = self.cadModelViewWidget.filepath
         print(f'SubConstruction {self} creation succeeded. ------------ ', end='')
         new_subConstruction.save_subConstruction()
         print("SubConstruction added to database successfully.")
-        if type(self.parent()) == QStackedWidget:
-            import construction_preview_SCRIPT
-            self.parent().addWidget(
-                construction_preview_SCRIPT.ConstructPreviewDialog(new_subConstruction.info['id']))
-            self.parent().setCurrentIndex(self.parent().indexOf(self) + 1)
-            self.parent().removeWidget(self)
-
         self.close()
 
     def quality_combos_activate(self, chosen):

@@ -52,8 +52,9 @@ class MainWindow(QMainWindow):
         self.animation.start()
 
     def openNewModule(self, newModuleWindow: QWidget):
+
+        newModuleWindow.showMaximized()
         self.close()
-        newModuleWindow.show()
         # in lambda definition an "event" has to be passed for proper functionality!
         newModuleWindow.closeEvent = lambda event: self.show()
 

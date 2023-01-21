@@ -27,12 +27,16 @@ class CustomListItem(QWidget):
         # Get access to QMainWindow instance for its member methods, and save its reference as a member variable
         self.mainWindowInstance = None
         self.parentScreen = parentScreen
-        self.openSubConstructionBtn.clicked.connect(lambda: print(f'No parentScreen detected.'))
         for widget in QApplication.topLevelWidgets():
             if widget.objectName() == 'inspectionPlannerWindow':
                 self.mainWindowInstance = widget
-                self.openSubConstructionBtn.clicked.connect(lambda: self.mainWindowInstance.changeScreen())
+                self.openSubConstructionBtn.clicked.connect(self.changeToSubConstructionScreen)
                 break
+
+    def changeToSubConstructionScreen(self):
+        new_screen = SubConstructPreviewScreen(self.parentScreen.subConstructionObject, self.subConstructionID,
+                                               self.parentScreen.subConstructionObject.db)
+        self.mainWindowInstance.stackedWidget.changeScreen(self.parentScreen, new_screen, 'Sub-Subconstruction Preview')
 
 
 class SubConstructPreviewScreen(QDialog):
@@ -42,12 +46,17 @@ class SubConstructPreviewScreen(QDialog):
         uic.properties.logger.setLevel(logging.WARNING)
         uic.uiparser.logger.setLevel(logging.WARNING)
         uic.loadUi(r'subconstruction_preview_UI.ui', self)
+        for widget in QApplication.topLevelWidgets():
+            if widget.objectName() == 'inspectionPlannerWindow':
+                from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
+                self.mainWindowObject: InspectionPlannerWindow = widget
+                break
         self.setObjectName('subConstructPreviewScreen')
         self.constructNumber = subConstructionID
         self.pdfViewerWidget = None
         self.cadModelViewWidget = None
         self.parentConstructionObject = parentConstruction
-        self.mainConstructionObject = parentConstruction.mainConstruction
+        self.mainConstructionObject = parentConstruction.mainConstructionObject
         self.db = parentConstruction.db if parentConstruction is not None else connected_database
         self.subConstructionObject = dbo.SubConstruction(parentConstruction, connected_database=self.db)
         self.subConstructionObject.load_info(subConstructionID)
@@ -76,13 +85,30 @@ class SubConstructPreviewScreen(QDialog):
         from new_subconstruction_SCRIPT import NewSubconstructionDialog
         self.addSubConstructionBtn.clicked.connect(
             lambda: self.showDialog(NewSubconstructionDialog(self.subConstructionObject),
-                                    self.load_SubConstructionsList)
-        )
+                                    self.load_SubConstructionsList))
         self.cadDocsTab.currentChanged.connect(lambda idx: self.cadModelViewWidget.fitToParent())
-
+        from construction_preview_SCRIPT import ConstructPreviewDialog
+        self.goToMainConstructionBtn.clicked.connect(lambda: self.mainWindowObject.changeScreen(self,
+            ConstructPreviewDialog(self.mainConstructionObject.info['id'], connected_database=self.db),
+                                                                            'Main Construction Preview'))
+        self.showParentConstructionBtn.clicked.connect(self.showParentConstruction)
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
 
         self.cadDocsTab.setCurrentIndex(0)
+
+    def showParentConstruction(self):
+        if self.parentConstructionObject.parentConstructionObject is not None:
+            grandParentConstruction: dbo.SubConstruction = self.parentConstructionObject.parentConstructionObject
+            parentConstructionScreen = SubConstructPreviewScreen(grandParentConstruction,
+                                                                 self.subConstructionObject.info['id'],
+                                                                 connected_database=self.db)
+            self.mainWindowObject.changeScreen(self, parentConstructionScreen, "SubConstruction Preview")
+        else:
+            grandParentConstruction: dbo.MainConstruction = self.parentConstructionObject.mainConstructionObject
+            from construction_preview_SCRIPT import ConstructPreviewDialog
+            parentConstructionScreen = ConstructPreviewDialog(grandParentConstruction.info['id'],
+                                                              connected_database=self.db)
+            self.mainWindowObject.changeScreen(self, parentConstructionScreen, "Main Construction Preview")
 
     def showStepModel(self, construction):
         # Delete old widget -> for in case CAD model is changed
@@ -91,7 +117,7 @@ class SubConstructPreviewScreen(QDialog):
             oldWidget.hide()
             print(f"Step widget -- {oldWidget} -- {oldWidget.objectName()} deleted... OK")
         tmp_layout = QVBoxLayout()
-        # create a widget for viewing CAD (CAD canvas widget/object)
+        # create a widget for viewing CAD (CAD canvas widget/new_screen_ref)
         self.cadModelViewWidget = cadviewer.CadViewer(construction.stpModelPath)
         tmp_layout.addWidget(self.cadModelViewWidget)
         self.cadViewerContainer.setLayout(tmp_layout)
@@ -99,7 +125,6 @@ class SubConstructPreviewScreen(QDialog):
         self.cadModelViewWidget.start_display()
 
     def showPdfViewer(self, construction):
-
         self.pdfViewerWidget = pdfviewer.pdfViewerLayout(fr'{construction.pdfDocsPath}',
                                                          parent=self.docsViewerContainer)
         self.docsViewerContainer.setLayout(self.pdfViewerWidget)
@@ -160,7 +185,7 @@ class SubConstructPreviewScreen(QDialog):
         subConstructions_IDs = belonging_subConstructions['id'].tolist()
         # iterate throughout subConstruction IDs list and create layout with listItems for obtained weld IDs
         if len(subConstructions_IDs) > 0:
-            constructionObject = dbo.SubConstruction(parentConstruction=self.construction)
+            constructionObject = dbo.SubConstruction(parentConstruction=self.subConstructionObject)
             for constructionID in subConstructions_IDs:
                 constructionObject.load_info(int(constructionID))
                 listItem = CustomListItem(int(constructionID), parentScreen=self)
@@ -168,7 +193,7 @@ class SubConstructPreviewScreen(QDialog):
                 listItem.constructionName.setText(constructionObject.info['name'])
                 listItem.constructionPicture.setPixmap(constructionObject.picture.scaled(120, 120, 1, 1))
                 listItem.seriesSize.setText(constructionObject.info['serial_number'])
-                listItem.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
+                # listItem.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
                 layout.addWidget(listItem, alignment=Qt.AlignTop)
             layout.setAlignment(Qt.AlignTop)
         else:
@@ -191,19 +216,21 @@ class SubConstructPreviewScreen(QDialog):
                   f"deleting {self.weldsTab.findChild(QScrollArea).objectName()}...")
             self.weldsTab.findChild(QScrollArea).deleteLater()
         tmp_scrollArea = QScrollArea()
+        tmp_scrollArea.setWidgetResizable(True)
         tmp_scrollWidget = QWidget()
         layout = QVBoxLayout()
-        layout.setSpacing(2)
+        layout.setSpacing(1)
         welds_tableName = f"{self.mainConstructionObject.info['tag']}_modelWelds"
         belonging_welds = \
             self.db.df_from_filteredTable(welds_tableName, 'belonging_construction_ID', self.constructNumber)
         if self.db.is_table(welds_tableName):
             if len(belonging_welds) > 0:
                 for weldData in belonging_welds.iterrows():
-                    from weldListItem_SCRIPT import WeldListItem
-                    weldListItem = WeldListItem(int(weldData[1]["id"]), self.subConstructionObject)
-                    layout.addWidget(weldListItem, alignment=Qt.AlignTop)
-                # layout.setAlignment(Qt.AlignTop)
+                    if not bool(weldData[1]['same_as_weldID']):
+                        from weldListItem_SCRIPT import WeldListItem
+                        weldListItem = WeldListItem(int(weldData[1]["id"]), self.subConstructionObject)
+                        layout.addWidget(weldListItem, alignment=Qt.AlignTop)
+                layout.setAlignment(Qt.AlignTop)
             else:
                 label = QLabel()
                 label.setText(f'No welds found in database.')
@@ -217,16 +244,17 @@ class SubConstructPreviewScreen(QDialog):
         self.tabWidget.setTabText(0, f'Welds ({len(belonging_welds)})')
 
     def showDialog(self, dialog, closeEventFunc):
-        print(f"Opening dialog {dialog}...")
-        dialog.show()
         dialog.closeEvent = lambda event: closeEventFunc()
+        dialog.exec_()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mainConstruct = dbo.MainConstruction()
     mainConstruct.load_info(1)
-    mainWindow = SubConstructPreviewScreen(mainConstruct, 1)
+    subconstruct = dbo.SubConstruction(mainConstruct, connected_database=mainConstruct.db)
+    subconstruct.load_info(1)
+    mainWindow = SubConstructPreviewScreen(subconstruct, 1)
     mainWindow.showMaximized()
 
     try:

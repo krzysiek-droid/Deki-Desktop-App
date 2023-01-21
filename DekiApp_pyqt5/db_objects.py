@@ -1,4 +1,5 @@
 import PyQt5.Qt
+import pandas
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 import gnrl_database_con as database
@@ -6,6 +7,7 @@ import datetime
 import shutil
 import pathlib
 import sys
+import os
 
 '''
 Podcza instalacji aplikacji, należy ją połączyc z konkretną bazą danych i serwerem tzn. znać nazwę bazy i kody dostępu.
@@ -37,6 +39,7 @@ class Construction:
         self.db_records = None
         self.company_name = companyName
         self.folderPath = None
+        self.parentConstructionObject = None
 
     # returns number of rows in database table (self.table_name)
     def update_records_amount(self):
@@ -50,13 +53,19 @@ class Construction:
             self.db_records = 0
             return 0
 
+    def check_files(self) -> dict:
+        if type(self.stpModelPath) == str and type(self.pdfDocsPath) == str:
+            status = {'CAD': os.path.isfile(self.stpModelPath),
+                      'Docs': os.path.isfile(self.pdfDocsPath)}
+            return status
+
 
 class MainConstruction(Construction):
     def __init__(self, connected_database=None):
         super(MainConstruction, self).__init__(connected_database=connected_database)
         self.table_name = f"{self.company_name}_2022_mainConstructions"
         self.update_records_amount()
-        self.mainConstruction = self
+        self.mainConstructionObject = self
         print(f"            Initialization succeeded.")
 
     def save_main_construction(self):
@@ -110,9 +119,9 @@ class SubConstruction(Construction):
         self.info = {}
         self.db = parentConstruction.db if connected_database is None else connected_database
         self.table_name = f'{self.company_name}_2022_SubConstructions'
-        self.parentConstruction = parentConstruction if parentConstruction is not None else None
-        self.mainConstruction = parentConstruction.mainConstruction if type(parentConstruction) is not \
-                                    MainConstruction else parentConstruction
+        self.parentConstructionObject = parentConstruction if parentConstruction is not None else None
+        self.mainConstructionObject = parentConstruction.mainConstructionObject if type(parentConstruction) is not \
+                                                                                   MainConstruction else parentConstruction
         print(f"            Initialization succeeded.")
 
     def save_subConstruction(self):
@@ -161,12 +170,12 @@ class SubConstruction(Construction):
 
 class WeldObject:
     def __init__(self, mainConstructionTag=None, connected_database=None, table_name=None):
-        print(f"\n-----------------------------------------------------------------{type(self)} INITIALIZED")
+        print(f"\n-----------------------------------------------------------------{type(self)} INITIALIZED", end=' ')
         self.table_name = f"{mainConstructionTag}_modelWelds" if table_name is None else table_name
         self.db = database.Database() if connected_database is None else connected_database
         self.db_records = self.update_records_amount()
         self.wps_filepath = None
-
+        self.db_content: pandas.DataFrame = self.db.table_into_DF(self.table_name)
         if self.db.is_table(self.table_name):
             self.info = dict.fromkeys(self.db.get_columns_names(self.table_name))
         else:
@@ -179,13 +188,23 @@ class WeldObject:
     def update_records_amount(self):
         if self.db.is_table(self.table_name):
             self.db_records = 0 if self.db.check_records_number(
-                self.table_name) is None else self.db.check_records_number(
+                self.table_name) == 0 else self.db.check_records_number(
                 self.table_name)
             return self.db_records
         else:
             print(f'Could not find table {self.table_name} in database. No records updated.')
             self.db_records = None
             return None
+
+    def fast_load_singleWeld(self, weldID):
+        print(f'Loading data for weld from: {self.table_name} - Weld ID: {weldID}....',
+              end=" ")
+        keys = self.db_content.keys()
+        values = self.db_content.iloc[weldID - 1].tolist()
+        self.info = {k: v for k, v in zip(keys, values)}
+        self.wps_filepath = srv_wps_files_path + fr'\{self.info["wps_number"]}.pdf'
+        self.info['testing_methods'] = self.info['testing_methods'].split(';')
+        print(f'Weld info loaded. OK')
 
     def load_info(self, weld_id):
         print(f'Loading data for weld from: {self.table_name} - Weld ID: {weld_id}....',
@@ -199,12 +218,10 @@ class WeldObject:
 
     def save_weld(self, new_weld_DbName, pathToWpsFile):
         dst_wpsDocsPath = srv_wps_files_path + fr'\{self.info["wps_number"]}.pdf'
+        self.update_records_amount()
         if self.db.is_table(new_weld_DbName):
-            print('Database for welds found. Adding new weld...')
-            # Do not update db_records to avoid multpile inserting of same WeldObject into db
-            print(f'Columns/Values length check:  '
-                  f'{len(self.db.get_columns_names(new_weld_DbName))} == {len(self.info.values())}?')
-            self.info['id'] = int(self.db_records) + 1
+            self.info.update({'id': int(self.db_records) + 1})
+            print(f'Inserting new weld... {self.info.values()}')
             self.db.insert(new_weld_DbName, list(self.info.values()))
             print(f'Weld inserted with id: {self.info["id"]}')
             if pathToWpsFile is not None:
@@ -233,12 +250,14 @@ class WeldObject:
         else:
             print('Database for welds not found - Cannot replace row in non existing database.')
 
+    def check_files(self):
+        return os.path.isfile(self.wps_filepath)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    subCons = WeldObject('test1_modelWelds')
-    subCons.info['wps_number'] = '135_2020_5'
-    subCons.save_weld('test1_modelWelds', r'D:/dekiApp/DKI_MVP_01/WPSy/135_2020_5.pdf')
+    subCons = WeldObject('DKI_LNG3200_MS_000')
+    subCons.fast_load_singleWeld(1)
 
     try:
         sys.exit(app.exec_())

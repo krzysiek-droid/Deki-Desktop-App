@@ -128,14 +128,15 @@ class Database:
 
         self.table_into_DF(table_name)
 
-    def delete_records(self, table_name):
-        qry = f'DELETE FROM {table_name}'
-        self.cur.execute(qry)
+    def delete_records(self, table_name, rowID):        #   TODO: order by ID
+        qry = f'DELETE FROM {table_name} WHILE id = %s'
+        deleted_item = (rowID, )
+        self.cur.execute(qry, deleted_item)
         self.conn.commit()
-        print(f"Table {table_name} fully cleared.")
+        print(f"Row {rowID} has been deleted from Database.")
 
     def table_into_DF(self, table_name):
-        self.reconnect()
+        # self.reconnect()
         table_name = validate_text(table_name)
         qry = f'SELECT * FROM {table_name}'
         self.cur.execute(qry)

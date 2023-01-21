@@ -10,13 +10,14 @@ from Screens import cadViewWidget_SCRIPT as cadviewer
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 
 import db_objects
+import json
 
-quality_norms = {'pressure equipment': ['PED_97_23_WE', 'N/A'], 'pipelines': ['EN 13480', 'N/A'], 'railways':
-    ['EN 15085', 'N/A'], 'welded structures': ['EN 1090', ['EXC1', 'EXC2', 'EXC3', 'EXC4']]}
-
-tolerances_norms = {'ISO 13920': ['1', '2', '3'], 'ISO 2768': ['s', 'm', 'l']}
-srv_files_filepath = r'D:\dekiApp\Deki_ServerFiles'
-
+with open(r"D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\app_settings.json", 'r') as s:
+    file = s.read()
+    quality_norms = json.loads(file)['quality_norms']
+    print(quality_norms)
+    tolerances_norms = json.loads(file)['tolerances_norms']
+    srv_files_filepath = json.loads(file)['srv_files_filepath']
 
 class CadViewerExtended(QWidget):
     def __init__(self, step_filepath: str):
@@ -28,13 +29,11 @@ class CadViewerExtended(QWidget):
         self.screenshot = QtGui.QPixmap()
 
         import cadViewWidget_SCRIPT
-        self.cadViewerWidget = cadViewWidget_SCRIPT.CadViewer(self.filepath,
-                                                              viewport_width=self.viewerFrame.baseSize().width(),
-                                                              viewport_height=self.viewerFrame.baseSize().height())
-        self.viewerFrameLayout.addWidget(self.cadViewerWidget)
-        self.cadViewerWidget.start_display()
+        self.cadViewerLayout: QLayout = cadViewWidget_SCRIPT.CadViewerLayout(self.filepath)
+        self.viewerFrame.setLayout(self.cadViewerLayout)
+        self.cadViewerLayout.start_display()
 
-        self.izoViewBtn.clicked.connect(lambda: self.cadViewerWidget.display.View_Iso())
+        self.izoViewBtn.clicked.connect(lambda: self.cadViewerLayout.display.View_Iso())
         self.snapshootBtn.clicked.connect(lambda: self.takeScreenshot())
         self.fullscreenBtn.clicked.connect(lambda: print('TODO fullscreen ?'))
 
@@ -44,7 +43,7 @@ class CadViewerExtended(QWidget):
         # class for it
 
     def saveScreenshot(self):
-        self.screenshot = self.cadViewerWidget.screen().grabWindow(self.cadViewerWidget.canvas.winId())
+        self.screenshot = self.viewerFrame.screen().grabWindow(self.cadViewerLayout.canvas.winId())
         pic = QLabel()
         pic.setPixmap(self.screenshot.scaled(150, 100))
         self.cadModelPictureView.setText('')
@@ -77,7 +76,8 @@ class NewConstructDialog(QDialog):
         self.subContractorContact.hide()
 
         #   ------------------------------------Buttons scripts---------------------------------------------------------
-        self.cadModelBtn_3.clicked.connect(lambda: self.showStepModel())  # Show CAD step model
+        self.cadModelBtn_3.clicked.connect(lambda: (self.showStepModel(),
+                                                    self.cadModelBtn_3.setText('Change step model')))
         self.documentationLinktbn_3.clicked.connect(lambda: self.showPdfViewer())  # Show .pdf document
         self.addConstructionBtn.clicked.connect(lambda: self.addConstruction())
         self.coopProductionBtn.toggled.connect(lambda:
@@ -85,11 +85,6 @@ class NewConstructDialog(QDialog):
                                                 self.subContractorContact.show()) if self.coopProductionBtn.isChecked() else
                                                (self.constructSubcontractorLine.hide(),
                                                 self.subContractorContact.hide()))
-
-        # import InspectionPlannerScreen_SCRIPT
-        # self.goBackBtn.clicked.connect(lambda:
-        #     self.parent().changeScreen(self, InspectionPlannerScreen_SCRIPT.InspectionPlannerScreen()) if self.parent() is not None
-        #     else print('no parent'))
 
         #   ------------------------------------ComboBoxes scripts------------------------------------------------------
         self.constructTypeCombo.addItems(quality_norms.keys())
@@ -123,12 +118,17 @@ class NewConstructDialog(QDialog):
                 grid = QVBoxLayout()
                 grid.addWidget(self.cadModelViewWidget)
                 self.cadViewerContainer.setLayout(grid)
-
                 if self.validate_info():
                     self.addConstructionBtn.setEnabled(True)
             else:
-                pass
-            # TODO: add the script for STEP preview model change
+                old_viewer = self.cadViewerContainer.findChild(CadViewerExtended)
+                old_viewer.deleteLater()
+                old_viewer.hide()
+                # Replace old Viewer with new Viewer with new CAD model
+                self.cadModelViewWidget = CadViewerExtended(fileName)
+                self.cadViewerContainer.layout().addWidget(self.cadModelViewWidget)
+        else:
+            pass
 
     def showDxfViewer(self):  # unused, for legacy stuff
         options = QFileDialog.Options()
@@ -148,12 +148,20 @@ class NewConstructDialog(QDialog):
         fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                   "pdf (*.pdf);;All Files (*)", options=options)
         if fileName:
-            print(f'Opening pdf: {fileName}')
-            self.pdfViewerWidget = pdfviewer.pdfViewerLayout(fileName, parent=self.docsViewerContainer)
-            # Insert a pdfViewerLayout into docViewer Widget (widget for pdf viewing)
-            self.docsViewerContainer.setLayout(self.pdfViewerWidget.main_layout)
-            if self.validate_info():
-                self.addConstructionBtn.setEnabled(True)
+            if not self.pdfViewerWidget:
+                self.pdfViewerWidget = pdfviewer.pdfViewerWidget(fileName)
+                layout = QVBoxLayout()
+                layout.addWidget(self.pdfViewerWidget)
+                self.docsViewerContainer.setLayout(layout)
+                if self.validate_info():
+                    self.addConstructionBtn.setEnabled(True)
+            else:
+                old_viewer = self.docsViewerContainer.findChild(pdfviewer.pdfViewerWidget)
+                old_viewer.deleteLater()
+                old_viewer.hide()
+                # Replace old Viewer with new Viewer with new CAD model
+                self.cadModelViewWidget = pdfviewer.pdfViewerWidget(fileName)
+                self.docsViewerContainer.layout().addWidget(self.cadModelViewWidget)
 
     def addConstruction(self):
         if self.validate_info():
@@ -235,7 +243,6 @@ class NewConstructDialog(QDialog):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    # mainWindow = CadViewerExtended("../DekiResources/Zbiornik LNG assembly.stp")
     mainWindow = NewConstructDialog()
     mainWindow.show()
 

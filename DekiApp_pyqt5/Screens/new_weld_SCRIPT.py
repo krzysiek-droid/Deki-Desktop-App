@@ -1,5 +1,6 @@
 import pathlib
 import sys
+from typing import Union
 
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
@@ -20,7 +21,7 @@ class NewWeldDialog(QDialog):
         loadUi(r'new_weld_UI.ui', self)
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.parentConstruction = parentConstruction if parentConstruction is not None else None
-        self.mainConstruction = parentConstruction.mainConstruction if parentConstruction is not None else None
+        self.mainConstruction = parentConstruction.mainConstructionObject if parentConstruction is not None else None
         self.db = self.parentConstruction.db if connected_database is None else connected_database
         self.new_weld_DbName = f'{self.mainConstruction.info["tag"]}_modelWelds'
         self.wps_filepath = None
@@ -62,7 +63,7 @@ class NewWeldDialog(QDialog):
         self.staggeredWeldBtn.clicked.connect(
             lambda: (self.select_jointContinuity(self.staggeredWeldBtn),
                      self.weldGraph.transformWeldSymbolType("staggered")))
-        self.addWeldBtn.clicked.connect(self.saveWeld)
+        self.addWeldBtn.clicked.connect(lambda: (self.saveWeld(), self.close()))
         self.addWPSBtn.clicked.connect(lambda: self.showPdfViewer(self.wpsDocsViewer))
         # -----------------------------------------------------------------LineEdits scripts---------------------------
         self.firstMaterialLine.editingFinished.connect(
@@ -91,25 +92,44 @@ class NewWeldDialog(QDialog):
                              self.weldTestingBtns.findChildren(QPushButton)])
             if status is True else [btn.setEnabled(True) for btn in self.weldTestingBtns.findChildren(QPushButton)])
 
+        self.addMultipleWeldsBtn.clicked.connect(lambda: self.openMultipleSaveDialog())
+        self.discardBtn.clicked.connect(lambda: self.close())
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
-        self.mainConstructionLbl.setText(f"{self.parentConstruction.mainConstruction.info['name']} \n"
-                                         f"{self.parentConstruction.mainConstruction.info['tag']}")
+        self.mainConstructionLbl.setText(f"{self.parentConstruction.mainConstructionObject.info['name']} \n"
+                                         f"{self.parentConstruction.mainConstructionObject.info['tag']}")
         self.parentConstructionLbl.setText(f"{self.parentConstruction.info['name']} \n"
                                            f"{self.parentConstruction.info['tag']}")
         self.showPdfViewer(self.drawingDocsViewer, filepath=self.parentConstruction.pdfDocsPath)
+
+        generated_id = \
+            str(self.new_weldObj.info['belonging_construction_tag']) + f'-{self.new_weldObj.update_records_amount()+1}'
+        self.new_weldObj.info['id'] = self.new_weldObj.db_records+1
+        self.weldIDgeneratedLabel.setText(f"/ {generated_id} /")
 
     def showPdfViewer(self, container: QWidget, filepath=None):
         if filepath is None:
             options = QFileDialog.Options()
             filepath, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                       "pdf (*.pdf);;All Files (*)", options=options)
+            self.wpsMissingCBox.setChecked(False)
             self.wpsNumberLine.setText(pathlib.Path(filepath).stem)
             self.wps_filepath = filepath
-        if len(container.findChildren(QLayout)) < 1:
-            pdfViewerWidget = pdfviewer.pdfViewerLayout(fr'{filepath}')
-            container.setLayout(pdfViewerWidget)
+            self.new_weldObj.info.update({'wps_number': self.wpsNumberLine.text()})
+        if len(container.findChildren(QLayout)) == 0:
+            pdfViewerWidget = pdfviewer.pdfViewerWidget(fr'{filepath}')
+            print(f"Creating layout for pdfViewerWidget...")
+            layout = QVBoxLayout()
+            layout.setObjectName(f'wpsDocsViewerLayout')
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
+            layout.addWidget(pdfViewerWidget)
+            container.setLayout(layout)
         else:
-            print(f'Layout {container.objectName()} already exist.')
+            old_pdf = container.findChild(pdfviewer.pdfViewerWidget)
+            old_pdf.deleteLater()
+            old_pdf.hide()
+            newPdfViewer = pdfviewer.pdfViewerWidget(fr'{filepath}')
+            container.layout().addWidget(newPdfViewer)
 
     def select_jointType(self, selected_btn: QPushButton):
         # button status changes before execution of this function!
@@ -153,26 +173,67 @@ class NewWeldDialog(QDialog):
                 btn.setStyleSheet("background-color : rgb(30, 210, 80)")
                 btn.setChecked(True)
         self.new_weldObj.info['weld_continuity_type'] = selected_btn.text().lower()
-        print(f"Joint continuity type saved: {self.new_weldObj.info['weld_continuity_type']}")
+        # print(f"Joint continuity type saved: {self.new_weldObj.info['weld_continuity_type']}")
 
-    def saveWeld(self):
+    def saveWeld(self, weld_repeated: bool = False):
         for key in self.weldGraph.upperWeldData.keys():
             self.new_weldObj.info[key] = self.weldGraph.upperWeldData[key]
-        if self.weldGraph.lowerWeldInfo.isVisible():
+        if self.weldGraph.lowerWeldInfo.isVisible():    # if sided weld info is given
             for key in self.weldGraph.lowerWeldData.keys():
                 self.new_weldObj.info[key] = self.weldGraph.lowerWeldData[key]
         for key in self.weldGraph.weldBanners.keys():
             self.new_weldObj.info[key] = self.weldGraph.weldBanners[key]
+        if type(self.new_weldObj.info['testing_methods']) is not list:
+            self.new_weldObj.info['testing_methods'] = self.new_weldObj.info['testing_methods'].split(';')
         if self.new_weldObj.info['testing_methods'] is not None:
-            print(f'Changing list of testing methods into a string.')
-            self.new_weldObj.info['testing_methods'] = ';'.join((self.new_weldObj.info['testing_methods']))
+            self.new_weldObj.info['testing_methods'] = ';'.join(self.new_weldObj.info['testing_methods'])
         else:
             self.new_weldObj.info['testing_methods'] = None
         if self.db.is_table(self.new_weld_DbName):
+            # save the weld ID
+            full_weldID = \
+                f"{self.weldIDprefixLine.text()}/{self.weldIDgeneratedLabel.text().replace('/', '')}/{self.weldIDsuffixLine.text()} "
+            full_weldID = full_weldID.replace(' ', '')
+            full_weldID = full_weldID[1::] if full_weldID[0] == '/' else full_weldID
+            full_weldID = full_weldID[0:len(full_weldID)-1:] if full_weldID[-1] == '/' else full_weldID
+            self.new_weldObj.info.update({'weld_id_generated': full_weldID})
             self.new_weldObj.save_weld(self.new_weld_DbName, self.wps_filepath)
         else:
             self.db.create_table(self.new_weld_DbName, self.new_weldObj.info.keys())
         self.close()
+
+    def openMultipleSaveDialog(self):
+        dialog = QDialog()
+        dialog.setModal(True)
+        layout = QVBoxLayout()
+        label = QLabel()
+        label.setText('How many the same welds u want to add?')
+        lineEdit = QLineEdit()
+        layout.addWidget(label, alignment=Qt.AlignCenter)
+        layout.addWidget(lineEdit, alignment=Qt.AlignCenter)
+        dialogBtns = QDialogButtonBox()
+        dialogBtns.setStandardButtons(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
+        dialogBtns.setEnabled(False)
+        lineEdit.setEnabled(True)
+        lineEdit.textChanged.connect(lambda: dialogBtns.setEnabled(True))
+        dialogBtns.rejected.connect(lambda: dialog.close())
+        dialogBtns.accepted.connect(
+            lambda: Union[self.saveMultipleWelds(lineEdit.text()), dialog.close(), self.close()])
+        layout.addWidget(dialogBtns, alignment=Qt.AlignCenter)
+        dialog.setLayout(layout)
+        dialog.exec_()
+
+    def saveMultipleWelds(self, welds_amount):
+        curr_ID = self.new_weldObj.info['id']
+        self.saveWeld()
+        self.new_weldObj.info['same_as_weldID'] = self.new_weldObj.info['weld_id_generated']
+        for i in range(int(welds_amount))[1::]:
+            generated_id = \
+                str(self.new_weldObj.info[
+                        'belonging_construction_tag']) + f'-{curr_ID}.{i}'
+            self.weldIDgeneratedLabel.setText(f"/ {generated_id} /")
+            print(f"Saving {i} weld...")
+            self.saveWeld()
 
 
 if __name__ == '__main__':
@@ -182,7 +243,7 @@ if __name__ == '__main__':
     mainConstruction.load_info(1)
     subConstruction = db_objects.SubConstruction(parentConstruction=mainConstruction, connected_database=db)
     subConstruction.load_info(1)
-    # mainWindow = NewWeldDialog(parentConstruction=subConstruction)
+    # mainWindow = NewWeldDialog(parentConstructionObject=subConstruction)
     mainWindow = NewWeldDialog(subConstruction)
     mainWindow.show()
 
