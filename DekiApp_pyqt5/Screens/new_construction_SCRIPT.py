@@ -194,7 +194,7 @@ class NewConstructDialog(QDialog):
 
             if type(self.parent()) == QStackedWidget:
                 import construction_preview_SCRIPT
-                self.parent().addWidget(construction_preview_SCRIPT.ConstructPreviewDialog(new_construction.info['id']))
+                self.parent().addWidget(construction_preview_SCRIPT.MainConstructionDialog(new_construction.info['id']))
                 self.parent().setCurrentIndex(self.parent().indexOf(self) + 1)
                 self.parent().removeWidget(self)
 

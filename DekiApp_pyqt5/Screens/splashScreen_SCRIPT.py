@@ -53,11 +53,12 @@ class SplashScreenDialog(QDialog):
         self.loadingLbl.setMovie(self.animation)
 
         self.stackedWidget: QStackedWidget = stackedWidgetInstance
-
+        print(f"SHOWING SPLAS...")
         self.show()
         self.mainAppInstance.processEvents()
-
+        print(f"LOADING NEXT SCREEN -> {self.calledScreen}")
         self.loadedScreen = self.calledScreen(*self.calledScreen_initArgs)
+        print(f"CHANGING SCREENS...")
         self.changeScreen()
 
     def changeScreen(self):
@@ -70,6 +71,7 @@ class SplashScreenDialog(QDialog):
             self.mainAppInstance.processEvents()
         else:
             print('Next screen has not been loaded.')
+
     def startAnimation(self):
         self.animation.start()
 
@@ -97,8 +99,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
 
-    # mainWindow = InspectionPlannerWindow()
-    # mainWindow.show()
+    # mainWindowObj = InspectionPlannerWindow()
+    # mainWindowObj.show()
 
     try:
         sys.exit(app.exec_())

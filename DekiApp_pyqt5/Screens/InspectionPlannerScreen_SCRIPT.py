@@ -13,44 +13,13 @@ import resources_rc
 import pathlib
 
 
-class CustomListItem(QWidget):
-    def __init__(self, constructionID):
-        super(CustomListItem, self).__init__()
-        # set attribute that deletes the instance of this class on closeEvent
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        loadUi(r'MainConstructionListItem_UI.ui', self)
-        self.constructionID = constructionID
-        # Get access to QMainWindow instance for its member methods, and save its reference as a member variable
-        self.mainWindowInstance = None
-        # Trigger a method of different new_screen_ref, in this case the InspectionPlanningMainWindow
-        # Updates the rightSidedContent of the InspectionPlanningMainWindow
-        # in lambda definition an "event" has to be passed for proper functionality
-        self.mouseReleaseEvent = lambda event: self.update_selfInfo()
-
-    def update_selfInfo(self):
-        for widget in QApplication.topLevelWidgets():
-            searched_child = widget.findChild(QWidget, name='inspectionPlannerScreen')
-            if searched_child is not None:
-                self.mainWindowInstance = searched_child
-                self.mainWindowInstance.updateRightMenu(self.constructionID)
-                break
-            elif widget.objectName() == 'inspectionPlannerScreen':
-                self.mainWindowInstance = widget
-                self.mainWindowInstance.updateRightMenu(self.constructionID)
-                break
-
-
 class InspectionPlannerScreen(QWidget):
-    def __init__(self, connected_database=None):
+    def __init__(self, mainWindowObj: QMainWindow, connected_database=None):
         super().__init__()
+        self.mainConstructionObject = None
         loadUi(r'InspectionPlannerScreen_UI.ui', self)
         self.currentListItemID = None
-        self.mainWindowObject = None
-        for widget in QApplication.topLevelWidgets():
-            if widget.objectName() == 'inspectionPlannerWindow':
-                from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
-                self.mainWindowObject: InspectionPlannerWindow = widget
-                print(f"found {self.mainWindowObject}")
+        self.mainWindowObject = mainWindowObj
         # Screen loading scripts
         self.goToConstructionBtn.setEnabled(False)
         # open database connection
@@ -65,19 +34,8 @@ class InspectionPlannerScreen(QWidget):
         self.addConstructionBtn.clicked.connect(
             lambda: (self.showDialog(new_construction_SCRIPT.NewConstructDialog())))
 
-        # change screen for 'construction_preview'
-        # from construction_preview_SCRIPT import ConstructPreviewDialog
-        # self.goToConstructionBtn.clicked.connect(
-        #     lambda: (print(f"Loading mainConstructionObject Preview Screen for mainConstructionObject ID {self.currentListItemID}"),
-        #              self.mainWindowObject.stackedWidget.changeScreen(self, ConstructPreviewDialog(
-        #                  self.currentListItemID, connected_database=self.db), 'Main Construction Preview') \
-        #                  if self.parent() is not None else print('no parent')))
 
-        from construction_preview_SCRIPT import ConstructPreviewDialog
-        self.goToConstructionBtn.clicked.connect(
-            lambda: self.mainWindowObject.stackedWidget.changeScreen_withSplash(ConstructPreviewDialog,
-                    [self.currentListItemID, self.db])
-        )
+        self.mainWindowObject.centerWindow(self)
 
     def loadConstructionsList(self):
         self.scrolledContentWidget = QWidget()
@@ -89,25 +47,7 @@ class InspectionPlannerScreen(QWidget):
         db_tableLength = len(self.db.table_into_DF('deki_2022_mainConstructions'))
         for constructionID in range(db_tableLength):
             constructionObject.load_info(constructionID + 1)
-            listItem = CustomListItem(constructionID + 1)
-            listItem.constructionTag.setText(constructionObject.info["tag"])
-            listItem.constructionName.setText(constructionObject.info['name'])
-            listItem.constructionPicture.setPixmap(constructionObject.picture.scaledToHeight(120, mode=Qt.SmoothTransformation))
-            listItem.seriesSize.setText(constructionObject.info['serial_number'])
-            listItem.clientLbl.setText(constructionObject.info['owner'])
-            in_preparation_style = 'color: rgb(250,150,0);' \
-                                   'font: 75 bold 9pt "Arial";'
-            released_style = 'color: rgb(30, 210, 80);' \
-                             'font: 75 bold 9pt "Arial";' \
-                             'text-decoration: underline;'
-            (listItem.stateLbl.setText('In preparation'), listItem.stateLbl.setStyleSheet(in_preparation_style)) if not \
-                self.db.is_table(f'{constructionObject.info["tag"]}_allWelds') else \
-                (listItem.stateLbl.setText('Released at: 17 Dec 22'), listItem.stateLbl.setStyleSheet(released_style))
-            counter = len(self.db.df_from_filteredTable('deki_2022_SubConstructions', 'main_construction_id',
-                                                        constructionObject.info['id']))
-            listItem.subsAmountLbl.setText(str(counter))
-            counter = len(self.db.table_into_DF(f"{constructionObject.info['tag']}_modelWelds"))
-            listItem.weldsAmountLbl.setText(str(counter))
+            listItem = CustomListItem(self, constructionObject)
             scrolledContentLayout.addWidget(listItem, alignment=Qt.AlignTop)
         self.scrolledContentWidget.setLayout(scrolledContentLayout)
         self.scrollArea.setWidget(self.scrolledContentWidget)
@@ -116,29 +56,79 @@ class InspectionPlannerScreen(QWidget):
         self.scrolledContentWidget.deleteLater()
         self.loadConstructionsList()
 
-    def updateRightMenu(self, constructionID):
-        constructionObject = dbo.MainConstruction(connected_database=self.db)
-        constructionObject.load_info(constructionID)
-        self.currentListItemID = constructionID
-        self.constructionName.setText(constructionObject.info['name'])
-        self.constructionTag.setText(constructionObject.info['tag'])
-        self.constructionSerialNo.setText(str(constructionObject.info['id']))  # TODO: change 'id' for 'serialNo'
-        self.constructionOwner.setText(constructionObject.info['owner'])
-        self.constructionType.setText(constructionObject.info['construct_type'])
-        self.constructionQualityNorm.setText(constructionObject.info['quality_norm'])
-        self.constructionQualityClass.setText(constructionObject.info['quality_class'])
-        self.constructionTolerancesNorm.setText(constructionObject.info['tolerances_norm'])
-        self.constructionTolerancesLevel.setText(constructionObject.info['tolerances_level'])
-        self.constructionCoopBody.setText(constructionObject.info['subcontractor'])
-        self.constructionCoopContact.setText(constructionObject.info['sub_contact'])
-        self.constructionPicLarge.setPixmap(constructionObject.picture.scaledToHeight(250, mode=Qt.SmoothTransformation))
-        print(self.constructionPicLarge.size())
+    def updateRightMenu(self, mainConstructionObj):
+        self.mainConstructionObject = mainConstructionObj
+
+        from construction_preview_SCRIPT import MainConstructionDialog
+        self.goToConstructionBtn.clicked.connect(
+            lambda: self.mainWindowObject.stackedWidget.changeScreen_withSplash(MainConstructionDialog,
+                                                                                [self.mainConstructionObject]))
+
+        self.currentListItemID = mainConstructionObj.info['id']
+        self.constructionName.setText(mainConstructionObj.info['name'])
+        self.constructionTag.setText(mainConstructionObj.info['tag'])
+        self.constructionSerialNo.setText(str(mainConstructionObj.info['serial_number']))
+        self.constructionOwner.setText(mainConstructionObj.info['owner'])
+        self.constructionType.setText(mainConstructionObj.info['construct_type'])
+        self.constructionQualityNorm.setText(mainConstructionObj.info['quality_norm'])
+        self.constructionQualityClass.setText(mainConstructionObj.info['quality_class'])
+        self.constructionTolerancesNorm.setText(mainConstructionObj.info['tolerances_norm'])
+        self.constructionTolerancesLevel.setText(mainConstructionObj.info['tolerances_level'])
+        self.constructionCoopBody.setText(mainConstructionObj.info['subcontractor'])
+        self.constructionCoopContact.setText(mainConstructionObj.info['sub_contact'])
+        self.constructionPicLarge.setPixmap(
+            mainConstructionObj.picture.scaledToHeight(250, mode=Qt.SmoothTransformation))
         self.goToConstructionBtn.setEnabled(True)
 
     def showDialog(self, dialog):
         dialog.show()
         dialog.closeEvent = lambda event: (
             self.refresh_scrollArea())
+
+
+class CustomListItem(QWidget):
+    def __init__(self, parentScreenObj: InspectionPlannerScreen, loadedConstructionObject: dbo.MainConstruction):
+        super(CustomListItem, self).__init__()
+        # set attribute that deletes the instance of this class on closeEvent
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        loadUi(r'MainConstructionListItem_UI.ui', self)
+        self.constructionID = loadedConstructionObject.info['id']
+        self.parentScreen = parentScreenObj
+        self.constructionObj = loadedConstructionObject
+        self.db = loadedConstructionObject.db
+
+        self.mouseReleaseEvent = lambda event: self.parentScreen.updateRightMenu(self.constructionObj)
+
+        self.releaseConstructionBtn.clicked.connect(self.releaseConstruction)
+
+        self.assignInfoToWidgets()
+
+    def releaseConstruction(self):
+        from constructionReleaseScreen_SCRIPT import ConstructionReleaseWindow
+        dialog = ConstructionReleaseWindow(self.constructionObj)
+        self.parentScreen.mainWindowObject.close()
+        dialog.show()
+
+    def assignInfoToWidgets(self):
+        self.constructionTag.setText(self.constructionObj.info["tag"])
+        self.constructionName.setText(self.constructionObj.info['name'])
+        self.constructionPicture.setPixmap(
+            self.constructionObj.picture.scaledToHeight(120, mode=Qt.SmoothTransformation))
+        self.seriesSize.setText(self.constructionObj.info['serial_number'])
+        self.clientLbl.setText(self.constructionObj.info['owner'])
+        in_preparation_style = 'color: rgb(250,150,0);' \
+                               'font: 75 bold 9pt "Arial";'
+        released_style = 'color: rgb(30, 210, 80);' \
+                         'font: 75 bold 9pt "Arial";' \
+                         'text-decoration: underline;'
+        (self.stateLbl.setText('In preparation'), self.stateLbl.setStyleSheet(in_preparation_style)) if not \
+            self.db.is_table(f'{self.constructionObj.info["tag"]}_allWelds') else \
+            (self.stateLbl.setText('Released at: 17 Dec 22'), self.stateLbl.setStyleSheet(released_style))
+        counter = len(self.db.df_from_filteredTable('deki_2022_SubConstructions', 'main_construction_id',
+                                                    self.constructionObj.info['id']))
+        self.subsAmountLbl.setText(str(counter))
+        counter = len(self.db.table_into_DF(f"{self.constructionObj.info['tag']}_modelWelds"))
+        self.weldsAmountLbl.setText(str(counter))
 
 
 if __name__ == '__main__':

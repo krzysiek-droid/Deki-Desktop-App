@@ -37,21 +37,38 @@ class ConstructionReleaseWindow(QDialog):
     def __init__(self, constructionObject: dbo.MainConstruction):
         super(ConstructionReleaseWindow, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowFlags(Qt.FramelessWindowHint)
 
         uic.properties.logger.setLevel(logging.WARNING)
         uic.uiparser.logger.setLevel(logging.WARNING)
         uic.loadUi(r'constructionReleaseWindow_UI.ui', self)
+        #   -------------------------------- BUTTONS
+        self.closeBtn.clicked.connect(self.close)
 
+        #   ------------------------------------------------------------------- SCREEN MANAGER
         from inspectionPlannerWindow_SCRIPT import CustomStackedWidget
         self.screenManager = CustomStackedWidget(self)
         self.mainLayout.addWidget(self.screenManager)
 
-        first_screen = ConstructionReleaseScreen(self.screenManager, constructionObject)
+        print(f"Pure window size: {self.size()}")
+
+        first_screen = ConstructionReleaseScreen(self.screenManager, constructionObject, self)
         self.screenManager.addWidget(first_screen)
+
+    def centerWindow(self, window: QWidget = None):
+        qtRectangle = self.frameGeometry() if window is None else window.frameGeometry()
+        centerPoint = QDesktopWidget().availableGeometry().center()
+        centerPoint.setY(centerPoint.y() - 50)
+        centerPoint.setX(centerPoint.x() - 30)
+
+        qtRectangle.moveCenter(centerPoint)
+        self.move(qtRectangle.topLeft())
 
 
 class ConstructionReleaseScreen(QDialog):
-    def __init__(self, screenManager_ref, constructionObject: dbo.MainConstruction):
+    def __init__(self, screenManager_ref, constructionObject: dbo.MainConstruction,
+                 parentWindow: ConstructionReleaseWindow):
+
         super(ConstructionReleaseScreen, self).__init__()
         self.constructionObject = constructionObject
         self.screenManager = screenManager_ref
@@ -59,6 +76,8 @@ class ConstructionReleaseScreen(QDialog):
         self.confirmedTestingLevels = {'vt': 0, 'pt': 0, 'mt': 0, 'ut': 0, 'rt': 0, 'lt': 0}
         self.checklist = {'seriesNumberLine': False,
                           'confirmationBtnsFrame': False}
+
+        self.parentWindow = parentWindow
 
         uic.loadUi(r'constructionReleaseScreen_UI.ui', self)
 
@@ -85,6 +104,8 @@ class ConstructionReleaseScreen(QDialog):
 
         #   ---------------------------------------- BUTTONS -------------------------------
         #   -- Testing Level Confirmation buttons --
+        self.resetSizeBtn.hide()
+
         for btn in self.confirmationBtnsFrame.findChildren(QPushButton):
             btn.setEnabled(False)
             btn.setText("")
@@ -101,6 +122,10 @@ class ConstructionReleaseScreen(QDialog):
                                              self.confirm_testing_level(self.rtLvlConfirmBtn, postClickChecked))
         self.ltLvlConfirmBtn.clicked.connect(lambda postClickChecked:
                                              self.confirm_testing_level(self.ltLvlConfirmBtn, postClickChecked))
+        self.resetSizeBtn.clicked.connect(self.resetSizeInput)
+
+        from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
+        self.discardBtn.clicked.connect(self.closeFunc)
 
         #   ---------------------------------------- LINE EDITS -------------------------------
         validator = QtGui.QIntValidator()
@@ -147,6 +172,8 @@ class ConstructionReleaseScreen(QDialog):
         #   ---------------------------------------- FUNCTIONS CALLS -----------------------
         self.checkConstructionData()
         self.check_assigned_tests()
+
+        parentWindow.centerWindow(self)
         print(f"Screen {self} - {self.objectName()} loaded.")
 
     # Function for series size QLineEdit functionality      -- connected (eF) to QLineEdit, seriesSizeLine
@@ -155,8 +182,17 @@ class ConstructionReleaseScreen(QDialog):
             try:
                 int(self.seriesNumberLine.text())
                 self.checklist.update({'seriesNumberLine': True})
+                self.seriesNumberLine.setConfirmed(True)
+                self.resetSizeBtn.show()
             except ValueError:
                 print('Integer value needed.')
+        self.validate_inputs()
+
+    def resetSizeInput(self):
+        self.seriesNumberLine.clear()
+        self.seriesNumberLine.setConfirmed(False)
+        self.resetSizeBtn.hide()
+        self.checklist.update({'seriesNumberLine': False})
         self.validate_inputs()
 
     #   Function to check completeness of data for construction (whether CAD or Docs are missing)
@@ -285,28 +321,23 @@ class ConstructionReleaseScreen(QDialog):
     def validate_inputs(self):
         lineEdits = self.testingLevelsGroupBox.findChildren(QLineEdit)
         editedLines = [lineEdit for lineEdit in lineEdits if lineEdit.hasValue is True]
-        if all([editedLine.isConfirmed for editedLine in editedLines]):
-            self.checklist.update({"confirmationBtnsFrame": True})
-        else:
-            self.checklist.update({"confirmationBtnsFrame": False})
 
-        if all(self.checklist.values()):
+        if all([editedLine.isConfirmed for editedLine in editedLines]) and self.checklist['seriesNumberLine']:
+            self.checklist.update({"confirmationBtnsFrame": True})
+            confirmedTestingLevels = {
+                f'{editedLine.objectName().replace("Line", "")}': editedLine.text().replace(' %', '')
+                for editedLine in editedLines if editedLine.isConfirmed is True}
             self.releaseBtn.setEnabled(True)
         else:
+            self.checklist.update({"confirmationBtnsFrame": False})
             self.releaseBtn.setEnabled(False)
 
+    def closeFunc(self):
+        self.parentWindow.close()
+        from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
+        nw = InspectionPlannerWindow()
+        nw.show()
 
-class TestingLevelsScreen(QDialog):
-    def __init__(self, screenManager_ref):
-        super(TestingLevelsScreen, self).__init__()
-        uic.loadUi(r'testingLevelsScreen_UI.ui', self)
-        self.setObjectName(f'TestingLevelsScreen')
-
-        self.screenManager = screenManager_ref
-        self.goBackBtn.clicked.connect(
-            lambda: self.screenManager.setCurrentIndex(self.screenManager.currentIndex() - 1))
-        self.discardBtn.clicked.connect(lambda: print('discarded'))
-        self.finishBtn.clicked.connect(lambda: print('finished'))
 
 
 if __name__ == '__main__':
@@ -316,7 +347,6 @@ if __name__ == '__main__':
     construction.load_info(1)
 
     mainWindow = ConstructionReleaseWindow(construction)
-    testScreen = TestingLevelsScreen(mainWindow.screenManager)
     mainWindow.show()
 
     try:

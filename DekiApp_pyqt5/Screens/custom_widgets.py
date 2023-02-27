@@ -1,5 +1,5 @@
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QLineEdit, QSizePolicy
+from PyQt5.QtCore import pyqtSignal, QPropertyAnimation, QRect
+from PyQt5.QtWidgets import QLineEdit, QSizePolicy, QToolButton
 from PyQt5.uic.properties import QtGui
 
 
@@ -61,3 +61,23 @@ class MouseClearableLineEdit(QLineEdit):
             self.setReadOnly(False)
             self.isConfirmed = False
             return self.isConfirmed
+
+
+class CustomToolCircleButton(QToolButton):
+    def __init__(self, *arg, **kwargs):
+        super(CustomToolCircleButton, self).__init__(*arg, **kwargs)
+
+        self.clicked.connect(lambda x:print(x))
+
+    def focusInEvent(self, event):
+        super(CustomToolCircleButton, self).focusInEvent(event)
+        print('Mouse moved')
+        # animation = QPropertyAnimation(self, "size")
+        # animation.setDuration(250)
+        # animation.setStartValue(QRect(60, 60, self.width(), self.height()))
+        # animation.setEndValue(QRect(80, 80, self.width(), self.height()))
+        # animation.start()
+
+    def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:
+        super(CustomToolCircleButton, self).focusOutEvent(e)
+        print('focused out')

@@ -243,7 +243,7 @@ if __name__ == '__main__':
     mainConstruction.load_info(1)
     subConstruction = db_objects.SubConstruction(parentConstruction=mainConstruction, connected_database=db)
     subConstruction.load_info(1)
-    # mainWindow = NewWeldDialog(parentConstructionObject=subConstruction)
+    # mainWindowObj = NewWeldDialog(parentConstructionObject=subConstruction)
     mainWindow = NewWeldDialog(subConstruction)
     mainWindow.show()
 

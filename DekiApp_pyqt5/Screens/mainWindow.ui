@@ -26,47 +26,7 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">*{
-border: none;
-background-color: transparent;
-backgraund: transparent;
-padding: 0;
-margin: 0;
-color: rgb(30, 210, 80);
-}
-
-#centralwidget{
-background-color: rgb(255, 255, 255);
-}
-#LeftMenuContainer{
-	background-color: rgb(214, 214, 214, 160);
-}
-QPushButton{
-text-align: left;
-padding: 5px;
-}
-QPushButton:hover{
-	background-color: rgb(255, 255, 255);
-}
-
-
-#CenterMenuSubContainer, #RightMenuSubContainer{
-	
-	background-color: rgb(255, 255, 255);
-
-}
-#frame_4,#frame_8, #popupNotificationSubContainer{
-	
-	background-color: rgba(214, 214, 214, 160);
-	border-radius: 20px;
-}
-#MainBodyContainer{
-background-color: rgba(214, 214, 214, 80);
-}
-#headerContainer, #footerContainer{
-	background-color: rgba(255, 255, 255);
-}
-</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
@@ -118,6 +78,21 @@ background-color: rgba(214, 214, 214, 80);
           </sizepolicy>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <property name="leftMargin">
+           <number>2</number>
+          </property>
+          <property name="topMargin">
+           <number>2</number>
+          </property>
+          <property name="rightMargin">
+           <number>2</number>
+          </property>
+          <property name="bottomMargin">
+           <number>2</number>
+          </property>
           <item>
            <widget class="QWidget" name="LMenuSubContainer" native="true">
             <property name="styleSheet">
@@ -924,7 +899,7 @@ background-color: rgba(214, 214, 214, 80);
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_13">
              <item>
-              <widget class="QStackedWidget" name="stackedWidget_3">
+              <widget class="QStackedWidget" name="mainContentStackedWidget">
                <property name="currentIndex">
                 <number>2</number>
                </property>
@@ -1272,6 +1247,7 @@ background-color: rgba(214, 214, 214, 80);
  <resources>
   <include location="../resources.qrc"/>
   <include location="../resources.qrc"/>
+  <include location="C:/Users/Młody/.designer/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

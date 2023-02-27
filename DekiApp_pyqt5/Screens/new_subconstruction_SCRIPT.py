@@ -168,7 +168,7 @@ class NewSubconstructionDialog(QDialog):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    # mainWindow = CadViewerExtended("../DekiResources/Zbiornik LNG assembly.stp")
+    # mainWindowObj = CadViewerExtended("../DekiResources/Zbiornik LNG assembly.stp")
     dummy_constructionObject = db_objects.MainConstruction()
     dummy_constructionObject.load_info(1)
     mainWindow = NewSubconstructionDialog(parentConstruction=dummy_constructionObject,

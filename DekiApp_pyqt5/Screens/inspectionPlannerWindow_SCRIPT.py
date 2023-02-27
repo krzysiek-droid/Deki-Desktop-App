@@ -45,8 +45,8 @@ class CustomStackedWidget(QStackedWidget):
         print(f'Changing screens with splash...')
         self.mainWindowInstance.hide()
         from splashScreen_SCRIPT import SplashScreenDialog
-        SplashScreenDialog(self, called_screen_ref, called_screen_init_args)
-        self.mainWindowInstance.show()
+        s = SplashScreenDialog(self, called_screen_ref, called_screen_init_args)
+        self.mainWindowInstance.showMaximized()
 
 
 class InspectionPlannerWindow(QMainWindow):
@@ -54,6 +54,7 @@ class InspectionPlannerWindow(QMainWindow):
         super(InspectionPlannerWindow, self).__init__()
         # set atribute that deletes the instance of this class on closeEvent
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowFlags(Qt.FramelessWindowHint)
         # set loggers to print only Warnings during screen changes, w/o it prints all debug lines, which is annoying
         uic.properties.logger.setLevel(logging.WARNING)
         uic.uiparser.logger.setLevel(logging.WARNING)
@@ -69,7 +70,8 @@ class InspectionPlannerWindow(QMainWindow):
         # QStackedWidget contains QStackedLayout, which is important in case of children and parent finding
         self.stackedWidgetContainer.addWidget(self.stackedWidget)
         # add the first screen (QWidget) to screenManager (stackedWidget)
-        self.stackedWidget.addWidget(InspectionPlannerScreen_SCRIPT.InspectionPlannerScreen(connected_database=self.db))
+        self.stackedWidget.addWidget(InspectionPlannerScreen_SCRIPT.InspectionPlannerScreen(self,
+                                                                                            connected_database=self.db))
 
         # show all pages allocated in QStackedWidget
         print(f"Screens (QWidgets) stacked in stackedLayout (ScreenManager):")
@@ -78,8 +80,12 @@ class InspectionPlannerWindow(QMainWindow):
         # button allocations
         self.closeBtn.clicked.connect(lambda: self.close())
 
-    def changeScreen(self, current_screen, target_screen, pageTitle):
-        self.stackedWidget.changeScreen(current_screen, target_screen, '')
+    def changeScreen(self, current_screen, target_screen):
+        self.stackedWidget.changeScreen_withSplash(current_screen, target_screen)
+
+    def centerWindow(self, window: QWidget = None):
+        self.move(QApplication.desktop().screen().rect().center() - self.rect().center())
+
 
 
 if __name__ == '__main__':

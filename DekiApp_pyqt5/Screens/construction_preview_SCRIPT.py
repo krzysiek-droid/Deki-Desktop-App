@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtGui
 
+import gnrl_database_con
 from Screens import cadViewWidget_SCRIPT as cadviewer
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 
@@ -37,31 +38,34 @@ class CustomListItem(QWidget):
 
     def changeToSubConstructionScreen(self):
         from subConstruction_preview_SCRIPT import SubConstructPreviewScreen
-        new_screen = SubConstructPreviewScreen(self.parentScreen.mainConstructionObject, self.subConstructionID)
-        self.mainWindowInstance.stackedWidget.changeScreen(self.parentScreen, new_screen, 'Subconstruction Preview')
+        self.mainWindowInstance.stackedWidget.changeScreen_withSplash(SubConstructPreviewScreen,
+          [self.parentScreen.mainWindowObject, self.parentScreen.mainConstructionObject,
+           self.subConstructionID])
 
 
-class ConstructPreviewDialog(QDialog):
-    def __init__(self, constructNumber, connected_database=None):
-        super(ConstructPreviewDialog, self).__init__()
+class MainConstructionDialog(QDialog):
+    def __init__(self, constructionObject: dbo.MainConstruction):
+        super(MainConstructionDialog, self).__init__()
         self.cadModelViewWidget = None
         uic.properties.logger.setLevel(logging.WARNING)
         uic.uiparser.logger.setLevel(logging.WARNING)
         uic.loadUi(r'construction_preview_UI.ui', self)
+        self.setWindowState(Qt.WindowMaximized)
+
         for widget in QApplication.topLevelWidgets():
             if widget.objectName() == 'inspectionPlannerWindow':
                 from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
                 self.mainWindowObject: InspectionPlannerWindow = widget
                 print(f"found {self.mainWindowObject}")
                 break
-        self.setObjectName('mainConstructionPreviewScreen')
-        self.mainConstructionIdNum = constructNumber
-        self.mainConstructionObject = dbo.MainConstruction()
-        self.mainConstructionObject.load_info(self.mainConstructionIdNum)
-        # open database connection
-        self.db = database.Database() if connected_database is None else connected_database
-        # ---------------------------------------------------------------Screen loading functions----------------------
 
+        self.setObjectName('mainConstructionPreviewScreen')
+        self.parentConstruction = constructionObject
+        self.mainConstructionObject = constructionObject
+        self.mainConstructionIdNum = self.mainConstructionObject.info['id']
+        # open database connection
+        self.db = self.mainConstructionObject.db
+        # ---------------------------------------------------------------Screen loading functions----------------------
         self.load_weldList()
         self.load_SubConstructionsList()
         self.showStepModel()
@@ -69,8 +73,8 @@ class ConstructPreviewDialog(QDialog):
         # ---------------------------------------------------------------Button scripting------------------------------
         from InspectionPlannerScreen_SCRIPT import InspectionPlannerScreen
         self.goBackBtn.clicked.connect(
-            lambda: self.mainWindowObject.changeScreen(self, InspectionPlannerScreen(connected_database=self.db),
-                                                       'Inspection Planner Screen'))
+            lambda: self.mainWindowObject.changeScreen(self, InspectionPlannerScreen(self.mainWindowObject, self.db)))
+
         from new_subconstruction_SCRIPT import NewSubconstructionDialog
         self.addSubassemblyBtn.clicked.connect(
             lambda: (self.showDialog(NewSubconstructionDialog(self.mainConstructionObject))))
@@ -93,8 +97,6 @@ class ConstructPreviewDialog(QDialog):
         self.subcontractorContactLabel.setText(self.mainConstructionObject.info['sub_contact'])
 
         self.cadDocsTab.currentChanged.connect(lambda idx: self.cadModelViewWidget.fitToParent())
-
-        print('initialization ended.')
 
     def showStepModel(self):
         # Delete old widget -> for in case CAD model is changed
@@ -173,6 +175,7 @@ class ConstructPreviewDialog(QDialog):
         belonging_welds = self.db.table_into_DF(welds_tableName)
         if self.db.is_table(welds_tableName):
             if len(belonging_welds) > 0:
+                print(f"Loading welds list - found {len(belonging_welds)} welds.")
                 for weldData in belonging_welds.iterrows():
                     if not bool(weldData[1]['same_as_weldID']):
                         from weldListItem_SCRIPT import WeldListItem
@@ -199,8 +202,12 @@ class ConstructPreviewDialog(QDialog):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    mainWindow = ConstructPreviewDialog(1)
-    mainWindow.showMaximized()
+    db = gnrl_database_con.Database()
+    mConstruct = dbo.MainConstruction(connected_database=db)
+    mConstruct.load_info(1)
+
+    mainWindow = MainConstructionDialog(mConstruct)
+    mainWindow.show()
 
     try:
         sys.exit(app.exec_())

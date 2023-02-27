@@ -1,3 +1,6 @@
+import json
+import time
+
 import PyQt5.Qt
 import pandas
 from PyQt5 import QtGui
@@ -25,10 +28,14 @@ weld_specification = ['id', 'belonging_construction_tag', 'belonging_constructio
                       'sided_weld_spacing', 'tail_info', 'first_material', 'second_material', 'first_welded_part',
                       'second_welded_part', 'testing_methods']
 
+with open(r'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\db_settings.json', 'r') as s:
+    reader = s.read()
+    welds_cols = json.loads(reader)['modelWelds_columns']
+
 
 class Construction:
-    def __init__(self, companyName='deki', connected_database=None):
-        self.db = database.Database() if connected_database is None else connected_database
+    def __init__(self, companyName='deki'):
+        self.db = QApplication.instance().database
         print(f"INITIALIZING {type(self)} - {self}...", end='')
         self.table_name = None
         self.picture = None
@@ -62,7 +69,7 @@ class Construction:
 
 class MainConstruction(Construction):
     def __init__(self, connected_database=None):
-        super(MainConstruction, self).__init__(connected_database=connected_database)
+        super(MainConstruction, self).__init__()
         self.table_name = f"{self.company_name}_2022_mainConstructions"
         self.update_records_amount()
         self.mainConstructionObject = self
@@ -114,10 +121,9 @@ class MainConstruction(Construction):
 
 
 class SubConstruction(Construction):
-    def __init__(self, parentConstruction=None, connected_database=None):
-        super(SubConstruction, self).__init__(connected_database=connected_database)
+    def __init__(self, parentConstruction=None):
+        super(SubConstruction, self).__init__()
         self.info = {}
-        self.db = parentConstruction.db if connected_database is None else connected_database
         self.table_name = f'{self.company_name}_2022_SubConstructions'
         self.parentConstructionObject = parentConstruction if parentConstruction is not None else None
         self.mainConstructionObject = parentConstruction.mainConstructionObject if type(parentConstruction) is not \
@@ -169,10 +175,10 @@ class SubConstruction(Construction):
 
 
 class WeldObject:
-    def __init__(self, mainConstructionTag=None, connected_database=None, table_name=None):
-        print(f"\n-----------------------------------------------------------------{type(self)} INITIALIZED", end=' ')
+    def __init__(self, mainConstructionTag=None, table_name=None):
+        # print(f"\n-----------------------------------------------------------------{type(self)} INITIALIZED", end=' ')
         self.table_name = f"{mainConstructionTag}_modelWelds" if table_name is None else table_name
-        self.db = database.Database() if connected_database is None else connected_database
+        self.db = QApplication.instance().database
         self.db_records = self.update_records_amount()
         self.wps_filepath = None
         self.db_content: pandas.DataFrame = self.db.table_into_DF(self.table_name)
@@ -197,24 +203,18 @@ class WeldObject:
             return None
 
     def fast_load_singleWeld(self, weldID):
-        print(f'Loading data for weld from: {self.table_name} - Weld ID: {weldID}....',
-              end=" ")
-        keys = self.db_content.keys()
+        keys = welds_cols
         values = self.db_content.iloc[weldID - 1].tolist()
         self.info = {k: v for k, v in zip(keys, values)}
         self.wps_filepath = srv_wps_files_path + fr'\{self.info["wps_number"]}.pdf'
         self.info['testing_methods'] = self.info['testing_methods'].split(';')
-        print(f'Weld info loaded. OK')
 
     def load_info(self, weld_id):
-        print(f'Loading data for weld from: {self.table_name} - Weld ID: {weld_id}....',
-              end=" ")
-        keys = self.db.get_columns_names(self.table_name)
-        values = self.db.get_row(self.table_name, 'id', f'{str(weld_id)}')[0]
+        keys = welds_cols
+        values = self.db_content.iloc[weld_id - 1].tolist()
         self.info = {k: v for k, v in zip(keys, values)}
         self.wps_filepath = srv_wps_files_path + fr'\{self.info["wps_number"]}.pdf'
         self.info['testing_methods'] = self.info['testing_methods'].split(';')
-        print(f'Weld info loaded. OK')
 
     def save_weld(self, new_weld_DbName, pathToWpsFile):
         dst_wpsDocsPath = srv_wps_files_path + fr'\{self.info["wps_number"]}.pdf'
@@ -254,10 +254,25 @@ class WeldObject:
         return os.path.isfile(self.wps_filepath)
 
 
+def measureTime(obj, args: list):
+    ts = time.time()
+    rObj = obj(*args)
+    tf = time.time()
+    return rObj, tf - ts
+
+
 if __name__ == "__main__":
+    import time
+
     app = QApplication(sys.argv)
     subCons = WeldObject('DKI_LNG3200_MS_000')
-    subCons.fast_load_singleWeld(1)
+    subCons, rt = measureTime(subCons.fast_load_singleWeld, [1])
+    print(rt)
+    weld = WeldObject('DKI_LNG3200_MS_000')
+    weld, rt = measureTime(weld.load_info, [1])
+    print(rt)
+
+    app.exit(app.exec_())
 
     try:
         sys.exit(app.exec_())

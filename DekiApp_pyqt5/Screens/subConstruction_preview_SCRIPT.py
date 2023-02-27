@@ -5,59 +5,36 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
-import db_objects
 from Screens import cadViewWidget_SCRIPT as cadviewer
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 
 import db_objects as dbo
-import gnrl_database_con as database
-from pandas import DataFrame
 
-import pandas as pd
+from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
 import resources_rc
 
-import pathlib
 
-
-class CustomListItem(QWidget):
-    def __init__(self, subConstructionID, parentScreen):
-        super(CustomListItem, self).__init__()
-        uic.loadUi(r'ListItem.ui', self)
-        self.subConstructionID = subConstructionID
-        # Get access to QMainWindow instance for its member methods, and save its reference as a member variable
-        self.mainWindowInstance = None
-        self.parentScreen = parentScreen
-        for widget in QApplication.topLevelWidgets():
-            if widget.objectName() == 'inspectionPlannerWindow':
-                self.mainWindowInstance = widget
-                self.openSubConstructionBtn.clicked.connect(self.changeToSubConstructionScreen)
-                break
-
-    def changeToSubConstructionScreen(self):
-        new_screen = SubConstructPreviewScreen(self.parentScreen.subConstructionObject, self.subConstructionID,
-                                               self.parentScreen.subConstructionObject.db)
-        self.mainWindowInstance.stackedWidget.changeScreen(self.parentScreen, new_screen, 'Sub-Subconstruction Preview')
+def showDialog(dialog, closeEventFunc):
+    dialog.closeEvent = lambda event: closeEventFunc()
+    dialog.exec_()
 
 
 class SubConstructPreviewScreen(QDialog):
-    def __init__(self, parentConstruction, subConstructionID, connected_database=None):
+    def __init__(self, mainWindowObj: InspectionPlannerWindow, parentConstruction
+                 , subConstructionID):
         super(SubConstructPreviewScreen, self).__init__()
         # set loggers to print only Warnings during screen changes, w/o it prints all debug lines, which is annoying
         uic.properties.logger.setLevel(logging.WARNING)
         uic.uiparser.logger.setLevel(logging.WARNING)
         uic.loadUi(r'subconstruction_preview_UI.ui', self)
-        for widget in QApplication.topLevelWidgets():
-            if widget.objectName() == 'inspectionPlannerWindow':
-                from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
-                self.mainWindowObject: InspectionPlannerWindow = widget
-                break
+        self.mainWindowObject = mainWindowObj
         self.setObjectName('subConstructPreviewScreen')
         self.constructNumber = subConstructionID
         self.pdfViewerWidget = None
         self.cadModelViewWidget = None
         self.parentConstructionObject = parentConstruction
-        self.mainConstructionObject = parentConstruction.mainConstructionObject
-        self.db = parentConstruction.db if parentConstruction is not None else connected_database
+        self.mainConstructionObject: dbo.MainConstruction = parentConstruction.mainConstructionObject
+        self.db = parentConstruction.db
         self.subConstructionObject = dbo.SubConstruction(parentConstruction, connected_database=self.db)
         self.subConstructionObject.load_info(subConstructionID)
         # open database connection
@@ -79,36 +56,35 @@ class SubConstructPreviewScreen(QDialog):
             self.qualityMoreInfoFrame.hide())
         self.showParentInfoBtn.clicked.connect(lambda: self.leftSidedContent.show())
         self.hideParentInfoBtn.clicked.connect(lambda: self.leftSidedContent.hide())
+
         from new_weld_SCRIPT import NewWeldDialog
         self.addWeldBtn.clicked.connect(
-            lambda: self.showDialog(NewWeldDialog(self.subConstructionObject), self.load_weldList))
+            lambda: showDialog(NewWeldDialog(self.subConstructionObject), self.load_weldList))
+
         from new_subconstruction_SCRIPT import NewSubconstructionDialog
         self.addSubConstructionBtn.clicked.connect(
-            lambda: self.showDialog(NewSubconstructionDialog(self.subConstructionObject),
-                                    self.load_SubConstructionsList))
+            lambda: showDialog(NewSubconstructionDialog(self.subConstructionObject), self.load_SubConstructionsList))
+
         self.cadDocsTab.currentChanged.connect(lambda idx: self.cadModelViewWidget.fitToParent())
-        from construction_preview_SCRIPT import ConstructPreviewDialog
-        self.goToMainConstructionBtn.clicked.connect(lambda: self.mainWindowObject.changeScreen(self,
-            ConstructPreviewDialog(self.mainConstructionObject.info['id'], connected_database=self.db),
-                                                                            'Main Construction Preview'))
+
+        from construction_preview_SCRIPT import MainConstructionDialog
+        self.goToMainConstructionBtn.clicked.connect(
+            lambda: self.mainWindowObject.stackedWidget.changeScreen_withSplash(
+                MainConstructionDialog, [self.mainConstructionObject]))
+
         self.showParentConstructionBtn.clicked.connect(self.showParentConstruction)
         # -----------------------------------------------------------------UPDATE INFO---------------------------------
 
         self.cadDocsTab.setCurrentIndex(0)
 
     def showParentConstruction(self):
-        if self.parentConstructionObject.parentConstructionObject is not None:
-            grandParentConstruction: dbo.SubConstruction = self.parentConstructionObject.parentConstructionObject
-            parentConstructionScreen = SubConstructPreviewScreen(grandParentConstruction,
-                                                                 self.subConstructionObject.info['id'],
-                                                                 connected_database=self.db)
-            self.mainWindowObject.changeScreen(self, parentConstructionScreen, "SubConstruction Preview")
-        else:
-            grandParentConstruction: dbo.MainConstruction = self.parentConstructionObject.mainConstructionObject
-            from construction_preview_SCRIPT import ConstructPreviewDialog
-            parentConstructionScreen = ConstructPreviewDialog(grandParentConstruction.info['id'],
-                                                              connected_database=self.db)
-            self.mainWindowObject.changeScreen(self, parentConstructionScreen, "Main Construction Preview")
+        if self.parentConstructionObject is dbo.SubConstruction:
+            self.mainWindowObject.stackedWidget.changeScreen_withSplash(SubConstructPreviewScreen,
+                                                                        [self.mainWindowObject, self,
+                                                                         self.parentConstructionObject.info['id']])
+        elif self.parentConstructionObject is dbo.MainConstruction:
+            from construction_preview_SCRIPT import MainConstructionDialog
+            self.mainWindowObject.stackedWidget.changeScreen_withSplash(MainConstructionDialog, [self.mainWindowObject])
 
     def showStepModel(self, construction):
         # Delete old widget -> for in case CAD model is changed
@@ -243,19 +219,25 @@ class SubConstructPreviewScreen(QDialog):
         self.weldsTabLayout.addWidget(tmp_scrollArea)
         self.tabWidget.setTabText(0, f'Welds ({len(belonging_welds)})')
 
-    def showDialog(self, dialog, closeEventFunc):
-        dialog.closeEvent = lambda event: closeEventFunc()
-        dialog.exec_()
+
+class CustomListItem(QWidget):
+    def __init__(self, subConstructionID, parentScreen: SubConstructPreviewScreen):
+        super(CustomListItem, self).__init__()
+        uic.loadUi(r'ListItem.ui', self)
+        self.subConstructionID = subConstructionID
+        # Get access to QMainWindow instance for its member methods, and save its reference as a member variable
+        self.mainWindowObject: InspectionPlannerWindow = parentScreen.mainWindowObject
+        self.parentScreen = parentScreen
+
+    def changeToSubConstructionScreen(self):
+        self.mainWindowObject.stackedWidget.changeScreen_withSplash(SubConstructPreviewScreen,
+                                                                    [self.mainWindowObject,
+                                                                     self.parentScreen.subConstructionObject,
+                                                                     self.subConstructionID])
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    mainConstruct = dbo.MainConstruction()
-    mainConstruct.load_info(1)
-    subconstruct = dbo.SubConstruction(mainConstruct, connected_database=mainConstruct.db)
-    subconstruct.load_info(1)
-    mainWindow = SubConstructPreviewScreen(subconstruct, 1)
-    mainWindow.showMaximized()
 
     try:
         sys.exit(app.exec_())
