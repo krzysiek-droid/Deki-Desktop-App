@@ -1,6 +1,7 @@
 import mariadb
 import sys
 import pandas as pd
+import requests
 
 with open(r"D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\DekiResources\database_con.txt",
           'r', encoding="UTF-8") as f:
@@ -19,12 +20,13 @@ PORT = int(db_credentials[4])
 def validate_text(text):
     tmp_text = text
     if text.isalnum():
-        print(f"Text is valid: {text}")
         return text
     else:
+        print(f"{text} requires validation...", end='')
         for letter in text:
             if not letter.isalnum():
                 tmp_text = tmp_text.replace(letter, '_')
+        print(f"Validated text -> {tmp_text}")
         return tmp_text
 
 
@@ -36,11 +38,22 @@ class Database:
                 password=DATABASE_PASSWORD,
                 host=DATABASE_HOST,
                 port=PORT,
-                database=DATABASE_NAME
+                database=DATABASE_NAME,
+                connect_timeout=2
             )
         except mariadb.Error as e:
-            print(f"Error connecting to MariaDB Platform: {e}")
-            sys.exit(1)
+            print(f"Error connecting to MariaDB Platform via internet: {e}")
+            try:
+                self.conn = mariadb.connect(
+                    user=DATABASE_USER,
+                    password=DATABASE_PASSWORD,
+                    host=f"192.168.1.106",
+                    port=PORT,
+                    database=DATABASE_NAME
+                )
+            except mariadb.Error as e:
+                print(f"Error connecting to MariaDB Platform via LAN: {e}")
+                sys.exit(1)
 
         self.cur = self.conn.cursor()
         self.cur.execute("SELECT version();")
@@ -51,22 +64,41 @@ class Database:
         self.conn.close()
         print(f'Database connection closed')
 
-    def insert(self, table_name, values: list):
-        table_name = validate_text(table_name)
+    def insert(self, table_name, values):
+        # table_name = validate_text(table_name)
+        print(f'Inserting into the database -> {table_name}', end='... ')
         try:
+            db_columns = self.get_columns_names(table_name)
+            placeholders = ','.join(["%s"] * len(db_columns))
+            if type(values) == dict:
+                values = [values.get(column, None) for column in db_columns]
             self.cur.execute(
-                f"INSERT INTO {table_name} ({','.join([_ for _ in self.get_columns_names(f'{table_name}')])})"
-                f" VALUES ({','.join(['%s' for _ in values])})", values)
+                f"INSERT INTO {table_name} ({','.join(db_columns)})"
+                f" VALUES ({placeholders})", values)
+            print(f'Query executed.', end=' ')
         except ValueError:
             print(f'Values has to be inserted as a py list (not any other arrays!).')
+        print(f"Committing the query...", end=' ')
         self.conn.commit()
+        print('Committed.')
 
-    def replace_row(self, table_name, values: list):
-        table_name = validate_text(table_name)
+    def replace_row(self, table_name, replaced_row: dict, row_id=None):
         try:
-            self.cur.execute(
-                f"REPLACE INTO {table_name} ({','.join([_ for _ in self.get_columns_names(f'{table_name}')])})"
-                f"VALUES ({','.join(['%s' for _ in values])})", values)
+            if row_id is None:
+                row_id = int(list(replaced_row.values())[0])
+            # Get the column names for the table
+            columns = self.get_columns_names(table_name)
+            # Remove the 'id' column from the list of column names
+            columns.remove('id')
+            # Construct the SET clause of the SQL query
+            set_clause = ','.join([f'{col}=%s' for col in columns])
+            # Append the row_id to the values list
+            values = list(replaced_row.values())[1:]
+            values.append(row_id)
+            # Construct the SQL query with a WHERE clause that filters by id
+            query = f"UPDATE {table_name} SET {set_clause} WHERE id = %s"
+            # Execute the SQL query
+            self.cur.execute(query, values)
         except ValueError:
             print(f'Values has to be inserted as a py list (not any other arrays!).')
         self.conn.commit()
@@ -87,7 +119,6 @@ class Database:
             columns_txt = ''.join(columns)
 
         qry = f'SELECT {columns_txt} FROM {table_name}'
-        print(qry)
         self.cur.execute(qry)
 
         output_list = []
@@ -114,7 +145,7 @@ class Database:
         self.table_into_DF(table_name)
 
     def insertDB_from_csv(self, table_name, csv_path, csv_separator):
-        table_name = validate_text(table_name)
+        # table_name = validate_text(table_name)
         df = pd.read_csv(csv_path, sep=csv_separator)
         if self.is_table(table_name):
             print(f"Table {table_name} already exist. Inserting data....")
@@ -128,16 +159,16 @@ class Database:
 
         self.table_into_DF(table_name)
 
-    def delete_records(self, table_name, rowID):        #   TODO: order by ID
+    def delete_records(self, table_name, rowID):  # TODO: order by ID
         qry = f'DELETE FROM {table_name} WHILE id = %s'
-        deleted_item = (rowID, )
+        deleted_item = (rowID,)
         self.cur.execute(qry, deleted_item)
         self.conn.commit()
         print(f"Row {rowID} has been deleted from Database.")
 
     def table_into_DF(self, table_name):
         # self.reconnect()
-        table_name = validate_text(table_name)
+        # table_name = validate_text(table_name)
         qry = f'SELECT * FROM {table_name}'
         self.cur.execute(qry)
         records = self.cur.fetchall()
@@ -150,7 +181,7 @@ class Database:
         return df
 
     def get_row(self, table_name: str, col_name: str, row_pos: str):
-        table_name = validate_text(table_name)
+        # table_name = validate_text(table_name)
         qry = f'SELECT * FROM {table_name} WHERE {col_name} = {row_pos}'
         self.cur.execute(qry)
         row_data = self.cur.fetchall()
@@ -166,12 +197,12 @@ class Database:
 
         return columns
 
-    def create_table(self, table_name, columns):
+    def create_table(self, table_name, columns: list):
         columnList = []
-        table_name = validate_text(table_name)
+        # table_name = validate_text(table_name)
         for columnName in columns:
             if not columnName.isalpha():
-                print(f"Wrong column name: {columnName}", end=", ")
+                # print(f"Wrong column name: {columnName}", end=", ")
                 if columnName == ' ' or columnName == "id":
                     raise ValueError(f'Wrong column name: {columnName}')
                 tmp_columnName = str(columnName)
@@ -180,7 +211,7 @@ class Database:
                         if letter == ".":
                             tmp_columnName = tmp_columnName.replace(letter, '')
                         tmp_columnName = tmp_columnName.replace(letter, '_')
-                        print(f"Changed for: {tmp_columnName}")
+                    #   print(f"Changed for: {tmp_columnName}")
                 columnList.append(tmp_columnName + ' VARCHAR(200)')
                 continue
 
@@ -201,7 +232,7 @@ class Database:
     # searches if given table name exists in SQL server tables with table_schema=public
     # Boolean
     def is_table(self, table_name):
-        table_name = validate_text(table_name)
+        # table_name = validate_text(table_name)
         tables_list = self.show_tables(DATABASE_NAME)
         for table in tables_list:
             if table[0] == table_name:
@@ -229,8 +260,13 @@ class Database:
         else:
             return 0
 
-    def df_from_filteredTable(self, table_name, column_name, value) -> pd.DataFrame:
-        qry = f"SELECT * FROM {table_name} WHERE {column_name} = {value}  ORDER BY ID"
+    def df_from_filteredTable(self, table_name, column_name, value, is_equal=True) -> pd.DataFrame:
+        if is_equal:
+            # print(f'Filtering the database table {table_name} for {value} in {column_name}')
+            qry = f"SELECT * FROM {table_name} WHERE {column_name} = {value}  ORDER BY ID"
+        else:
+            # print(f'Filtering the database table {table_name} by {column_name} not equal != to {value}')
+            qry = f"SELECT * FROM {table_name} WHERE {column_name} != {value}  ORDER BY ID"
         self.cur.execute(qry)
         records = self.cur.fetchall()
         table_cols = self.get_columns_names(table_name)
@@ -241,39 +277,91 @@ class Database:
             df = pd.concat([df, x])
         return df
 
+    def get_subConstruction_branch(self, root_id, table_name=None, df=None):
+        if df is None:
+            df = self.table_into_DF(table_name)
+        # Find all rows with the given root_id as the parent_id
+
+        children = df[df['parent_construction_id'] == root_id]
+        # Base case: return the empty DataFrame if there are no children
+        if children.empty:
+            return pd.DataFrame()
+        # Recursively find all children of each child
+        result = pd.DataFrame()
+        for index, child in children.iterrows():
+            child_branch = self.get_subConstruction_branch(child['id'], table_name, df)
+            if not child_branch.empty:
+                result = pd.concat([result, child_branch])
+        return pd.concat([children, result])
+
+    def get_subConstruction_core(self, root_id, table_name=None, df=None) -> pd.DataFrame:
+        if df is None:
+            df = self.table_into_DF(table_name)
+
+        # Find the row with the given root_id
+        df = df.reset_index()
+        root_row = df.iloc[[int(root_id) - 1]]
+        if root_row.empty:
+            return pd.DataFrame()
+
+        # Find all parents of the root row
+        parent_rows = pd.DataFrame(columns=df.columns)
+        parent_id = root_row['parent_construction_id'].iloc[0]
+        while parent_id is not None:
+            parent_row = df.iloc[[int(parent_id) - 1]]
+            if parent_row.empty:
+                break
+            parent_rows = pd.concat([parent_rows, parent_row])
+            parent_id = parent_row['parent_construction_id'].iloc[0]
+        return parent_rows
+
+    def table_length(self, table_name):
+        """
+        Returns the number of rows in a table.
+        Args:
+            table_name (str): The name of the table to get the length of.
+        Returns:
+            An integer representing the number of rows in the table, or None if the table does not exist.
+        """
+        cursor = self.conn.cursor()
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        result = cursor.fetchone()
+        if result:
+            return result[0]
+        else:
+            return 0
+
+    def rows_equal_count(self, table_name, column_name, value):
+        """
+        Returns the number of rows in a specified MariaDB database table
+        where a given column has a specific value.
+
+        Parameters:
+        table_name (str): Name of the table to search.
+        column_name (str): Name of the column to search for the value.
+        value: Value to search for in the column.
+
+        Returns:
+        int: Number of rows in the table where the column has the specified value.
+        """
+        cursor = self.conn.cursor()
+        query = f"SELECT COUNT(*) FROM {table_name} WHERE {column_name} = %s"
+        cursor.execute(query, (value,))
+        result = cursor.fetchone()
+        return result[0]
+
     def reconnect(self):
         self.cur.close()
         self.conn.close()
-        print(f"Database connection close - trying to reconnect...")
+        print(f"Database connection closed - trying to reconnect...")
         self.__init__()
-
 
 
 if __name__ == "__main__":
     db = Database()
-    db_rows = db.df_from_filteredTable('deki_2022_SubConstructions', 'parent_construction_id', 1)
-    print(db_rows['id'].tolist())
-    for i in db_rows['id'].tolist():
-        print(i)
-    # print(db.show_tables(DATABASE_NAME))
-    # dct = {
-    #     'name': 'Zbiornik LNG',
-    #     'tag': 'self.constructTagLine.text()',
-    #     'number': 'DKI_LNG3200_MS_000',
-    #     'owner': 'self.constructOwnerLine.text()',
-    #     'localization': 'self.constructLocalizationLine.text()',
-    #     'material': 'self.constructMaterialLine.text()',
-    #     'additional_info': 'NaN',
-    #     'subcontractor': "NaN",
-    #     'sub_contact': "NaN",
-    #     'construct_type': 'str(self.constructTypeCombo.currentText())',
-    #     'quality_norm': 'str(self.constructQualityNormCombo.currentText())',
-    #     'quality_class': 'str(self.constructQualityClassCombo.currentText())',
-    #     'tolerances_norm': 'str(self.constructTolerancesNormCombo.currentText())',
-    #     'tolerances_level': 'str(self.constructTolerancesLevelCombo.currentText())'}
-    #
-    # db.create_table('test_2022_constructions',
-    #                 ['tag', 'number', 'name', 'owner', 'localization',
-    #                  'material', 'additional_info', 'subcontractor', 'sub_contact', 'construct_type',
-    #                  'quality_norm', 'quality_class', 'tolerances_norm', 'tolerances_level'])
-    # db.insert('test_2022_constructions', dct.values())
+    # db_rows = db.df_from_filteredTable('deki_2022_SubConstructions', 'parent_construction_id', 1)
+    # print(db_rows['id'].tolist())
+    # for i in db_rows['id'].tolist():
+    #     print(i)
+    s = db.get_subConstruction_core(1, table_name="GS03Y23_SubConstructions")
+    print(s)

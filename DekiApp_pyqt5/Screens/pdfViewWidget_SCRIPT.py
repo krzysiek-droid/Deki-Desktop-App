@@ -151,11 +151,11 @@ class pdfViewerLayout(QVBoxLayout):
     def __init__(self, filepath, parent=None):
         super(pdfViewerLayout, self).__init__()
         self.filepath = Path(filepath)
-        print(f'filepath to Path.uri object: {self.filepath.as_uri()}')
+        # print(f'filepath to Path.uri object: {self.filepath.as_uri()}')
         self.pdfWidget = QAxContainer.QAxWidget()
         self.pdfWidget.setControl("{8856F961-340A-11D0-A96B-00C04FD705A2}")
         self.loadPdf()
-        print(f"pdfViewerLayout initialized succesfully")
+        print(f"pdfViewerLayout initialized successfully")
 
     def loadPdf(self):
         # convert system path to web path with .as_uri() method
@@ -168,7 +168,7 @@ class pdfViewerWidget(QWidget):
     def __init__(self, filepath, parent=None):
         super(pdfViewerWidget, self).__init__()
         self.filepath = Path(filepath)
-        print(f'filepath to Path.uri object: {self.filepath.as_uri()}')
+        # print(f'filepath to Path.uri object: {self.filepath.as_uri()}')
         self.pdfWidget = QAxContainer.QAxWidget()
         self.pdfWidget.setControl("{8856F961-340A-11D0-A96B-00C04FD705A2}")
         self.layout = QVBoxLayout()

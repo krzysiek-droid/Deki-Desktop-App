@@ -106,8 +106,7 @@ class WeldGraphWidget(QWidget):
         move_vect = weld_dialog.mapFromGlobal(global_position)
         weld_dialog.move(move_vect)
         weld_dialog.exec_()  # exec_() opens the Dialog and waits for user input
-        print(f'Chosen btn: {weld_dialog.selectedBtn_Name}')
-        # save the selected options for upper weld in Dialog specific dict
+        # save the clicked options for upper weld in Dialog specific dict
         if weld_dialog.selectedBtn_Name.count('Type') > 0:
             self.upperWeldData['upper_weld_type'] = weld_dialog.selectedBtn_Name.replace('weldType_', '')
         else:
@@ -116,7 +115,7 @@ class WeldGraphWidget(QWidget):
         # rotate the icon in case the calling button is rotated
         if rotated:
             px = px.transformed(QtGui.QTransform().scale(1, -1))
-            # save the selected options for lower weld in Dialog specific dict
+            # save the clicked options for lower weld in Dialog specific dict
             if weld_dialog.selectedBtn_Name.count('Type') > 0:
                 self.lowerWeldData['sided_weld_type'] = weld_dialog.selectedBtn_Name.replace('weldType_', '')
             else:
@@ -171,8 +170,8 @@ class WeldGraphWidget(QWidget):
             self.upperWeldData[key_ref] = updated_value if len(updated_value) > 0 else None
         else:
             self.lowerWeldData[key_ref] = updated_value if len(updated_value) > 0 else None
-        print(f"Weld data updated: upper -> {self.upperWeldData}")
-        print(f"Weld data updated: lower -> {self.lowerWeldData}")
+        # print(f"Weld data updated: upper -> {self.upperWeldData}", end=" -> ")
+        # print(f"Weld data updated: lower -> {self.lowerWeldData}")
 
     def updateWeldBanner(self, weldBannerBtn: QPushButton, checkedIcon_path, uncheckedIcon_path, banner_type: str):
         if weldBannerBtn.isChecked():

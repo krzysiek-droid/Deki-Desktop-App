@@ -3494,7 +3494,7 @@ QPushButton{
             <item>
              <widget class="QTabWidget" name="tabWidget">
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="weldsTab">
                <attribute name="title">
@@ -3743,8 +3743,17 @@ QPushButton{
                 </item>
                 <item>
                  <widget class="QScrollArea" name="weldListWidget">
+                  <property name="horizontalScrollBarPolicy">
+                   <enum>Qt::ScrollBarAlwaysOff</enum>
+                  </property>
+                  <property name="sizeAdjustPolicy">
+                   <enum>QAbstractScrollArea::AdjustToContents</enum>
+                  </property>
                   <property name="widgetResizable">
                    <bool>true</bool>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
                   </property>
                   <widget class="QWidget" name="weldListWidgetContent">
                    <property name="geometry">
@@ -3910,8 +3919,8 @@ QPushButton{
                     <rect>
                      <x>0</x>
                      <y>0</y>
-                     <width>613</width>
-                     <height>737</height>
+                     <width>71</width>
+                     <height>16</height>
                     </rect>
                    </property>
                   </widget>

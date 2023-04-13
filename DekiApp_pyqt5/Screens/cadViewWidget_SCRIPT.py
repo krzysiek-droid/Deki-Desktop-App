@@ -1,3 +1,4 @@
+import ctypes
 import logging
 import sys
 import resources_rc
@@ -76,6 +77,9 @@ class CadViewerLayout(QVBoxLayout):
 
 
 class CadViewer(QWidget):
+    opengl32 = ctypes.windll.opengl32
+    wglDeleteContext = opengl32.wglDeleteContext
+
     def __init__(self, step_filepath: str):
         super(CadViewer, self).__init__()
         # self.setMinimumSize(viewport_width, viewport_height)
@@ -98,6 +102,11 @@ class CadViewer(QWidget):
 
         # ------------------------------------------------Call class functions------------------------------------------
         self.read_stepFile(self.filepath)
+
+    def closeEvent(self, QCloseEvent):
+        super(CadViewer, self).closeEvent(QCloseEvent)
+        self.wglDeleteContext(self.context().handle())
+        QCloseEvent.accept()
 
     # ----------------------------------------------Class Functions---------------------------------------------------
     def read_stepFile(self, step_filepath):

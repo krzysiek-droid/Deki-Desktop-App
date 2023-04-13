@@ -1,0 +1,38 @@
+{
+  "quality_norms": {
+    "pressure equipment": [
+      "PED_97_23_WE",
+      "N/A"
+    ],
+    "pipelines": [
+      "EN 13480",
+      "N/A"
+    ],
+    "railways": [
+      "EN 15085",
+      "N/A"
+    ],
+    "welded structures": [
+      "EN 1090",
+      [
+        "EXC1",
+        "EXC2",
+        "EXC3",
+        "EXC4"
+      ]
+    ]
+  },
+  "tolerances_norms": {
+    "ISO 13920": [
+      "1",
+      "2",
+      "3"
+    ],
+    "ISO 2768": [
+      "s",
+      "m",
+      "l"
+    ]
+  },
+  "srv_files_filepath": "D:\\dekiApp\\Deki_ServerFiles"
+}

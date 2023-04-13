@@ -1,23 +1,45 @@
+from datetime import datetime
 import sys
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRegExp
+from PyQt5.QtGui import QValidator, QRegExpValidator
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
 from PyQt5 import QtGui
 from PyQt5 import QtCore
-from PyQt5.Qt import QTimer
-from Screens import cadViewWidget_SCRIPT as cadviewer
+from Screens import db_objects
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 
-import db_objects
 import json
 
 with open(r"D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\app_settings.json", 'r') as s:
     file = s.read()
     quality_norms = json.loads(file)['quality_norms']
-    print(quality_norms)
+    # print(quality_norms)
     tolerances_norms = json.loads(file)['tolerances_norms']
     srv_files_filepath = json.loads(file)['srv_files_filepath']
+
+
+class NoSlashValidator(QValidator):
+    def validate(self, input, pos):
+        if '\\' in input or '/' in input:
+            return QValidator.Invalid, input, pos
+        else:
+            return QValidator.Acceptable, input, pos
+
+
+class CompositeValidator(QValidator):
+    def __init__(self, validators):
+        super().__init__()
+        self.validators = validators
+
+    def validate(self, input, pos):
+        for validator in self.validators:
+            state, input, pos = validator.validate(input, pos)
+            if state == QValidator.Invalid:
+                return QValidator.Invalid, input, pos
+        return QValidator.Acceptable, input, pos
+
 
 class CadViewerExtended(QWidget):
     def __init__(self, step_filepath: str):
@@ -51,7 +73,7 @@ class CadViewerExtended(QWidget):
         # self.screenshot.save('screenshot.png', 'png')
 
     def screenshot_retry(self):
-        pass
+        print(f'No function yet')
         # TODO: change the screenshot preview to notification dialog with approval of user in order to maintain
         # TODO: STP file open during the decision of screenshot approval
 
@@ -63,9 +85,12 @@ class NewConstructDialog(QDialog):
     def __init__(self):
         super(NewConstructDialog, self).__init__()
         # set attribute that deletes the instance of this class on closeEvent
+
         self.setAttribute(Qt.WA_DeleteOnClose)
         loadUi(r'new_construction_UI.ui', self)
         print(QApplication.topLevelWidgets())
+
+        self.new_constructionObj = None
 
         #   ------------------------------------Class members-----------------------------------------------------------
         self.cadModelViewWidget = None  # QWidget
@@ -74,13 +99,12 @@ class NewConstructDialog(QDialog):
         #   ------------------------------------Hidden content----------------------------------------------------------
         self.constructSubcontractorLine.hide()
         self.subContractorContact.hide()
-
         #   ------------------------------------Buttons scripts---------------------------------------------------------
         self.cadModelBtn_3.clicked.connect(lambda: (self.showStepModel(),
                                                     self.cadModelBtn_3.setText('Change step model')))
         self.documentationLinktbn_3.clicked.connect(lambda: self.showPdfViewer())  # Show .pdf document
         self.addConstructionBtn.clicked.connect(lambda: self.addConstruction())
-        self.coopProductionBtn.toggled.connect(lambda:
+        self.coopProductionBtn.clicked.connect(lambda:
                                                (self.constructSubcontractorLine.show(),
                                                 self.subContractorContact.show()) if self.coopProductionBtn.isChecked() else
                                                (self.constructSubcontractorLine.hide(),
@@ -96,13 +120,19 @@ class NewConstructDialog(QDialog):
         self.constructTolerancesNormCombo.activated.connect(lambda: self.tolerances_combos_activate(
             self.constructTolerancesNormCombo.currentText()))
         self.tolerances_combos_activate(self.constructTolerancesNormCombo.currentText())
-
         # ---------------------------------------Signals----------------------------------------------------------------
         # validator = QtGui.QRegExpValidator(QtCore.QRegExp(r"^[a-zA-Z0-9.,_%+- ]*"), self)
         for widget in self.findChildren(QLineEdit):
             # widget.setValidator(validator)
             widget.editingFinished.connect(lambda: self.addConstructionBtn.setEnabled(True) if self.validate_info() else
             self.addConstructionBtn.setEnabled(False))
+
+        regExp = QRegExp(r'^[a-zA-Z_]\w{0,63}$')
+        regex_validator = QRegExpValidator(regExp)
+        no_slash_validator = NoSlashValidator()
+        combined_validator = CompositeValidator([regex_validator, no_slash_validator])
+
+        self.constructNumberLine.setValidator(combined_validator)
 
     #   ------------------------------------Class functions-------------------------------------------------------------
     def showStepModel(self):
@@ -113,20 +143,26 @@ class NewConstructDialog(QDialog):
                                                   "stp (*.stp);;All Files (*);;step (*.step)", options=options)
         if fileName:
             if not self.cadModelViewWidget:
-                self.cadModelViewWidget = CadViewerExtended(fileName)
-                # Create Layout for cadModelViewWidget
-                grid = QVBoxLayout()
-                grid.addWidget(self.cadModelViewWidget)
-                self.cadViewerContainer.setLayout(grid)
-                if self.validate_info():
-                    self.addConstructionBtn.setEnabled(True)
+                try:
+                    self.cadModelViewWidget = CadViewerExtended(fileName)
+                    # Create Layout for cadModelViewWidget
+                    grid = QVBoxLayout()
+                    grid.addWidget(self.cadModelViewWidget)
+                    self.cadViewerContainer.setLayout(grid)
+                    if self.validate_info():
+                        self.addConstructionBtn.setEnabled(True)
+                except Exception as e:
+                    print(f"Initial CAD widget couldn't be created err-> {e}")
             else:
-                old_viewer = self.cadViewerContainer.findChild(CadViewerExtended)
-                old_viewer.deleteLater()
-                old_viewer.hide()
-                # Replace old Viewer with new Viewer with new CAD model
-                self.cadModelViewWidget = CadViewerExtended(fileName)
-                self.cadViewerContainer.layout().addWidget(self.cadModelViewWidget)
+                try:
+                    old_viewer = self.cadViewerContainer.findChild(CadViewerExtended)
+                    old_viewer.deleteLater()
+                    old_viewer.hide()
+                    # Replace old Viewer with new Viewer with new CAD model
+                    self.cadModelViewWidget = CadViewerExtended(fileName)
+                    self.cadViewerContainer.layout().addWidget(self.cadModelViewWidget)
+                except Exception as e:
+                    print(f"Reinitialized CAD widget couldn't be created -> {e}")
         else:
             pass
 
@@ -165,38 +201,49 @@ class NewConstructDialog(QDialog):
 
     def addConstruction(self):
         if self.validate_info():
-            print('adding to database...')
-            new_construction = db_objects.MainConstruction()
-            new_construction.info = {'id': f'{new_construction.update_records_amount() + 1}',
-                                     'name': self.constructNameLine.text(),
-                                     'tag': self.constructTagLine.text(),
-                                     'serial_number': self.constructNumberLine.text(),
-                                     'owner': self.constructOwnerLine.text(),
-                                     'localization': self.constructLocalizationLine.text(),
-                                     'material': self.constructMaterialLine.text(),
-                                     'additional_info': "N/A" if len(self.additionalInfoLine.text()) == 0 else
-                                     self.additionalInfoLine.text(),
-                                     'subcontractor': "N/A" if len(self.constructSubcontractorLine.text()) == 0 else
-                                     self.constructSubcontractorLine.text(),
-                                     'sub_contact': "N/A" if len(self.subContractorContact.text()) == 0 else
-                                     self.subContractorContact.text(),
-                                     'construct_type': str(self.constructTypeCombo.currentText()),
-                                     'quality_norm': str(self.constructQualityNormCombo.currentText()),
-                                     'quality_class': str(self.constructQualityClassCombo.currentText()),
-                                     'tolerances_norm': str(self.constructTolerancesNormCombo.currentText()),
-                                     'tolerances_level': str(self.constructTolerancesLevelCombo.currentText())}
+            print('adding to database...', end=' ')
+            self.new_constructionObj = db_objects.MainConstruction()
+            try:
+                self.new_constructionObj.info = {'id': f'{self.new_constructionObj.update_records_amount() + 1}',
+                                         'name': self.constructNameLine.text(),
+                                         'tag': self.constructTagLine.text(),
+                                         'serial_number': self.constructNumberLine.text(),
+                                         'owner': self.constructOwnerLine.text(),
+                                         'localization': self.constructLocalizationLine.text(),
+                                         'material': self.constructMaterialLine.text(),
+                                         'additional_info': "N/A" if len(self.additionalInfoLine.text()) == 0 else
+                                         self.additionalInfoLine.text(),
+                                         'subcontractor': "N/A" if len(self.constructSubcontractorLine.text()) == 0 else
+                                         self.constructSubcontractorLine.text(),
+                                         'sub_contact': "N/A" if len(self.subContractorContact.text()) == 0 else
+                                         self.subContractorContact.text(),
+                                         'construct_type': str(self.constructTypeCombo.currentText()),
+                                         'quality_norm': str(self.constructQualityNormCombo.currentText()),
+                                         'quality_class': str(self.constructQualityClassCombo.currentText()),
+                                         'tolerances_norm': str(self.constructTolerancesNormCombo.currentText()),
+                                         'tolerances_level': str(self.constructTolerancesLevelCombo.currentText()),
+                                         'series_size': self.seriesSizeLine.text(),
+                                         'created_time': f'{datetime.now().strftime("%Y-%m-%d %H:%M")}',
+                                         'created_by': 'admin'}
+                print(f'Information acquired', end='........ ')
+            except Exception as e:
+                print(f"Construction info issue err-> {e}")
 
-            new_construction.picture = self.cadModelViewWidget.screenshot
-            new_construction.pdfDocsPath = self.pdfViewerWidget.filepath
-            new_construction.stpModelPath = self.cadModelViewWidget.filepath
-            new_construction.save_main_construction()
-            print("MainConstruction added to database successfully.")
+            try:
+                self.new_constructionObj.picture = self.cadModelViewWidget.screenshot
+                self.new_constructionObj.pdfDocsPath = self.pdfViewerWidget.filepath
+                self.new_constructionObj.stpModelPath = self.cadModelViewWidget.filepath
+                print(f'Saving....', end='........ ')
+            except Exception as e:
+                print(f"CAD files save error -> {e}")
 
-            if type(self.parent()) == QStackedWidget:
-                import construction_preview_SCRIPT
-                self.parent().addWidget(construction_preview_SCRIPT.MainConstructionDialog(new_construction.info['id']))
-                self.parent().setCurrentIndex(self.parent().indexOf(self) + 1)
-                self.parent().removeWidget(self)
+            try:
+                self.new_constructionObj.save_main_construction()
+                print("MainConstruction added to database successfully.")
+            except Exception as e:
+                print(f"Database object MainConstruction save function error -> {e}")
+
+            self.accept()
 
     def validate_info(self):
         for lineEdit in self.findChildren(QLineEdit):
@@ -241,8 +288,12 @@ class NewConstructDialog(QDialog):
 
 #   ----------------------------------------Main script (for Screen testing purposes)-----------------------------------
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    from mainWindow import DekiDesktopApp
 
+    app = DekiDesktopApp(sys.argv)
+
+    con = db_objects.MainConstruction()
+    print(con)
     mainWindow = NewConstructDialog()
     mainWindow.show()
 

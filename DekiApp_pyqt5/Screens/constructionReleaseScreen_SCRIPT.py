@@ -6,8 +6,7 @@ from PyQt5.QtCore import Qt, QRegExp, pyqtSignal
 from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtGui
 
-import db_objects as dbo
-import resources_rc
+from Screens import db_objects as dbo
 
 import json
 
@@ -70,7 +69,7 @@ class ConstructionReleaseScreen(QDialog):
                  parentWindow: ConstructionReleaseWindow):
 
         super(ConstructionReleaseScreen, self).__init__()
-        self.constructionObject = constructionObject
+        self.mainConstructionObject = constructionObject
         self.screenManager = screenManager_ref
         self.setObjectName(f'ConstructionReleaseScreen')
         self.confirmedTestingLevels = {'vt': 0, 'pt': 0, 'mt': 0, 'ut': 0, 'rt': 0, 'lt': 0}
@@ -82,23 +81,23 @@ class ConstructionReleaseScreen(QDialog):
         uic.loadUi(r'constructionReleaseScreen_UI.ui', self)
 
         # --- init UI
-        self.constructPicture.setPixmap(self.constructionObject.picture.scaled(260, 230, 1, 1))
-        self.seriesTagLine.setText(self.constructionObject.info['serial_number'])
+        self.constructPicture.setPixmap(self.mainConstructionObject.picture.scaled(260, 230, 1, 1))
+        self.seriesTagLine.setText(self.mainConstructionObject.info['serial_number'])
         self.weldsBtn.setText(f"127 \n Welds")
         self.constructionsBtn.setText(f"3 \n Constructions")
         self.cadsBtn.setText(f"0 \n CADs missing")
         self.docsBtn.setText(f"0 \n DOCs missing")
         self.wpsesBtn.setText(f"2 \n WPS missing")
-        self.qualityNormLine.setText(self.constructionObject.info['quality_norm'])
-        self.qualityClassLine.setText(self.constructionObject.info['quality_class'])
-        self.tollerancesNormLine.setText(self.constructionObject.info['tolerances_norm'])
-        self.tollerancesLevelLine.setText(self.constructionObject.info['tolerances_level'])
-        self.constructNameLbl.setText(self.constructionObject.info['name'])
-        self.constructTagLbl.setText(self.constructionObject.info['tag'])
+        self.qualityNormLine.setText(self.mainConstructionObject.info['quality_norm'])
+        self.qualityClassLine.setText(self.mainConstructionObject.info['quality_class'])
+        self.tollerancesNormLine.setText(self.mainConstructionObject.info['tolerances_norm'])
+        self.tollerancesLevelLine.setText(self.mainConstructionObject.info['tolerances_level'])
+        self.constructNameLbl.setText(self.mainConstructionObject.info['name'])
+        self.constructTagLbl.setText(self.mainConstructionObject.info['tag'])
 
         subcontractors = 0
-        if self.constructionObject.info['subcontractor'] != 'N/A':
-            self.cooperationLine.setText(self.constructionObject.info['subcontractor'])
+        if self.mainConstructionObject.info['subcontractor'] != 'N/A':
+            self.cooperationLine.setText(self.mainConstructionObject.info['subcontractor'])
         else:
             self.cooperationLine.setText('None')
 
@@ -124,7 +123,6 @@ class ConstructionReleaseScreen(QDialog):
                                              self.confirm_testing_level(self.ltLvlConfirmBtn, postClickChecked))
         self.resetSizeBtn.clicked.connect(self.resetSizeInput)
 
-        from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
         self.discardBtn.clicked.connect(self.closeFunc)
 
         #   ---------------------------------------- LINE EDITS -------------------------------
@@ -199,20 +197,18 @@ class ConstructionReleaseScreen(QDialog):
     def checkConstructionData(self):
         #   Check amount of welds
         welds_amount = \
-            self.constructionObject.db.check_records_number(f"{self.constructionObject.info['tag']}_modelWelds")
+            self.mainConstructionObject.db.check_records_number(f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
         self.weldsBtn.setText(f'{welds_amount} \n Welds')
 
         #   Check amount of sub constructions
         sub_constructions = \
-            self.constructionObject.db.df_from_filteredTable('deki_2022_SubConstructions', 'main_construction_id',
-                                                             self.constructionObject.info['id'])
+            self.mainConstructionObject.db.table_into_DF(f"{self.mainConstructionObject.info['serial_number']}_SubConstructions")
         self.constructionsBtn.setText(f'{len(sub_constructions)} \n Constructions')
 
         #   Check missing files for CAD models and Documentation
         files_missing = {'cads': 0, 'docs': 0}
         for index, construct in sub_constructions.iterrows():
-            constructionObject = dbo.SubConstruction(parentConstruction=self.constructionObject,
-                                                     connected_database=self.constructionObject.db)
+            constructionObject = dbo.SubConstruction(self.mainConstructionObject)
             constructionObject.load_info(construct['id'])
             check_status = constructionObject.check_files()
             if not check_status['CAD']:
@@ -234,9 +230,9 @@ class ConstructionReleaseScreen(QDialog):
             self.docsBtn.setChecked(True)
 
         #   Check the existence of WPS docs (pdf files)
-        welds_list = self.constructionObject.db.table_into_DF(f"{self.constructionObject.info['tag']}_modelWelds")
+        welds_list = self.mainConstructionObject.db.table_into_DF(f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
         missing_WPSes = 0
-        from db_objects import srv_wps_files_path as WPS_path
+        from Screens.db_objects import srv_wps_files_path as WPS_path
         for index, weld_as_DFseries in welds_list.iterrows():
             if not os.path.isfile(WPS_path + fr'\{weld_as_DFseries["wps_number"]}.pdf'):
                 missing_WPSes += 1
@@ -249,7 +245,7 @@ class ConstructionReleaseScreen(QDialog):
 
     # Function for initialization to check tests assigned to welds      -- INIT
     def check_assigned_tests(self):
-        db_content = self.constructionObject.db.table_into_DF(f"{self.constructionObject.info['tag']}_modelWelds")
+        db_content = self.mainConstructionObject.db.table_into_DF(f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
         for method_label in self.testsFoundFrame.findChildren(QLabel):
             method: str = method_label.objectName()[:2].upper()
             method_count = ';'.join(db_content['testing_methods'].values.tolist()).split(';').count(method)
@@ -341,7 +337,11 @@ class ConstructionReleaseScreen(QDialog):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    from mainWindow import DekiDesktopApp
+    app = DekiDesktopApp(sys.argv)
+
+    from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
+    ins = InspectionPlannerWindow()
 
     construction = dbo.MainConstruction()
     construction.load_info(1)

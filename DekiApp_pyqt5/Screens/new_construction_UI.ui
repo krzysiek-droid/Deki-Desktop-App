@@ -82,16 +82,16 @@ font:  italic 12pt &quot;Calibri&quot;;
        <number>2</number>
       </property>
       <property name="leftMargin">
-       <number>2</number>
+       <number>6</number>
       </property>
       <property name="topMargin">
-       <number>2</number>
+       <number>6</number>
       </property>
       <property name="rightMargin">
-       <number>2</number>
+       <number>6</number>
       </property>
       <property name="bottomMargin">
-       <number>2</number>
+       <number>6</number>
       </property>
       <item>
        <widget class="QWidget" name="leftContent" native="true">
@@ -112,7 +112,7 @@ font:  italic 12pt &quot;Calibri&quot;;
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <property name="spacing">
-          <number>2</number>
+          <number>10</number>
          </property>
          <property name="leftMargin">
           <number>2</number>
@@ -128,6 +128,9 @@ font:  italic 12pt &quot;Calibri&quot;;
          </property>
          <item>
           <widget class="QFrame" name="frame_2">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);</string>
+           </property>
            <property name="frameShape">
             <enum>QFrame::StyledPanel</enum>
            </property>
@@ -156,16 +159,20 @@ font:  italic 12pt &quot;Calibri&quot;;
                 <weight>75</weight>
                 <italic>false</italic>
                 <bold>true</bold>
+                <underline>false</underline>
                </font>
               </property>
               <property name="layoutDirection">
                <enum>Qt::LeftToRight</enum>
               </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(30, 210, 80);</string>
+              </property>
               <property name="text">
                <string>Add new construction</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+               <set>Qt::AlignCenter</set>
               </property>
               <property name="indent">
                <number>20</number>
@@ -176,7 +183,7 @@ font:  italic 12pt &quot;Calibri&quot;;
           </widget>
          </item>
          <item>
-          <widget class="QWidget" name="constructInfoInputContainer" native="true">
+          <widget class="QGroupBox" name="constructInfoInputContainer">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -189,6 +196,14 @@ font:  italic 12pt &quot;Calibri&quot;;
              <height>0</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <family>Microsoft YaHei</family>
+             <pointsize>10</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
            <property name="styleSheet">
             <string notr="true">QLabel{
 	font-family: Calibri, Helvetica, sans-serif;
@@ -196,6 +211,15 @@ font:  italic 12pt &quot;Calibri&quot;;
 	font-style: normal;
 	font-weight: normal;
 }</string>
+           </property>
+           <property name="title">
+            <string>New Construction Info</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+           <property name="flat">
+            <bool>true</bool>
            </property>
            <layout class="QGridLayout" name="gridLayout_2">
             <property name="leftMargin">
@@ -295,6 +319,12 @@ font:  italic 12pt &quot;Calibri&quot;;
                 <width>0</width>
                 <height>30</height>
                </size>
+              </property>
+              <property name="toolTip">
+               <string>Must begin with a Letter and only Letters, Number and Undescore (_) are allowed</string>
+              </property>
+              <property name="inputMask">
+               <string/>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -734,7 +764,7 @@ font:  italic 12pt &quot;Calibri&quot;;
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QLineEdit" name="constructMaterialLine_2">
+             <widget class="QLineEdit" name="seriesSizeLine">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -806,6 +836,15 @@ font:  italic 12pt &quot;Calibri&quot;;
              <width>0</width>
              <height>150</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>Calibri</family>
+             <pointsize>10</pointsize>
+             <weight>50</weight>
+             <italic>true</italic>
+             <bold>false</bold>
+            </font>
            </property>
            <property name="alignment">
             <set>Qt::AlignHCenter|Qt::AlignTop</set>

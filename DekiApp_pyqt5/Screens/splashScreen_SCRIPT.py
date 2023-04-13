@@ -49,17 +49,24 @@ class SplashScreenDialog(QDialog):
 
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
-        self.animation = QMovie(r'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\Icons\31.gif')
-        self.loadingLbl.setMovie(self.animation)
+        # self.animation = QMovie(r'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\Icons\31.gif')
+        # self.loadingLbl.setMovie(self.animation)
 
         self.stackedWidget: QStackedWidget = stackedWidgetInstance
-        print(f"SHOWING SPLAS...")
+        print(f"SHOWING SPLASH...", end=" ")
         self.show()
         self.mainAppInstance.processEvents()
-        print(f"LOADING NEXT SCREEN -> {self.calledScreen}")
-        self.loadedScreen = self.calledScreen(*self.calledScreen_initArgs)
-        print(f"CHANGING SCREENS...")
+        print(f"LOADING NEXT SCREEN -> {self.calledScreen}", end="...")
+        try:
+            self.loadedScreen = self.calledScreen(*self.calledScreen_initArgs)
+        except Exception as e:
+            print(f"Screen loading during Splash failure err-> {e}")
+            self.reject()
+        self.mainAppInstance.processEvents()
+        print(f"CHANGING SCREENS...", end=' ')
         self.changeScreen()
+        self.mainAppInstance.processEvents()
+        print(f"DONE. SPLASH FINISHED.")
 
     def changeScreen(self):
         if self.loadedScreen:

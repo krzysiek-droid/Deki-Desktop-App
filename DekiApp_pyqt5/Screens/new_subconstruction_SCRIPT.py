@@ -1,18 +1,40 @@
+from datetime import datetime
 import sys
 
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
 from PyQt5.uic import loadUi
-import db_objects
-import new_construction_SCRIPT as newConstructionScreen
+from Screens import db_objects
+import gnrl_database_con
+import new_rootConstruction as newConstructionScreen
+
+import re
+
+
+def last_three_letters(s):
+    """
+    Returns the last three letters from a given string after filtering out non-letter characters.
+    Args:
+        s (str): The string to extract the letters from.
+    Returns:
+        A string containing the last three letters from the input string, or None if no letters are found.
+    """
+    # Use regular expression to match only letters
+    letters = re.findall('[a-zA-Z]', s)
+    # If there are at least three letters, return the last three letters
+    if len(letters) >= 3:
+        return ''.join(letters[-3:])
+    # Otherwise, return None
+    else:
+        return None
 
 
 class NewSubconstructionDialog(QDialog):
     # parentConstructionObject has to be a database new_screen_ref class -> db_object.MainConstruction
-    def __init__(self, parentConstruction=None, connected_db=None):
+    def __init__(self, parentConstruction: db_objects.Construction = None):
         # TODO: Add database connection parse
         super(NewSubconstructionDialog, self).__init__()
-        self.db = connected_db if connected_db is not None else parentConstruction.db
+        self.new_subConstruction = None
+        self.db: gnrl_database_con.Database = QApplication.instance().database
         self.pdfViewerWidget = None
         self.cadModelViewWidget = None
         self.parentConstruction = parentConstruction
@@ -39,6 +61,11 @@ class NewSubconstructionDialog(QDialog):
         self.parentConstructTolerancesLevelLabel.setText(self.parentConstruction.info['tolerances_level'])
         self.parentConstructSubcontractorLabel.setText(self.parentConstruction.info['subcontractor'])
         self.parentConstructSubcontractorContactLabel.setText(self.parentConstruction.info['sub_contact'])
+
+        subConstructions_number = self.db.table_length(
+            f"{self.parentConstruction.mainConstructionObject.info['serial_number']}_SubConstructions")
+        self.newSubconstructionSerialNo.setText(self.parentConstruction.info['serial_number'] +
+                                                f'_SC0{subConstructions_number}')
         # ----------------------------------------Button
         # scripts--------------------------------------------------------------
         self.showParentConstructionCadModel.clicked.connect(lambda: print(f'show parent CAD'))
@@ -73,14 +100,13 @@ class NewSubconstructionDialog(QDialog):
         fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
                                                   "stp (*.stp);;All Files (*);;step (*.step)", options=options)
         if fileName:
-            from new_construction_SCRIPT import CadViewerExtended
+            from new_rootConstruction import CadViewerExtended
             if not self.cadModelViewWidget:
                 self.cadModelViewWidget = CadViewerExtended(fileName)
                 # Create Layout for cadModelViewWidget
                 grid = QVBoxLayout()
                 grid.addWidget(self.cadModelViewWidget)
                 self.cadViewerContainer.setLayout(grid)
-
             else:
                 old_viewer = self.cadViewerContainer.findChild(CadViewerExtended)
                 old_viewer.deleteLater()
@@ -112,41 +138,56 @@ class NewSubconstructionDialog(QDialog):
                 self.docsViewerContainer.layout().addWidget(self.cadModelViewWidget)
 
     def addSubConstruction(self):
-        print('adding to database...')
-        print(self.parentConstruction.info)
-        new_subConstruction = db_objects.SubConstruction(parentConstruction=self.parentConstruction,
-                                                         connected_database=self.db)
-        new_subConstruction.info = \
-            {'id': new_subConstruction.update_records_amount() + 1,
-             'parent_construction_id': int(self.parentConstruction.info['id']) if type(self.parentConstruction) is not
-                                                                                  db_objects.MainConstruction else None,
-             'main_construction_id': self.parentConstruction.info['id'] if type(self.parentConstruction) is
-                                                                           db_objects.MainConstruction else
-             self.parentConstruction.info['main_construction_id'],
-             'name': self.newSubconstructionName.text(),
-             'tag': self.newSubconstructionTag.text(),
-             'serial_number': self.newSubconstructionSerialNo.text(),
-             'owner': self.newSubconstructionOwner.text(),
-             'localization': self.newSubconstructionLocalization.text(),
-             'material': self.newSubconstructionMainMaterial.text(),
-             'additional_info': "N/A" if len(self.newSubconstructionAdditionalInfoLine.text()) == 0 else
-             self.newSubconstructionAdditionalInfoLine.text(),
-             'subcontractor': "N/A" if len(self.newSubconstructionSubcontractor.text()) == 0 else
-             self.newSubconstructionSubcontractor.text(),
-             'sub_contact': "N/A" if len(self.newSubconstructionSubcontractorContact.text()) == 0 else
-             self.newSubconstructionSubcontractorContact.text(),
-             'construct_type': str(self.newSubconstructionTypeCombo.currentText()),
-             'quality_norm': str(self.newSubconstructionQualityNormCombo.currentText()),
-             'quality_class': str(self.newSubconstructionQualityClassCombo.currentText()),
-             'tolerances_norm': str(self.newSubconstructionTolerancesNormCombo.currentText()),
-             'tolerances_level': str(self.newSubconstructionTolerancesLevelCombo.currentText())}
-        new_subConstruction.picture = self.cadModelViewWidget.screenshot
-        new_subConstruction.pdfDocsPath = self.pdfViewerWidget.filepath
-        new_subConstruction.stpModelPath = self.cadModelViewWidget.filepath
-        print(f'SubConstruction {self} creation succeeded. ------------ ', end='')
-        new_subConstruction.save_subConstruction()
+        try:
+            print('adding to database...')
+            self.new_subConstruction = db_objects.SubConstruction(
+                mainConstructionObject=self.parentConstruction.mainConstructionObject)
+
+            self.new_subConstruction.info = \
+                {'id': self.new_subConstruction.update_records_amount() + 1,
+                 'parent_construction_id': int(self.parentConstruction.info['id']) if type(
+                     self.parentConstruction) is not
+                                                                                      db_objects.MainConstruction else None,
+                 'main_construction_id': self.parentConstruction.info['id'] if type(self.parentConstruction) is
+                                                                               db_objects.MainConstruction else
+                 self.parentConstruction.info['main_construction_id'],
+                 'name': self.newSubconstructionName.text(),
+                 'tag': self.newSubconstructionTag.text(),
+                 'serial_number': self.newSubconstructionSerialNo.text(),
+                 'owner': self.newSubconstructionOwner.text(),
+                 'localization': self.newSubconstructionLocalization.text(),
+                 'material': self.newSubconstructionMainMaterial.text(),
+                 'additional_info': "N/A" if len(self.newSubconstructionAdditionalInfoLine.text()) == 0 else
+                 self.newSubconstructionAdditionalInfoLine.text(),
+                 'subcontractor': "N/A" if len(self.newSubconstructionSubcontractor.text()) == 0 else
+                 self.newSubconstructionSubcontractor.text(),
+                 'sub_contact': "N/A" if len(self.newSubconstructionSubcontractorContact.text()) == 0 else
+                 self.newSubconstructionSubcontractorContact.text(),
+                 'construct_type': str(self.newSubconstructionTypeCombo.currentText()),
+                 'quality_norm': str(self.newSubconstructionQualityNormCombo.currentText()),
+                 'quality_class': str(self.newSubconstructionQualityClassCombo.currentText()),
+                 'tolerances_norm': str(self.newSubconstructionTolerancesNormCombo.currentText()),
+                 'tolerances_level': str(self.newSubconstructionTolerancesLevelCombo.currentText()),
+                 'tier': int(self.parentConstruction.info['tier']) + 1 if type(self.parentConstruction) is
+                                                                          db_objects.SubConstruction else 1,
+                 'update_time': f'{datetime.now().strftime("%Y-%m-%d %H:%M")}',
+                 'update_by': 'admin'}
+        except Exception as e:
+            print(f"Construction info gathering error -> {e}")
+            self.reject()
+
+        try:
+            self.new_subConstruction.picture = self.cadModelViewWidget.screenshot
+            self.new_subConstruction.pdfDocsPath = self.pdfViewerWidget.filepath
+            self.new_subConstruction.stpModelPath = self.cadModelViewWidget.filepath
+            print(f'SubConstruction {self} creation succeeded. ------------ ', end='')
+        except Exception as e:
+            print(f"Construction files save error -> {e}")
+            self.reject()
+
+        self.new_subConstruction.save_subConstruction()
         print("SubConstruction added to database successfully.")
-        self.close()
+        self.accept()
 
     def quality_combos_activate(self, chosen):
         self.newSubconstructionQualityNormCombo.setCurrentText(newConstructionScreen.quality_norms[chosen][0])
@@ -166,13 +207,14 @@ class NewSubconstructionDialog(QDialog):
 
 #   ----------------------------------------Main script (for Screen testing purposes)-----------------------------------
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    from mainWindow import DekiDesktopApp
+
+    app = DekiDesktopApp(sys.argv)
 
     # mainWindowObj = CadViewerExtended("../DekiResources/Zbiornik LNG assembly.stp")
     dummy_constructionObject = db_objects.MainConstruction()
-    dummy_constructionObject.load_info(1)
-    mainWindow = NewSubconstructionDialog(parentConstruction=dummy_constructionObject,
-                                          connected_db=dummy_constructionObject.db)
+    dummy_constructionObject.load_info(2)
+    mainWindow = NewSubconstructionDialog(parentConstruction=dummy_constructionObject)
     mainWindow.show()
 
     try:

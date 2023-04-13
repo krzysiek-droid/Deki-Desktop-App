@@ -1,5 +1,5 @@
 from PyQt5.QtCore import pyqtSignal, QPropertyAnimation, QRect
-from PyQt5.QtWidgets import QLineEdit, QSizePolicy, QToolButton
+from PyQt5.QtWidgets import QLineEdit, QSizePolicy, QToolButton, QPushButton
 from PyQt5.uic.properties import QtGui
 
 
@@ -12,17 +12,34 @@ class CustomLineEdit(QLineEdit):
         self.customLineEdit_textChanged()
         self.setClearButtonEnabled(False)
 
+        self.setStyleSheet('CustomLineEdit[readOnly="true"]{'
+                           '    background-color: rgb(230, 230, 230);}'
+                           'CustomLineEdit[readOnly="false"]{'
+                           '    background-color: rgb(255, 255, 255);'
+                           '    color: green;}'
+                           'CustomLineEdit{'
+                           '    border-bottom: 1px solid;'
+                           '    border-color: gray;}'
+                           )
+
     def customLineEdit_textChanged(self):
-        if self.isReadOnly() and self.clearAction is None:
-            clear_icon = QtGui.QIcon(':/Icons/Icons/edit-3.svg')
-            self.clearAction = self.addAction(clear_icon, QLineEdit.ActionPosition.TrailingPosition)
-            self.clearAction.triggered.connect(lambda: (self.setReadOnly(False), self.customLineEdit_textChanged()))
-            self.setClearButtonEnabled(False)
-            self.setReadOnly(True)
-        else:
-            self.removeAction(self.clearAction)
-            self.clearAction = None
-            self.setClearButtonEnabled(True)
+        try:
+            if self.isReadOnly() and self.clearAction is None:
+                clear_icon = QtGui.QIcon(fr'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\Icons\edit-3.svg')
+                self.clearAction = self.addAction(clear_icon, QLineEdit.ActionPosition.TrailingPosition)
+                self.clearAction.triggered.connect(self.clear_line)
+                self.setClearButtonEnabled(False)
+                self.setReadOnly(True)
+            else:
+                self.removeAction(self.clearAction)
+                self.clearAction = None
+                self.setClearButtonEnabled(True)
+        except Exception as e:
+            print(f"custom_widgets | CustomLineEdit Func(customLineEdit_textChanged) failre | -> {e}")
+
+    def clear_line(self):
+        self.setReadOnly(False)
+        self.customLineEdit_textChanged()
 
 
 class MouseClearableLineEdit(QLineEdit):
@@ -63,14 +80,14 @@ class MouseClearableLineEdit(QLineEdit):
             return self.isConfirmed
 
 
-class CustomToolCircleButton(QToolButton):
+class CustomPushCircleButton(QPushButton):
     def __init__(self, *arg, **kwargs):
-        super(CustomToolCircleButton, self).__init__(*arg, **kwargs)
+        super(CustomPushCircleButton, self).__init__(*arg, **kwargs)
 
-        self.clicked.connect(lambda x:print(x))
+        self.clicked.connect(lambda x: print(x))
 
     def focusInEvent(self, event):
-        super(CustomToolCircleButton, self).focusInEvent(event)
+        super(CustomPushCircleButton, self).focusInEvent(event)
         print('Mouse moved')
         # animation = QPropertyAnimation(self, "size")
         # animation.setDuration(250)
@@ -79,5 +96,5 @@ class CustomToolCircleButton(QToolButton):
         # animation.start()
 
     def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:
-        super(CustomToolCircleButton, self).focusOutEvent(e)
+        super(CustomPushCircleButton, self).focusOutEvent(e)
         print('focused out')
