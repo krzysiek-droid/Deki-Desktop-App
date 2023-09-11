@@ -82,7 +82,7 @@ class InspectionPlannerWindow(QMainWindow):
         # QStackedWidget contains QStackedLayout, which is important in case of children and parent finding
         self.stackedWidgetContainer.addWidget(self.stackedWidget)
         # add the first screen (QWidget) to screenManager (stackedWidget)
-        self.stackedWidget.addWidget(InspectionPlannerScreen_SCRIPT.InspectionPlannerScreen(self))
+        self.stackedWidget.addWidget(InspectionPlannerScreen_SCRIPT.InspectionPlannerScreen())
 
         # button allocations
         self.closeBtn.clicked.connect(lambda: self.close())

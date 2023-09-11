@@ -380,7 +380,7 @@ border-radius: 25px;
                    <number>0</number>
                   </property>
                   <item>
-                   <widget class="QLabel" name="label">
+                   <widget class="QLabel" name="weldsLbl">
                     <property name="minimumSize">
                      <size>
                       <width>50</width>
@@ -397,7 +397,7 @@ Welds</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QLabel" name="label_2">
+                   <widget class="QLabel" name="subsLbl">
                     <property name="minimumSize">
                      <size>
                       <width>50</width>

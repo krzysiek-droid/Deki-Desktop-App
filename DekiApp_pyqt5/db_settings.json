@@ -75,5 +75,12 @@
     "first_welded_part",
     "second_welded_part",
     "testing_methods",
-    "same_as_weldID"]
+    "same_as_weldID"],
+  "realWelds_columns": ["id",
+    "construction_serialNo",
+    "drawing_tag",
+    "construction_num",
+    "weld_production_num",
+    "modelWeld_db_id",
+    "modelWeld_generatedID"]
 }

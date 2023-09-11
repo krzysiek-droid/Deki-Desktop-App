@@ -47,7 +47,7 @@ class Database:
                 self.conn = mariadb.connect(
                     user=DATABASE_USER,
                     password=DATABASE_PASSWORD,
-                    host=f"192.168.1.106",
+                    host=f"192.168.1.103",
                     port=PORT,
                     database=DATABASE_NAME
                 )
@@ -228,6 +228,58 @@ class Database:
         else:
             print(f"Table could not been created, because another table with the same name exists")
             return 0
+
+    def create_table_2(self, table_name, columns: list, data=None):
+        columnList = []
+        # table_name = validate_text(table_name)
+        for columnName in columns:
+            if not columnName.isalpha():
+                if columnName == ' ' or columnName == "id":
+                    raise ValueError(f'Wrong column name: {columnName}')
+                tmp_columnName = str(columnName)
+                for letter in columnName:
+                    if not letter.isalpha():
+                        if letter == ".":
+                            tmp_columnName = tmp_columnName.replace(letter, '')
+                        tmp_columnName = tmp_columnName.replace(letter, '_')
+                columnList.append(tmp_columnName + ' VARCHAR(200)')
+                continue
+            columnList.append(columnName + ' VARCHAR(200)')
+
+        id_column = columnList[0].split(' ')[0]
+        cols = ','.join([column for column in columnList[1::]])
+        print(f"Proceeding table creation with columns: {cols}, and id column -> {id_column}")
+
+        if self.is_table(table_name):
+            print(f"Table already exists, dropping table {table_name}", end='... ')
+            # If the table already exists, drop it
+            qry = f"DROP TABLE {table_name}"
+            self.cur.execute(qry)
+            self.conn.commit()
+            print(f"Table {table_name} has been dropped.")
+
+
+        qry = f"CREATE TABLE {table_name} ({id_column} INT NOT NULL AUTO_INCREMENT, {cols}, PRIMARY KEY({id_column}))"
+        self.cur.execute(qry)
+        self.conn.commit()
+        print(f"Table {table_name} has been created.")
+
+        columns = self.get_columns_names(table_name)
+
+        # If data is provided, insert into the newly created table
+        if data is not None:
+            try:
+                placeholders = ','.join(["%s"] * len(columns))
+                for i, row in data.iterrows():
+                    values = row.values.tolist()
+                    self.cur.execute(
+                        f"INSERT INTO {table_name} ({','.join(columns)})"
+                        f" VALUES ({placeholders})", values)
+                    self.conn.commit()
+                print(f"{len(data)} rows have been inserted into table {table_name}.")
+            except Exception as exc:
+                print(f"Failed to insert data into table {table_name}. Error: {exc}")
+                self.conn.rollback()
 
     # searches if given table name exists in SQL server tables with table_schema=public
     # Boolean

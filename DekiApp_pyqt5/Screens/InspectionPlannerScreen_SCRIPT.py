@@ -11,13 +11,16 @@ from Screens import db_objects, db_objects as dbo
 
 
 class InspectionPlannerScreen(QWidget):
-    def __init__(self, mainWindowObj: QMainWindow):
+    def __init__(self):
         try:
             super().__init__()
             self.mainConstructionObject = None
             loadUi(r'InspectionPlannerScreen_UI.ui', self)
             self.currentListItemID = None
-            self.mainWindowInstance = mainWindowObj
+            self.mainWindowInstance = QApplication.instance().inspectionPlannerWindow
+            if self.mainWindowInstance is None:
+                print(f"InspectionPlannerScreen_SCRIPT")
+                raise SystemError
             # Screen loading scripts
             self.goToConstructionBtn.setEnabled(False)
             # open database connection
@@ -143,7 +146,7 @@ class CustomListItem(QWidget):
                          'background-color: rgb(30, 210, 80);' \
                          'border-radius: 10px;'
         (self.stateLbl.setText('In preparation'), self.stateLbl.setStyleSheet(in_preparation_style)) if not \
-            self.db.is_table(f'{self.constructionObj.info["tag"]}_allWelds') else \
+            self.db.is_table(f'{self.constructionObj.info["serial_number"]}_welds') else \
             (self.stateLbl.setText('Released at: 17 Dec 22'), self.stateLbl.setStyleSheet(released_style))
         counter = len(self.db.df_from_filteredTable(f"{self.constructionObj.info['serial_number']}_SubConstructions",
                                                     'main_construction_id', self.constructionObj.info['id']))

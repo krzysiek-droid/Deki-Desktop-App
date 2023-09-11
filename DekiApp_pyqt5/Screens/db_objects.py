@@ -1,5 +1,10 @@
+import datetime
 import json
 import time
+
+import gfunctions
+import gnrl_database_con
+from gfunctions import log_exception
 
 import pandas
 import pandas as pd
@@ -38,7 +43,7 @@ with open(r'D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\db_settings.json', 'r') a
 class Construction:
     def __init__(self):
         print(f"INITIALIZING {self}...", end='')
-        self.db = QApplication.instance().database
+        self.db: gnrl_database_con.Database = QApplication.instance().database
         self.table_name = None
         self.picture = None
         self.picturePath = None  # Path
@@ -160,6 +165,17 @@ class MainConstruction(Construction):
             print(f"Loading data for {self} failed err-> {e}")
             return 0
 
+    def releaseConstruction(self, new_table_values: pd.DataFrame):
+        try:
+            realWelds_tableName = f"{self.info['serial_number']}_welds"
+            self.db.create_table_2(realWelds_tableName, new_table_values.columns.tolist(), new_table_values)
+            self.info['released_by'] = 'admin'
+            self.info['released_time'] = datetime.datetime.now()
+            self.db.replace_row(self.table_name, self.info, int(self.info['id']))
+        except Exception as exc:
+            print(gfunctions.log_exception(exc))
+            return 0
+
 
 class SubConstruction(Construction):
     def __init__(self, mainConstructionObject, parentConstructionObject=None):
@@ -180,9 +196,36 @@ class SubConstruction(Construction):
             print(f"\ndb_objects | SubConstruction __init__ | loading welds data from database {self.table_name}...",
                   end=' ')
             self.db_content: pandas.DataFrame = self.db.table_into_DF(self.table_name)
-            print(f"done")
+            print(f"Caching data...", end=' ')
+            self.mainWindowInstance.cached_data.update({'subConstructions_db': self.db_content})
+            print(f"Done.")
 
         self.info = dict.fromkeys(self.db_content.columns.tolist())
+
+    def get_children(self) -> pd.DataFrame:
+        try:
+            if len(self.db_content) == self.db.check_records_number(self.table_name):
+                belonging_constructions = self.db.get_subConstruction_branch(self.info['id'], df=self.db_content)
+                return belonging_constructions
+            else:
+                self.db_content = self.db.table_into_DF(self.table_name)
+                self.mainWindowInstance.cached_data.update({'subConstructions_db': self.db_content})
+                return self.get_children()
+        except Exception as exc:
+            print(log_exception(exc))
+            return pd.DataFrame()
+
+    def get_belonging_welds(self) -> pd.DataFrame:
+        try:
+            welds_df = self.mainWindowInstance.cached_data['modelWelds_db']
+            if welds_df is None:
+                welds_df = self.db.table_into_DF(f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
+                self.mainWindowInstance.cached_data.update({'modelWelds_db': welds_df})
+            b_welds_df = welds_df[welds_df['belonging_construction_ID'] == self.info['id']]
+            return b_welds_df
+        except Exception as exc:
+            print(log_exception(exc))
+            return pd.DataFrame()
 
     def save_subConstruction(self):
         try:
@@ -256,7 +299,8 @@ class WeldObject:
         if self.mainWindowInstance.cached_data['modelWelds_db'] is not None:
             self.db_content: pandas.DataFrame = self.mainWindowInstance.cached_data['modelWelds_db']
         else:
-            print(f"\ndb_objects | WeldObject __init__ | loading welds data from database {self.table_name}...", end=' ')
+            print(f"\ndb_objects | WeldObject __init__ | loading welds data from database {self.table_name}...",
+                  end=' ')
             self.db_content: pandas.DataFrame = self.db.table_into_DF(self.table_name)
             print(f"Caching data in mainWindowInstance...", end=' ')
             self.mainWindowInstance.cached_data.update({'modelWelds_db': self.db_content})
@@ -280,7 +324,7 @@ class WeldObject:
     def fast_load_singleWeld(self, weldID):
         values = self.db_content.iloc[weldID - 1].tolist()
         self.info = {k: v for k, v in zip(self.info.keys(), values)}
-        if self.info["wps_number"] is not 'missing':
+        if self.info["wps_number"] != 'missing':
             self.wps_filepath = srv_wps_files_path + fr'\{self.info["wps_number"]}.pdf'
         else:
             self.wps_filepath = "missing"

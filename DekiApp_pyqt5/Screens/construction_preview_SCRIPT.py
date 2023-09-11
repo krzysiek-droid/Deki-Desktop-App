@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtCore
 
+import gfunctions
 from Screens import cadViewWidget_SCRIPT as cadviewer, db_objects as dbo
 from Screens import pdfViewWidget_SCRIPT as pdfviewer
 
@@ -16,15 +17,16 @@ def clearLayout(layout):
         if child.widget() is not None:
             child.widget().hide()
             child.widget().deleteLater()
+            child.widget().setParent(None)
     print(f'Finished.')
 
 
-class CustomListItem(QWidget):
+class ConstructionListItem(QWidget):
     selected = QtCore.pyqtSignal()
     opened = QtCore.pyqtSignal(object)
 
     def __init__(self, subConstruction_loaded: dbo.SubConstruction):
-        super(CustomListItem, self).__init__()
+        super(ConstructionListItem, self).__init__()
         uic.loadUi(r'ListItem.ui', self)
         print(f"---------------------------------------- INIT OF {subConstruction_loaded.info['name']} list item.")
         self.subConstructionObject = subConstruction_loaded
@@ -49,6 +51,11 @@ class CustomListItem(QWidget):
         self.constructionPicture.setPixmap(self.subConstructionObject.picture.scaled(120, 120, 1, 1))
         self.typeLbl.setText(self.subConstructionObject.info['construct_type'])
         self.tierLbl.setText(f"Tier: {self.subConstructionObject.info['tier']}")
+
+        belonging_constructions = self.subConstructionObject.get_children()
+        belonging_welds = self.subConstructionObject.get_belonging_welds()
+        self.subsLbl.setText(f"{len(belonging_constructions)} \n subs")
+        self.weldsLbl.setText(f"{len(belonging_welds)} \n welds")
 
     def select_item(self):
         self.isSelected = True
@@ -106,13 +113,11 @@ class MainConstructionDialog(QDialog):
         uic.loadUi(r'construction_preview_UI.ui', self)
         # self.setWindowState(Qt.WindowMaximized)
 
-        if QApplication.instance().inspectionPlannerWindow is None:
-            for widget in QApplication.topLevelWidgets():
-                if widget.objectName() == 'inspectionPlannerWindow':
-                    self.mainWindowInstance = widget
-                    break
-        else:
-            self.mainWindowInstance = QApplication.instance().inspectionPlannerWindow
+
+        self.mainWindowInstance = QApplication.instance().inspectionPlannerWindow
+        if self.mainWindowInstance is None:
+            gfunctions.log_exception("Cant find the inspectionPlannerWindow in QApplication.instance()")
+            raise SystemError
 
         self.lowerTierConstructionsTab.setEnabled(False)
         self.upperTierConstructionsTab.setEnabled(False)
@@ -155,8 +160,7 @@ class MainConstructionDialog(QDialog):
         # ---------------------------------------------------------------Button scripting------------------------------
         from InspectionPlannerScreen_SCRIPT import InspectionPlannerScreen
         self.goBackBtn.clicked.connect(
-            lambda: self.mainWindowInstance.changeScreen(self,
-                                                         InspectionPlannerScreen(self.mainWindowInstance, self.db)))
+            lambda: self.mainWindowInstance.changeScreen(InspectionPlannerScreen, []))
 
         self.addSubassemblyBtn.clicked.connect(self.add_TopTier_construction)
 
@@ -207,7 +211,7 @@ class MainConstructionDialog(QDialog):
                     constructionObject = dbo.SubConstruction(self.mainConstructionObject)
                     constructionObject.load_info(int(constructionID))
                     self.constructions_objects.append(constructionObject)
-                    listItem = CustomListItem(constructionObject)
+                    listItem = ConstructionListItem(constructionObject)
                     listItem.opened.connect(self.open_construction)
                     listItem.selected.connect(self.select_subConstruction)
                     if constructionObject.info['parent_construction_id'] is None:
@@ -245,7 +249,8 @@ class MainConstructionDialog(QDialog):
         else:
             layout = QVBoxLayout()
             layout.setSpacing(2)
-            # iterate throughout subConstruction list to load them as CustomListItem new_screen_ref into the screen
+            # iterate throughout subConstruction list to load them as ConstructionListItem new_screen_ref into the
+            # screen
             if len(self.constructions_items_list) != 0:
                 for constructionListItem in self.constructions_items_list:
                     layout.addWidget(constructionListItem, alignment=Qt.AlignTop)
@@ -274,9 +279,9 @@ class MainConstructionDialog(QDialog):
                             if int(constructionObject.info['id']) == int(weld_row[1]["belonging_construction_ID"]):
                                 weld_parent_constructionObject = constructionObject
                                 break
-                            else:
-                                weld_parent_constructionObject = dbo.SubConstruction(self.mainConstructionObject)
-                                weld_parent_constructionObject.load_info(int(weld_row[1]["belonging_construction_ID"]))
+                        if weld_parent_constructionObject is None:
+                            weld_parent_constructionObject = dbo.SubConstruction(self.mainConstructionObject)
+                            weld_parent_constructionObject.load_info(int(weld_row[1]["belonging_construction_ID"]))
                         weldListItem = WeldListItem(int(weld_row[1]["id"]), weld_parent_constructionObject)
                         self.weld_items_list.append(weldListItem)
                 print(f'{len(self.weld_items_list)} unique welds found.')
@@ -305,7 +310,8 @@ class MainConstructionDialog(QDialog):
             layout = QVBoxLayout()
             layout.setSpacing(2)
             self.weldListWidgetContent.setLayout(layout)
-            # iterate throughout subConstruction list to load them as CustomListItem new_screen_ref into the screen
+            # iterate throughout subConstruction list to load them as ConstructionListItem new_screen_ref into the
+            # screen
             if len(self.weld_items_list) != 0:
                 for weld_list_item in self.weld_items_list:
                     layout.addWidget(weld_list_item, alignment=Qt.AlignTop)
@@ -359,7 +365,7 @@ class MainConstructionDialog(QDialog):
             tree_ids = tree_ids['id'].tolist()
             for item in self.constructions_items_list:
                 if item.subConstructionObject.info['id'] in tree_ids:
-                    lowerItem = CustomListItem(item.subConstructionObject)
+                    lowerItem = ConstructionListItem(item.subConstructionObject)
                     lowerItem.opened.connect(self.open_construction)
                     lowerConstructionsItems.append(lowerItem)
 
@@ -404,7 +410,7 @@ class MainConstructionDialog(QDialog):
             # get list of items representing upper constructions
             for item in self.constructions_items_list:
                 if item.subConstructionObject.info['id'] in parents_df['id'].tolist():
-                    upperConstructionsItems.append(CustomListItem(item.subConstructionObject))
+                    upperConstructionsItems.append(ConstructionListItem(item.subConstructionObject))
 
             # add listItems of construction's upper constructions into the scroll area
             for listItem in upperConstructionsItems:
@@ -439,7 +445,7 @@ class MainConstructionDialog(QDialog):
             try:
                 print(f"New construction added -{dialog.new_subConstruction}. Showing...", end=' ')
                 new_constructionObject = dialog.new_subConstruction
-                new_constructionItem = CustomListItem(new_constructionObject)
+                new_constructionItem = ConstructionListItem(new_constructionObject)
                 new_constructionItem.setAsTop()
                 # add new listItem (created from added subConstruction) to items_list
                 self.constructions_items_list.append(new_constructionItem)

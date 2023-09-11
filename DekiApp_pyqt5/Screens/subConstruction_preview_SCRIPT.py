@@ -1,6 +1,7 @@
 import logging
 import sys
-import inspect
+
+from gfunctions import log_exception
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import *
@@ -14,25 +15,6 @@ from weldListItem_SCRIPT import WeldListItem
 def showDialog(dialog, closeEventFunc):
     dialog.closeEvent = lambda event: closeEventFunc()
     dialog.exec_()
-
-
-def log_exception(e):
-    """
-    Construct a log string with the class name, function name, and exception.
-
-    :param e: The exception object that was raised.
-    :return: A string with the class name, function name, and exception.
-    """
-
-    # Get the current frame and extract the class name and function name
-    frame = inspect.currentframe().f_back
-    class_name = frame.f_locals.get('self', None).__class__.__name__
-    function_name = frame.f_code.co_name
-
-    # Construct the log string with the class name, function name, and exception
-    log_string = f" {class_name} | {function_name} | err-> {e} "
-
-    return log_string
 
 
 class SubConstructPreviewScreen(QDialog):
@@ -176,11 +158,11 @@ class SubConstructPreviewScreen(QDialog):
                                                                         df=self.subConstructions_table)
             child_list = []
             if not child_constructions_df.empty:
-                from construction_preview_SCRIPT import CustomListItem
+                from construction_preview_SCRIPT import ConstructionListItem
                 for row in child_constructions_df.iterrows():
                     construction = dbo.SubConstruction(self.mainConstructionObject)
                     construction.load_info(row[1]['id'])
-                    new_listItem = CustomListItem(construction)
+                    new_listItem = ConstructionListItem(construction)
                     new_listItem.transform_into_subConstructionScreenItem()
                     new_listItem.opened.connect(self.open_construction)
                     child_list.append(new_listItem)
@@ -207,9 +189,9 @@ class SubConstructPreviewScreen(QDialog):
         # Condition required for list refreshment after every call of this function
         if self.subComponentsListContent.layout() is not None:
             layout = self.subComponentsListContent.layout()
-            if layout.findChild(QLabel) is not None:
-                layout.findChild(QLabel).deleteLater()
-                layout.findChild(QLabel).hide()
+            for lbl in self.subComponentsList.findChildren(QLabel):
+                lbl.deleteLater()
+                lbl.hide()
             curr_itemsList = set(layout.findChildren(QWidget))
             # Section for adding/removal of listItem with changes in AllListItems
             # Every change in db_subConstructions has to be followed by load_subConstructionList function!
@@ -233,7 +215,8 @@ class SubConstructPreviewScreen(QDialog):
         else:
             layout = QVBoxLayout()
             layout.setSpacing(2)
-            # iterate throughout subConstruction list to load them as CustomListItem new_screen_ref into the screen
+            # iterate throughout subConstruction list to load them as ConstructionListItem new_screen_ref into the
+            # screen
             if len(self.constructions_items_list) != 0:
                 for constructionListItem in self.constructions_items_list:
                     layout.addWidget(constructionListItem, alignment=Qt.AlignTop)
@@ -285,19 +268,18 @@ class SubConstructPreviewScreen(QDialog):
                 self.weldListWidget.findChild(QLabel).hide()
                 self.weldListWidget.findChild(QLabel).deleteLater()
             QApplication.instance().processEvents()
-
             # Refresh ScrollArea
             # Delete previous items
             for i in reversed(range(layout.count())):
                 layout.itemAt(i).widget().setParent(None)
             QApplication.instance().processEvents()
-
             # Reset the first item in Scroll Area - has to be done bcs of some kind of glitch that changes
             # visibility issues of weldNumberLine
-            reset_listItem = self.weld_items_list[0]
-            self.weld_items_list[0] = WeldListItem(int(reset_listItem.weldObj.info['id']), reset_listItem.parent_construction)
-
-            # Add all items again (with new Item beeing included)
+            if len(self.weld_items_list) > 1:
+                reset_listItem = self.weld_items_list[0]
+                self.weld_items_list[0] = WeldListItem(int(reset_listItem.weldObj.info['id']),
+                                                       reset_listItem.parent_construction)
+            # Add all items again (with new Item being included)
             for weldListItem in self.weld_items_list:
                 layout.addWidget(weldListItem, alignment=Qt.AlignTop)
             layout.setAlignment(Qt.AlignTop)
@@ -308,7 +290,8 @@ class SubConstructPreviewScreen(QDialog):
             layout = QVBoxLayout()
             layout.setSpacing(2)
             self.weldListWidgetContent.setLayout(layout)
-            # iterate throughout subConstruction list to load them as CustomListItem new_screen_ref into the screen
+            # iterate throughout subConstruction list to load them as ConstructionListItem new_screen_ref into the
+            # screen
             if len(self.weld_items_list) != 0:
                 for weld_list_item in self.weld_items_list:
                     layout.addWidget(weld_list_item, alignment=Qt.AlignTop)
@@ -343,8 +326,8 @@ class SubConstructPreviewScreen(QDialog):
             result = dialog.exec_()
             if bool(result):
                 try:
-                    from construction_preview_SCRIPT import CustomListItem
-                    new_constructionItem = CustomListItem(dialog.new_subConstruction)
+                    from construction_preview_SCRIPT import ConstructionListItem
+                    new_constructionItem = ConstructionListItem(dialog.new_subConstruction)
                     self.constructions_items_list.append(new_constructionItem)
                     self.load_SubConstructionsScrollArea()
                     # update the subConstructions list
@@ -389,7 +372,6 @@ if __name__ == '__main__':
     ins.cached_data['mainConstructionObject'] = main_construction
     sub_construction = dbo.SubConstruction(main_construction)
     sub_construction.load_info(1)
-
 
     screen = SubConstructPreviewScreen(sub_construction)
     screen.show()

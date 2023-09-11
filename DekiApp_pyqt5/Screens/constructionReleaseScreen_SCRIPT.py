@@ -1,7 +1,11 @@
+import datetime
 import logging
 import os
 import sys
 
+import gfunctions
+
+import pandas
 from PyQt5.QtCore import Qt, QRegExp, pyqtSignal
 from PyQt5.QtWidgets import *
 from PyQt5 import uic, QtGui
@@ -15,6 +19,14 @@ with open(r"D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\app_settings.json", 'r') 
     quality_norms = json.loads(file)['quality_norms']
     tolerances_norms = json.loads(file)['tolerances_norms']
     srv_files_filepath = json.loads(file)['srv_files_filepath']
+
+with open(r"D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\db_settings.json", 'r') as o:
+    file = o.read()
+    realWelds_db_cols = json.loads(file)['realWelds_columns']
+
+
+def save_dataframe_to_textfile(dataframe, filename):
+    dataframe.to_csv(filename, sep='\t', index=False)
 
 
 class ConfirmationButton(QPushButton):
@@ -36,7 +48,7 @@ class ConstructionReleaseWindow(QDialog):
     def __init__(self, constructionObject: dbo.MainConstruction):
         super(ConstructionReleaseWindow, self).__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        # self.setWindowFlags(Qt.FramelessWindowHint)
 
         uic.properties.logger.setLevel(logging.WARNING)
         uic.uiparser.logger.setLevel(logging.WARNING)
@@ -48,8 +60,6 @@ class ConstructionReleaseWindow(QDialog):
         from inspectionPlannerWindow_SCRIPT import CustomStackedWidget
         self.screenManager = CustomStackedWidget(self)
         self.mainLayout.addWidget(self.screenManager)
-
-        print(f"Pure window size: {self.size()}")
 
         first_screen = ConstructionReleaseScreen(self.screenManager, constructionObject, self)
         self.screenManager.addWidget(first_screen)
@@ -125,10 +135,26 @@ class ConstructionReleaseScreen(QDialog):
 
         self.discardBtn.clicked.connect(self.closeFunc)
 
+        self.releaseBtn.clicked.connect(self.releaseConstruction)
+
+        #   ---------------------------------------- FUNCTIONS CALLS -----------------------
+        self.checkConstructionData()
+        self.check_assigned_tests()
+        self.load_lineEdits()
+
+        parentWindow.centerWindow(self)
+        print(f"Screen {self} - {self.objectName()} loaded.")
+
+    def load_lineEdits(self):
         #   ---------------------------------------- LINE EDITS -------------------------------
         validator = QtGui.QIntValidator()
         self.seriesNumberLine.setValidator(validator)
         self.seriesNumberLine.editingFinished.connect(self.update_series_amount)
+
+        prev_series_size = self.mainConstructionObject.info['series_size']
+        if prev_series_size is not None or len(prev_series_size) != 0:
+            self.seriesNumberLine.setText(f"{self.mainConstructionObject.info['series_size']}")
+            self.update_series_amount()
 
         validator = QtGui.QRegExpValidator(QRegExp("^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)$"))
         self.vtLine.setValidator(validator)
@@ -167,12 +193,6 @@ class ConstructionReleaseScreen(QDialog):
         self.ltLine.editingFinished.connect(lambda: self.change_testing_level(self.ltLine))
         self.ltLine.textChanged.connect(lambda: (self.ltLvlConfirmBtn.setChecked(False),
                                                  self.confirm_testing_level(self.ltLvlConfirmBtn, False)))
-        #   ---------------------------------------- FUNCTIONS CALLS -----------------------
-        self.checkConstructionData()
-        self.check_assigned_tests()
-
-        parentWindow.centerWindow(self)
-        print(f"Screen {self} - {self.objectName()} loaded.")
 
     # Function for series size QLineEdit functionality      -- connected (eF) to QLineEdit, seriesSizeLine
     def update_series_amount(self):
@@ -197,12 +217,14 @@ class ConstructionReleaseScreen(QDialog):
     def checkConstructionData(self):
         #   Check amount of welds
         welds_amount = \
-            self.mainConstructionObject.db.check_records_number(f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
+            self.mainConstructionObject.db.check_records_number(
+                f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
         self.weldsBtn.setText(f'{welds_amount} \n Welds')
 
         #   Check amount of sub constructions
         sub_constructions = \
-            self.mainConstructionObject.db.table_into_DF(f"{self.mainConstructionObject.info['serial_number']}_SubConstructions")
+            self.mainConstructionObject.db.table_into_DF(
+                f"{self.mainConstructionObject.info['serial_number']}_SubConstructions")
         self.constructionsBtn.setText(f'{len(sub_constructions)} \n Constructions')
 
         #   Check missing files for CAD models and Documentation
@@ -230,7 +252,8 @@ class ConstructionReleaseScreen(QDialog):
             self.docsBtn.setChecked(True)
 
         #   Check the existence of WPS docs (pdf files)
-        welds_list = self.mainConstructionObject.db.table_into_DF(f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
+        welds_list = self.mainConstructionObject.db.table_into_DF(
+            f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
         missing_WPSes = 0
         from Screens.db_objects import srv_wps_files_path as WPS_path
         for index, weld_as_DFseries in welds_list.iterrows():
@@ -245,7 +268,8 @@ class ConstructionReleaseScreen(QDialog):
 
     # Function for initialization to check tests assigned to welds      -- INIT
     def check_assigned_tests(self):
-        db_content = self.mainConstructionObject.db.table_into_DF(f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
+        db_content = self.mainConstructionObject.db.table_into_DF(
+            f"{self.mainConstructionObject.info['serial_number']}_modelWelds")
         for method_label in self.testsFoundFrame.findChildren(QLabel):
             method: str = method_label.objectName()[:2].upper()
             method_count = ';'.join(db_content['testing_methods'].values.tolist()).split(';').count(method)
@@ -334,13 +358,66 @@ class ConstructionReleaseScreen(QDialog):
         nw = InspectionPlannerWindow()
         nw.show()
 
+    def releaseConstruction(self):
+        if False in self.checklist.values():
+            # Check whether all required inputs were given - if not print the unsatisfied conditions
+            print(f"Cannot release construction -> {' - '.join(key for key,value in self.checklist.items() if not value)}")
+        else:
+            try:
+                mConstruct_id = int(self.mainConstructionObject.info['id'])
+                self.mainConstructionObject.load_info(mConstruct_id)
+                modelWelds_df: pandas.DataFrame = self.mainConstructionObject.modelWelds_df
+                subConstructions_df = self.mainConstructionObject.subConstructions_df
+                series_size = int(self.seriesNumberLine.text())
+
+                # create a DataFrame with real welds
+                realWelds_df = pandas.DataFrame(columns=realWelds_db_cols)
+                # First loop for the number of constructions in a given Series
+                print(f"------------------------", end=' ')
+                print(f"Starting to generate the realWelds table long for {len(modelWelds_df) * series_size} rows")
+                st_time = datetime.datetime.now()
+                realWeld_rows = []
+                for construction_increment in range(series_size + 1)[1::]:
+                    # 2nd loop for the welds in the construction
+                    for index, modelWeld_info in modelWelds_df.iterrows():
+                        parent_construction_info: pandas.DataFrame = \
+                            subConstructions_df[subConstructions_df['id'] == modelWeld_info[
+                                'belonging_construction_ID']].iloc[0]
+                        parent_construction_info = parent_construction_info.to_dict()
+                        realWeld_key = realWelds_db_cols
+                        parent_serialNo = parent_construction_info['serial_number']
+                        # for keys meaning refer to db_settings.json
+                        realWeld_row = {realWeld_key[0]: len(realWeld_rows) + 1,
+                                        realWeld_key[1]: parent_construction_info['serial_number'],
+                                        realWeld_key[2]: parent_construction_info['tag'],
+                                        realWeld_key[3]: construction_increment,
+                                        realWeld_key[4]: f"{parent_serialNo}-{construction_increment}-"
+                                                         f"{modelWeld_info['id']}",
+                                        realWeld_key[5]: modelWeld_info['id'],
+                                        realWeld_key[6]: modelWeld_info['weld_id_generated']}
+                        if bool(modelWeld_info['same_as_weldID']):
+                            realWeld_row.update({'modelWeld_generatedID': modelWeld_info['same_as_weldID']})
+                        realWeld_rows.append(realWeld_row)
+                realWelds_df = pandas.concat([realWelds_df, pandas.DataFrame(realWeld_rows)])
+                generate_time = st_time - datetime.datetime.now()
+                print(f"Generation ended by {-1 * generate_time.total_seconds()}")
+                save_dataframe_to_textfile(realWelds_df, r"D:\CondaPy - Projects\PyGUIs\DekiApp_pyqt5\teste_df.txt")
+
+                self.mainConstructionObject.releaseConstruction(realWelds_df)
+
+                self.accept()
+            except Exception as exc:
+                print(gfunctions.log_exception(exc))
+                return 0
 
 
 if __name__ == '__main__':
     from mainWindow import DekiDesktopApp
+
     app = DekiDesktopApp(sys.argv)
 
     from inspectionPlannerWindow_SCRIPT import InspectionPlannerWindow
+
     ins = InspectionPlannerWindow()
 
     construction = dbo.MainConstruction()
